@@ -2,10 +2,6 @@
 
 #Copyright(c)2009 Internet Archive. Software license GPL version 3.
 
-"""
-List of identifiers for the Prelinger Collection was fetched from the following url:
-http://www.archive.org/advancedsearch.php?q=collection%3Aprelinger_library&fl%5B%5D=identifier&sort%5B%5D=&sort%5B%5D=&sort%5B%5D=&rows=32000&fmt=csv&xmlsearch=Search
-"""
 
 import csv
 import os
@@ -15,7 +11,9 @@ import cStringIO
 import codecs
 import xml.etree.ElementTree as ET
 
-
+# UTF-8 wrappers for csv.writer
+# From http://docs.python.org/library/csv.html#csv-examples
+# _____________________________________________________________________________
 class UnicodeWriter:
     """
     A CSV writer which will write rows to CSV file "f",
@@ -45,13 +43,22 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
-
+# getString(ET.Element xml, string key)
+# _____________________________________________________________________________
 def getString(xml, key):
     element = xml.find(key)
     if None == element:
         return ""
     else:
         return element.text
+
+# main()
+# _____________________________________________________________________________
+
+"""
+List of identifiers for the Prelinger Collection was fetched from the following url:
+http://www.archive.org/advancedsearch.php?q=collection%3Aprelinger_library&fl%5B%5D=identifier&sort%5B%5D=&sort%5B%5D=&sort%5B%5D=&rows=32000&fmt=csv&xmlsearch=Search
+"""
 
 ids = [
     "americanhealthse01charrich",
