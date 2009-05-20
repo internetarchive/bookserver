@@ -91,7 +91,7 @@ def addCatalogEntry(catalog, title, updated):
     entry = ET.SubElement(catalog, "entry")
     createTextElement(entry, "title",  title)
 
-    href = 'subjects/' + title + '.atom'
+    href = 'subjects/' + title + '.xml'
     link = ET.SubElement(entry, "link", {'type': 'application/atom+xml', 'href': href})
 
     createTextElement(entry, "updated",  updated)
