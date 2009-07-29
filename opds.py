@@ -16,13 +16,20 @@ import urllib
 import simplejson as json
 import xml.etree.ElementTree as ET
 
+# For pretty printing... sigh
+from xml.dom.ext.reader import Sax2
+from xml.dom.ext import PrettyPrint
+from StringIO import StringIO
+
+
 numRows = 50
 
 # You can customize pubInfo:
 pubInfo = {
     'name'     : 'Internet Archive',
     'uri'      : 'http://www.archive.org',
-    'opdsroot' : 'http://bookserver.archive.org'
+    'opdsroot' : 'http://bookserver.archive.org',
+    'mimetype' : 'application/atom+xml;profile=opds'
 }
 
 urls = (
@@ -30,6 +37,7 @@ urls = (
     '/alpha.xml',           'alphaList',
     '/alpha/(.)(?:/(.*))?', 'alpha',
     '/downloads.xml',       'downloads',
+    '/new(?:/(.*))?',       'newest',
     '/',                    'index',
     '/(.*)',                'indexRedirect',        
     )
@@ -49,8 +57,10 @@ def createTextElement(parent, name, value):
 def createOpdsRoot(title, nss, relurl, datestr):
     ### TODO: add updated element and uuid element
     opds = ET.Element("feed")
-    opds.attrib['xmlns'] = 'http://www.w3.org/2005/Atom'
-        
+    opds.attrib['xmlns']         = 'http://www.w3.org/2005/Atom'
+    opds.attrib['xmlns:dc']      = 'http://purl.org/dc/elements/1.1/'
+    opds.attrib['xmlns:dcterms'] = 'http://purl.org/dc/terms/'
+    
     createTextElement(opds, 'title',    title)
     urn = 'urn:x-internet-archive:bookserver:' + nss
     createTextElement(opds, 'id',       urn)
@@ -117,7 +127,23 @@ def createOpdsEntryBook(opds, item):
     element.attrib['type'] = 'application/pdf'
     element.attrib['href'] = url;
 
+    if 'date' in item:
+        element = createTextElement(entry, 'dcterms:issued',  item['date'][0:4])
 
+    if 'subject' in item:
+        for subject in item['subject']:    
+            element = ET.SubElement(entry, 'category')
+            element.attrib['term'] = subject;
+            
+    if 'publisher' in item:            
+        for publisher in item['publisher']:    
+            element = createTextElement(entry, 'dc:publisher', publisher)
+
+    if 'language' in item:            
+        for language in item['language']:    
+            element = createTextElement(entry, 'dc:language', language);
+    
+    
     ### create content element
     ### FireFox won't show the content element if it contains nested html elements
     contentText=''
@@ -154,6 +180,33 @@ def createOpdsEntryBook(opds, item):
     element.attrib['type'] = 'html'
 
 
+# createNavLinks()
+#______________________________________________________________________________
+def createNavLinks(opds, titleFragment, urlFragment, start, numFound):
+    if 0 != start:
+        #from the atom spec:
+        title = 'Previous results for ' + titleFragment
+        url = '%s/%d' % (urlFragment, start-1)
+
+        element = ET.SubElement(opds, 'link')
+        element.attrib['rel']  = 'previous'
+        element.attrib['type'] = 'application/atom+xml'
+        element.attrib['href'] = url
+        element.attrib['title'] = title
+
+
+    if (start+1)*numRows < numFound:
+        #from the atom spec:
+        title = 'Next results for ' + titleFragment
+        url = '%s/%d' % (urlFragment, start+1)
+
+        element = ET.SubElement(opds, 'link')
+        element.attrib['rel']  = 'next'
+        element.attrib['type'] = 'application/atom+xml'
+        element.attrib['href'] = url
+        element.attrib['title'] = title
+
+
 # getDateString()
 #______________________________________________________________________________
 def getDateString():
@@ -164,13 +217,26 @@ def getDateString():
                 (t.tm_year, t.tm_mon, t.tm_mday, 0, 0, 0, 0, 0, 0))
     return datestr
 
+# prettyPrintET()
+#______________________________________________________________________________
+def prettyPrintET(etNode):
+    reader = Sax2.Reader()
+    docNode = reader.fromString(ET.tostring(etNode))
+    tmpStream = StringIO()
+    PrettyPrint(docNode, stream=tmpStream)
+    return tmpStream.getvalue()
+
 # /
 #______________________________________________________________________________
 class index:
     def GET(self):
         opds = createOpdsRoot('Internet Archive OPDS', 'opds', '/', getDateString())
 
-        createOpdsEntry(opds, 'All Titles', 'opds:titles:all', 
+        createOpdsEntry(opds, 'Newest Books', 'opds:new', 
+                        '/new', getDateString(),
+                        'All Titles, sorted by update date.')
+
+        createOpdsEntry(opds, 'Alphabetical By Title', 'opds:titles:all', 
                         '/alpha.xml', getDateString(),
                         'Alphabetical list of all titles.')
 
@@ -178,9 +244,8 @@ class index:
                         '/downloads.xml', getDateString(),
                         'The most downloaded books from the Internet Archive in the last month.')
         
-        web.header('Content-Type', 'application/xml')
-
-        return ET.tostring(opds)
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
 
 
 # /alpha/a/0
@@ -193,7 +258,7 @@ class alpha:
             url = '/alpha/%s/%d' % (letter, start-1)
 
             element = ET.SubElement(opds, 'link')
-            element.attrib['rel']  = 'prev'
+            element.attrib['rel']  = 'previous'
             element.attrib['type'] = 'application/atom+xml'
             element.attrib['href'] = url
             element.attrib['title'] = title
@@ -269,8 +334,8 @@ class alpha:
 
         self.makePrevNextLinksDebug(opds, letter, start, numFound)
         
-        web.header('Content-Type', 'application/xml')
-        return ET.tostring(opds)
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
                 
         
 # /alpha.xml
@@ -291,8 +356,8 @@ class alphaList:
                                 '/alpha/'+lower+'/0', datestr, 
                                 'Titles starting with ' + letter)
             
-        web.header('Content-Type', 'application/xml')
-        return ET.tostring(opds)
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
 
 # /downloads.xml
 #______________________________________________________________________________
@@ -311,8 +376,47 @@ class downloads:
         for item in obj['response']['docs']:
             createOpdsEntryBook(opds, item)
 
-        web.header('Content-Type', 'application/xml')
-        return ET.tostring(opds)
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
+
+# /new/0
+#______________________________________________________________________________
+class newest:
+    def GET(self, start):
+        if not start:
+            start = 0
+        else:
+            start = int(start)
+        
+        #TODO: add Image PDFs to this query
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+        f = urllib.urlopen(solrUrl)        
+        contents = f.read()
+        f.close()
+        obj = json.loads(contents)
+        
+        numFound = int(obj['response']['numFound'])
+
+        titleFragment = 'books sorted by update date'        
+        title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
+        opds = createOpdsRoot(title, 'opds:new:%d' % (start), 
+                        '/new/%d'%(start), getDateString())
+
+        urlFragment = '/new'
+        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
+        
+        for item in obj['response']['docs']:
+            description = None
+            
+            if 'description' in item:
+                description = item['description']
+
+            createOpdsEntryBook(opds, item)
+
+        #self.makePrevNextLinksDebug(opds, letter, start, numFound)
+        
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
 
 # redirect to remove trailing slash
 #______________________________________________________________________________        
