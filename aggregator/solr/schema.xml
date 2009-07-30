@@ -312,11 +312,15 @@
    <field name="publisher"   type="textIA"   indexed="true" stored="true" multiValued="true"/>
    <field name="rights"      type="textIA"   indexed="true" stored="true" multiValued="true"/>
    <field name="subject"     type="textIA"   indexed="true" stored="true" multiValued="true"/>
-    <!-- bookserver addition -->
+
+    <!-- bookserver additions -->
    <field name="link"        type="string"   indexed="true" stored="true" multiValued="true"/>
    
    <!-- price info is stored normalized to USD -->
    <field name="price"       type="float"    indexed="true" stored="true"/>   
+
+   <!-- provider is the bookstore or library supplying the book -->
+   <field name="provider"    type="string"   indexed="true" stored="true"/>
 
    
    <!-- catchall field, containing all other searchable text fields (implemented
