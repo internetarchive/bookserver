@@ -29,7 +29,7 @@ This script downloads, installs, and configures the solr search engine.
 import commands
 import os
 
-solr_dir = '/solr' #beware! The custom scripts.conf (see below) contains a hardcoded path '/solr'!
+solr_dir = '/solr' #beware! The solr config and upstart script contain a hardcoded path '/solr'!
 
 print 'Installing Java6'
 (ret, out) = commands.getstatusoutput("""/bin/echo -e 'sun-java6-bin shared/accepted-sun-dlj-v1-1 boolean true\nsun-java6-jre shared/accepted-sun-dlj-v1-1 boolean true' | sudo debconf-set-selections""")
@@ -80,7 +80,7 @@ print out
 assert 0==ret
 
 print 'adding solr upstart file'
-(ret, out) = commands.getstatusoutput("""wget -q -O /etc/event.d/solr-upstart 'http://home.us.archive.org/~rkumar/git/gitweb.cgi?p=zolr/.git;a=blob_plain;f=solr-upstart'""");
+(ret, out) = commands.getstatusoutput("""wget -q -O /etc/event.d/solr-upstart 'http://home.us.archive.org/~rkumar/git/gitweb.cgi?p=bookserver/.git;a=blob_plain;f=aggregator/solr/solr-upstart'""");
 print out
 assert 0==ret
 
