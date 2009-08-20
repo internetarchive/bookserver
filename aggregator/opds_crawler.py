@@ -38,7 +38,7 @@ config = {'warc_dir':              '/crawler/data',
 
 feeds = (
          {'domain':'IA', 'url':'http://bookserver.archive.org/new', 'sorted_by_date':True},
-         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/new.xml', 'sorted_by_date':True},
+         #{'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/new.xml', 'sorted_by_date':True},
         )
 
 import feedparser #import feedparser before eventlet
@@ -113,8 +113,11 @@ def getLatestWarc(domain_warc_dir, tempdir):
 #createNewWarc()
 #_______________________________________________________________________________
 def createNewWarc(domain, domain_warc_dir, tempdir):
-    #Name the warc file based on the domain and crawl date
-    warcDateTime = datetime.datetime.utcnow()
+    #Name the warc file based on the domain and the date of the last update date
+    #Since this is a new warc, we will use 01-01-1970 as update date. It will
+    #get renamed with the crawl is finished to whatever is the lastest update
+    #date in the feed
+    warcDateTime = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
     warcFileName = '%s/%s_%s_warc.gz' % (domain_warc_dir, domain, warcDateTime.isoformat())
     print 'creating new warc file ' + warcFileName
@@ -123,6 +126,12 @@ def createNewWarc(domain, domain_warc_dir, tempdir):
     
     w = WFile(warcFileName, config['max_warc_size'], warc.WARC_FILE_WRITER, cmode, tempdir)
     return w, warcFileName, warcDateTime
+
+#renameWarc()
+#_______________________________________________________________________________
+def renameWarc(warcFileName, domain, domain_warc_dir, latestDateTime):
+    newFileName = '%s/%s_%s_warc.gz' % (domain_warc_dir, domain, latestDateTime.isoformat())
+    os.rename(warcFileName, newFileName)
 
 # urlInWarc()
 #_______________________________________________________________________________
@@ -163,7 +172,7 @@ def addToWarc(w, uri, data, f, mime):
 #_______________________________________________________________________________
 # fetches the feed, adds it to a warc (if necessary), updates solr, and then,
 # if present, fetches the rel=next link
-def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc):
+def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, latestDateTime):
 
     data = httpc.get(url, headers = {"User-Agent": "Internet Archive OPDS Crawler +http://bookserver.archive.org",})
     print "%s fetched %s" % (time.asctime(), url)
@@ -178,13 +187,17 @@ def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc):
 
     #TODO: make new warc if our warc file is too big
     #TODO: only add to warc if not already there.
-    
-    addToWarc(latestWarc, url, data, f, 'application/atom+xml')    
+
+    if (warcDateTime < dt):
+        print "Feed updated date is newer than warc date. Adding to warc"
+        addToWarc(latestWarc, url, data, f, 'application/atom+xml')
+        latestDateTime = dt
 
     time.sleep(config['default_sleep_seconds'])
 
-    #recurse
-    for link in f.feed.links:
+    #recurse    
+    #for link in f.feed.links:
+    if 0:
         if 'next' == link['rel']:
             #feedparser automatically resolves relative links in link['href'],
             #but only if we have feedparser pull the url. We use httpc.get()
@@ -195,8 +208,9 @@ def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc):
             starturl = feed['url']
             nexturl  = link['href']
             absurl = urlparse.urljoin(starturl, nexturl)
-            crawlFeedRecursive(feed, str(absurl), crawlDateTime, latestWarc)
+            crawlFeedRecursive(feed, str(absurl), crawlDateTime, latestWarc, warcDateTime, latestDateTime)
 
+    return latestDateTime
 
         
 # crawlDomain()
@@ -219,11 +233,14 @@ def crawlDomain(feed, crawlDateTime):
     if None == latestWarc:
         (latestWarc, warcFileName, warcDateTime) = createNewWarc(feed['domain'], domain_warc_dir, tempdir)
 
-    crawlFeedRecursive(feed, feed['url'], crawlDateTime, latestWarc)                       
-     
+    latestDateTime = crawlFeedRecursive(feed, feed['url'], crawlDateTime, latestWarc, warcDateTime, warcDateTime)
+    print "Finished crawling %s, whose feed was last updated on %s" % (feed['domain'], latestDateTime.isoformat())
+        
     os.rmdir(tempdir)
     latestWarc.destroy()
 
+    renameWarc(warcFileName, feed['domain'], domain_warc_dir, latestDateTime)
+    
 # __main__
 #_______________________________________________________________________________
 
