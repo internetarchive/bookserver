@@ -39,8 +39,8 @@ urls = (
     '/alpha/(.)(?:/(.*))?', 'alpha',
     '/downloads.xml',       'downloads',
     '/new(?:/(.*))?',       'newest',
-    '/search(.*)',          'search',
     '/opensearch.xml',      'openSearchDescription',
+    '/opensearch(.*)',      'search',
     '/',                    'index',
     '/(.*)',                'indexRedirect',        
     )
@@ -88,7 +88,7 @@ def createOpdsRoot(title, nss, relurl, datestr):
     createTextElement(author, 'uri',   pubInfo['uri'])
 
     createRelLink(opds, 'search', '/opensearch.xml', 'Search ' + pubInfo['name'])
-    createRelLink(opds, 'search', '/search?q={searchTerms}&start={startPage?}', 'Search ' + pubInfo['name'])
+    createRelLink(opds, 'search', '/opensearch?q={searchTerms}&start={startPage?}', 'Search ' + pubInfo['name'])
     
     return opds
     
@@ -456,9 +456,9 @@ class search:
         titleFragment = 'search results for ' + q
         title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
         opds = createOpdsRoot(title, 'opds:search:%s:%d' % (qq, start), 
-                        '/search?q=%s&start=%d'%(qq, start), getDateString())
+                        '/opensearch?q=%s&start=%d'%(qq, start), getDateString())
 
-        urlFragment = '/search?q=%s&start=' % (qq)
+        urlFragment = '/opensearch?q=%s&start=' % (qq)
         createNavLinks(opds, titleFragment, urlFragment, start, numFound)
         
         for item in obj['response']['docs']:
@@ -485,7 +485,7 @@ class openSearchDescription:
     <ShortName>Internet Archive Search</ShortName>
     <Description>Search archive.org's OPDS Catalog.</Description>
     <Url type="application/atom+xml" 
-        template="http://bookserver.archive.org/search?q={searchTerms}&amp;start={startPage?}"/>
+        template="http://bookserver.archive.org/opensearch?q={searchTerms}&amp;start={startPage?}"/>
 </OpenSearchDescription>"""        
 
 
