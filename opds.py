@@ -12,6 +12,7 @@ sys.path.append("/petabox/www/bookserver")
 import web
 import time
 import string
+import cgi
 import urllib
 import simplejson as json
 import xml.etree.ElementTree as ET
@@ -38,6 +39,8 @@ urls = (
     '/alpha/(.)(?:/(.*))?', 'alpha',
     '/downloads.xml',       'downloads',
     '/new(?:/(.*))?',       'newest',
+    '/search(.*)',          'search',
+    '/opensearch.xml',      'openSearchDescription',
     '/',                    'index',
     '/(.*)',                'indexRedirect',        
     )
@@ -186,7 +189,7 @@ def createNavLinks(opds, titleFragment, urlFragment, start, numFound):
     if 0 != start:
         #from the atom spec:
         title = 'Previous results for ' + titleFragment
-        url = '%s/%d' % (urlFragment, start-1)
+        url = '%s%d' % (urlFragment, start-1)
 
         element = ET.SubElement(opds, 'link')
         element.attrib['rel']  = 'previous'
@@ -198,7 +201,7 @@ def createNavLinks(opds, titleFragment, urlFragment, start, numFound):
     if (start+1)*numRows < numFound:
         #from the atom spec:
         title = 'Next results for ' + titleFragment
-        url = '%s/%d' % (urlFragment, start+1)
+        url = '%s%d' % (urlFragment, start+1)
 
         element = ET.SubElement(opds, 'link')
         element.attrib['rel']  = 'next'
@@ -402,7 +405,7 @@ class newest:
         opds = createOpdsRoot(title, 'opds:new:%d' % (start), 
                         '/new/%d'%(start), getDateString())
 
-        urlFragment = '/new'
+        urlFragment = '/new/'
         createNavLinks(opds, titleFragment, urlFragment, start, numFound)
         
         for item in obj['response']['docs']:
@@ -418,6 +421,64 @@ class newest:
         web.header('Content-Type', pubInfo['mimetype'])
         return prettyPrintET(opds)
 
+
+# /search
+#______________________________________________________________________________        
+class search:
+    def GET(self, query):
+        params = cgi.parse_qs(web.ctx.query)
+
+        if not 'start' in params:
+            start = 0
+        else:
+            start = int(params['start'][0])
+
+        q  = params['?q'][0]
+        qq = urllib.quote(q)
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        f = urllib.urlopen(solrUrl)        
+        contents = f.read()
+        f.close()
+        obj = json.loads(contents)
+        
+        numFound = int(obj['response']['numFound'])
+
+        titleFragment = 'search results for ' + q
+        title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
+        opds = createOpdsRoot(title, 'opds:search:%s:%d' % (qq, start), 
+                        '/search?q=%s&start=%d'%(qq, start), getDateString())
+
+        urlFragment = '/search?q=%s&start=' % (qq)
+        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
+        
+        for item in obj['response']['docs']:
+            description = None
+            
+            if 'description' in item:
+                description = item['description']
+
+            createOpdsEntryBook(opds, item)
+
+        #self.makePrevNextLinksDebug(opds, letter, start, numFound)
+        
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
+
+
+# /opensearch.xml - Open Search Description
+#______________________________________________________________________________        
+class openSearchDescription:
+    def GET(self):
+        web.header('Content-Type', 'application/atom+xml')
+        return """<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>Internet Archive Search</ShortName>
+    <Description>Search archive.org's OPDS Catalog.</Description>
+    <Url type="application/atom+xml" 
+        template="http://bookserver.archive.org/?search={searchTerms}&amp;start={startPage?}"/>
+</OpenSearchDescription>"""        
+
+
 # redirect to remove trailing slash
 #______________________________________________________________________________        
 class redirect:
@@ -430,7 +491,9 @@ class indexRedirect:
     def GET(self, path):
         web.seeother('/')
 
-
+        
+# main() - standalone mode
+#______________________________________________________________________________        
 if __name__ == "__main__":
     #run in standalone mode
     app = web.application(urls, globals())
