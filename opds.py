@@ -55,6 +55,17 @@ def createTextElement(parent, name, value):
     element.text = value
     return element
 
+# createRelLink()
+#______________________________________________________________________________
+def createRelLink(parent, rel, relurl, title=None):
+    absurl = pubInfo['opdsroot'] + relurl
+    element = ET.SubElement(parent, 'link')
+    element.attrib['rel']  = rel
+    element.attrib['type'] = 'application/atom+xml'
+    element.attrib['href'] = absurl;
+    if title:
+        element.attrib['title'] = title;
+
 # createOpdsRoot()
 #______________________________________________________________________________
 def createOpdsRoot(title, nss, relurl, datestr):
@@ -70,16 +81,15 @@ def createOpdsRoot(title, nss, relurl, datestr):
 
     createTextElement(opds, 'updated',  datestr)
     
-    absurl = pubInfo['opdsroot'] + relurl
-    element = ET.SubElement(opds, 'link')
-    element.attrib['rel'] = 'self'
-    element.attrib['type'] = 'application/atom+xml'
-    element.attrib['href'] = absurl;
+    createRelLink(opds, 'self', relurl)
     
     author = ET.SubElement(opds, 'author')
     createTextElement(author, 'name',  pubInfo['name'])
     createTextElement(author, 'uri',   pubInfo['uri'])
-        
+
+    createRelLink(opds, 'search', '/opensearch.xml', 'Search ' + pubInfo['name'])
+    createRelLink(opds, 'search', '/search?q={searchTerms}&start={startPage?}', 'Search ' + pubInfo['name'])
+    
     return opds
     
 
@@ -235,10 +245,6 @@ class index:
     def GET(self):
         opds = createOpdsRoot('Internet Archive OPDS', 'opds', '/', getDateString())
 
-        createOpdsEntry(opds, 'Newest Books', 'opds:new', 
-                        '/new', getDateString(),
-                        'All Titles, sorted by update date.')
-
         createOpdsEntry(opds, 'Alphabetical By Title', 'opds:titles:all', 
                         '/alpha.xml', getDateString(),
                         'Alphabetical list of all titles.')
@@ -246,6 +252,10 @@ class index:
         createOpdsEntry(opds, 'Most Downloaded Books', 'opds:downloads', 
                         '/downloads.xml', getDateString(),
                         'The most downloaded books from the Internet Archive in the last month.')
+
+        createOpdsEntry(opds, 'Recent Scans', 'opds:new', 
+                        '/new', getDateString(),
+                        'Books most recently scanned by the Internet Archive.')
         
         web.header('Content-Type', pubInfo['mimetype'])
         return prettyPrintET(opds)
@@ -475,7 +485,7 @@ class openSearchDescription:
     <ShortName>Internet Archive Search</ShortName>
     <Description>Search archive.org's OPDS Catalog.</Description>
     <Url type="application/atom+xml" 
-        template="http://bookserver.archive.org/?search={searchTerms}&amp;start={startPage?}"/>
+        template="http://bookserver.archive.org/search?q={searchTerms}&amp;start={startPage?}"/>
 </OpenSearchDescription>"""        
 
 
