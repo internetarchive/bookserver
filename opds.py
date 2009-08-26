@@ -445,7 +445,7 @@ class search:
 
         q  = params['?q'][0]
         qq = urllib.quote(q)
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
         f = urllib.urlopen(solrUrl)        
         contents = f.read()
         f.close()
