@@ -88,7 +88,6 @@ def createOpdsRoot(title, nss, relurl, datestr):
     createTextElement(author, 'uri',   pubInfo['uri'])
 
     createRelLink(opds, 'search', '/opensearch.xml', 'Search ' + pubInfo['name'])
-    createRelLink(opds, 'search', '/opensearch?q={searchTerms}&start={startPage?}', 'Search ' + pubInfo['name'])
     
     return opds
     
@@ -451,12 +450,19 @@ class search:
         f.close()
         obj = json.loads(contents)
         
-        numFound = int(obj['response']['numFound'])
+        numFound    = int(obj['response']['numFound'])
+        firstResult = start*numRows
+        lastResult  = min((start+1)*numRows, numFound)
 
         titleFragment = 'search results for ' + q
-        title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
+        title = 'Internet Archive - %d to %d of %d %s.' % (firstResult, lastResult, numFound, titleFragment)
         opds = createOpdsRoot(title, 'opds:search:%s:%d' % (qq, start), 
                         '/opensearch?q=%s&start=%d'%(qq, start), getDateString())
+                        
+        opds.attrib['xmlns:opensearch'] = 'http://a9.com/-/spec/opensearch/1.1/'
+        createTextElement(opds, 'opensearch:totalResults', str(numFound))
+        createTextElement(opds, 'opensearch:itemsPerPage', str(lastResult-firstResult))
+        createTextElement(opds, 'opensearch:startIndex',   str(firstResult))
 
         urlFragment = '/opensearch?q=%s&start=' % (qq)
         createNavLinks(opds, titleFragment, urlFragment, start, numFound)
