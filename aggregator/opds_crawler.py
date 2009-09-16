@@ -38,7 +38,7 @@ config = {'warc_dir':              '/crawler/data',
 
 feeds = (
          {'domain':'IA', 'url':'http://bookserver.archive.org/new', 'sorted_by_date':True},
-         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/new.xml', 'sorted_by_date':True},
+         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/recent.xml', 'sorted_by_date':True},
         )
 
 import feedparser #import feedparser before eventlet
@@ -57,7 +57,7 @@ import time
 import glob
 import re
 import tempfile
-
+import Queue
 
 import datetime
 import xml.utils.iso8601
@@ -226,13 +226,13 @@ def addToSolr(feed, f, tempdir):
     
     os.unlink(solr_import_xml)
 
-
-# crawlFeedRecursive()
+# crawlFeedOnePage()
 #_______________________________________________________________________________
 # fetches the feed, adds it to a warc (if necessary), updates solr, and then,
 # if present, fetches the rel=next link
-def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, latestDateTime, tempdir):
+def crawlFeedOnePage(feed, queue, crawlDateTime, latestWarc, warcDateTime, latestDateTime, tempdir):
 
+    url = queue.get()
     data = httpc.get(url, headers = {"User-Agent": "Internet Archive OPDS Crawler +http://bookserver.archive.org",})
     print "%s fetched %s" % (time.asctime(), url)
 
@@ -257,23 +257,23 @@ def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, lates
     time.sleep(config['default_sleep_seconds'])
 
     #recurse    
-    for link in f.feed.links:
-    #if 0:
-        if 'next' == link['rel']:
-            #feedparser automatically resolves relative links in link['href'],
-            #but only if we have feedparser pull the url. We use httpc.get()
-            #to pull the url, because we want to archive the raw data. Since
-            #we call feedparser.parse() with a string and not a url, the 
-            #url in link['href'] remains a relative url.
-            
-            starturl = feed['url']
-            nexturl  = link['href']
-            absurl = urlparse.urljoin(starturl, nexturl)
-            crawlFeedRecursive(feed, str(absurl), crawlDateTime, latestWarc, warcDateTime, latestDateTime, tempdir)
+    if f.feed.has_key('links'):
+        for link in f.feed.links:
+        #if 0:
+            if 'next' == link['rel']:
+                #feedparser automatically resolves relative links in link['href'],
+                #but only if we have feedparser pull the url. We use httpc.get()
+                #to pull the url, because we want to archive the raw data. Since
+                #we call feedparser.parse() with a string and not a url, the 
+                #url in link['href'] remains a relative url.
+                
+                starturl = feed['url']
+                nexturl  = link['href']
+                absurl = urlparse.urljoin(starturl, nexturl)
+                queue.put(str(absurl))
 
     return latestDateTime
 
-        
 # crawlDomain()
 #_______________________________________________________________________________
 def crawlDomain(feed, crawlDateTime):
@@ -294,7 +294,12 @@ def crawlDomain(feed, crawlDateTime):
     if None == latestWarc:
         (latestWarc, warcFileName, warcDateTime) = createNewWarc(feed['domain'], domain_warc_dir, tempdir)
 
-    latestDateTime = crawlFeedRecursive(feed, feed['url'], crawlDateTime, latestWarc, warcDateTime, warcDateTime, tempdir)
+    queue = Queue.Queue() #a Queue might be overkill here; could probably use a list
+    queue.put(feed['url'])
+    
+    while not queue.empty():
+        latestDateTime = crawlFeedOnePage(feed, queue, crawlDateTime, latestWarc, warcDateTime, warcDateTime, tempdir)
+    
     print "Finished crawling %s, whose feed was last updated on %s" % (feed['domain'], latestDateTime.isoformat())
         
     os.rmdir(tempdir)
