@@ -38,7 +38,7 @@ config = {'warc_dir':              '/crawler/data',
 
 feeds = (
          {'domain':'IA', 'url':'http://bookserver.archive.org/new', 'sorted_by_date':True},
-         #{'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/new.xml', 'sorted_by_date':True},
+         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/new.xml', 'sorted_by_date':True},
         )
 
 import feedparser #import feedparser before eventlet
@@ -51,6 +51,7 @@ from eventlet import coros, httpc, util
 # requests, because the standard socket is blocking.
 util.wrap_socket_with_coroutine_socket()
 
+import commands
 import os
 import time
 import glob
@@ -71,7 +72,7 @@ import warc
 from   wfile   import WFile
 from   wrecord import WRecord 
 
-
+from   lxml    import etree
 
 
 #writeLockFile()
@@ -167,12 +168,70 @@ def addToWarc(w, uri, data, f, mime):
     w.storeRecord(r)
     r.destroy()
 
+# addField()
+#_______________________________________________________________________________
+def addField(element, name, data):
+    field = etree.SubElement(element, "field")
+    field.set('name', name)
+    field.text=data
+
+# addField2()
+#_______________________________________________________________________________
+def addField2(element, name, feedElement, key):
+    if feedElement.has_key(key):
+        addField(element, name, feedElement[key])
+
+# addToSolr()
+#_______________________________________________________________________________
+# add feed to solr search engine
+def addToSolr(feed, f, tempdir):
+
+    root = etree.Element("add")
+    for e in f.entries:
+        doc = etree.SubElement(root, "doc")
+        addField(doc, 'urn',          e.id)
+        addField(doc, 'provider',     feed['domain'])        
+        
+        addField2(doc, 'title',       e, 'title')
+        #ddField2(doc, 'date',        e, 'published') #TODO: fix this
+        addField2(doc, 'updatedate',  e, 'updated')
+        addField2(doc, 'creator',     e, 'author')
+        addField2(doc, 'language',    e, 'language')
+        addField2(doc, 'publisher',   e, 'publisher')
+
+        
+        for l in e.links:
+            if 'application/pdf' == l.type:
+                addField(doc, 'format', 'pdf')
+                addField(doc, 'link',   l.href)
+            elif 'application/epub+zip' == l.type:
+                addField(doc, 'format', 'epub')
+                addField(doc, 'link',   l.href)                
+            #todo: add more formats (what about online ajax/html bookreader?)    
+        
+        if e.has_key('tags'):
+            for t in e.tags:
+                addField(doc, 'subject', t.term)
+        
+        #TODO: deal with description, titleSorter, creatorSorter, languageSorter, price
+
+    solr_import_xml = tempdir + "/solr_import.xml"
+    tree = etree.ElementTree(root)
+    tree.write(solr_import_xml)
+    command = """/solr/example/exampledocs/post.sh '%s'""" % (solr_import_xml)
+    print command
+    (ret, out) = commands.getstatusoutput(command)
+    print out
+    assert 0 == ret
+    
+    os.unlink(solr_import_xml)
+
 
 # crawlFeedRecursive()
 #_______________________________________________________________________________
 # fetches the feed, adds it to a warc (if necessary), updates solr, and then,
 # if present, fetches the rel=next link
-def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, latestDateTime):
+def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, latestDateTime, tempdir):
 
     data = httpc.get(url, headers = {"User-Agent": "Internet Archive OPDS Crawler +http://bookserver.archive.org",})
     print "%s fetched %s" % (time.asctime(), url)
@@ -193,11 +252,13 @@ def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, lates
         addToWarc(latestWarc, url, data, f, 'application/atom+xml')
         latestDateTime = dt
 
+    addToSolr(feed, f, tempdir)
+
     time.sleep(config['default_sleep_seconds'])
 
     #recurse    
-    #for link in f.feed.links:
-    if 0:
+    for link in f.feed.links:
+    #if 0:
         if 'next' == link['rel']:
             #feedparser automatically resolves relative links in link['href'],
             #but only if we have feedparser pull the url. We use httpc.get()
@@ -208,7 +269,7 @@ def crawlFeedRecursive(feed, url, crawlDateTime, latestWarc, warcDateTime, lates
             starturl = feed['url']
             nexturl  = link['href']
             absurl = urlparse.urljoin(starturl, nexturl)
-            crawlFeedRecursive(feed, str(absurl), crawlDateTime, latestWarc, warcDateTime, latestDateTime)
+            crawlFeedRecursive(feed, str(absurl), crawlDateTime, latestWarc, warcDateTime, latestDateTime, tempdir)
 
     return latestDateTime
 
@@ -233,7 +294,7 @@ def crawlDomain(feed, crawlDateTime):
     if None == latestWarc:
         (latestWarc, warcFileName, warcDateTime) = createNewWarc(feed['domain'], domain_warc_dir, tempdir)
 
-    latestDateTime = crawlFeedRecursive(feed, feed['url'], crawlDateTime, latestWarc, warcDateTime, warcDateTime)
+    latestDateTime = crawlFeedRecursive(feed, feed['url'], crawlDateTime, latestWarc, warcDateTime, warcDateTime, tempdir)
     print "Finished crawling %s, whose feed was last updated on %s" % (feed['domain'], latestDateTime.isoformat())
         
     os.rmdir(tempdir)
