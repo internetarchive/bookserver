@@ -29,9 +29,10 @@ numRows = 50
 pubInfo = {
     'name'     : 'Internet Archive',
     'uri'      : 'http://www.archive.org',
-    'opdsroot' : 'http://bookserver.archive.org',
+    'opdsroot' : 'http://bookserver.archive.org/aggregator',
     'mimetype' : 'application/atom+xml;profile=opds',
-    'solr_base': 'http://ia331527.us.archive.org:8983/solr/select/?version=2.2&wt=json'
+    'solr_base': 'http://ia331527.us.archive.org:8983/solr/select/?version=2.2&wt=json',
+    'url_base' : '/aggregator',
 }
 
 urls = (
@@ -264,11 +265,11 @@ class index:
         opds = createOpdsRoot('Internet Archive OPDS', 'opds', '/', getDateString())
 
         createOpdsEntry(opds, 'Alphabetical By Title', 'opds:titles:all', 
-                        '/alpha.xml', getDateString(),
+                        'alpha.xml', getDateString(),
                         'Alphabetical list of all titles.')
 
         createOpdsEntry(opds, 'By Provider', 'opds:providers:all', 
-                        '/providers.xml', getDateString(),
+                        'providers.xml', getDateString(),
                         'Listing of all publishers and sellers.')
 
         #createOpdsEntry(opds, 'Most Downloaded Books', 'opds:downloads', 
@@ -315,7 +316,7 @@ class alpha:
     def makePrevNextLinksDebug(self, opds, letter, start, numFound):
         if 0 != start:
             title = 'Previous results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start-1)
+            url = pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start-1)
 
             #this test entry is for easier navigation in firefox #TODO: remove this
             createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start-1), 
@@ -325,7 +326,7 @@ class alpha:
         if (start+1)*numRows < numFound:
             #from the atom spec:
             title = 'Next results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start+1)
+            url = pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start+1)
 
             #this test entry is for easier navigation in firefox #TODO: remove this
             createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start+1), 
@@ -333,7 +334,7 @@ class alpha:
     
             
         createOpdsEntry(opds, 'Alphabetical Title Index', 'opds:titles:all', 
-                            '/alpha.xml', getDateString(), None)
+            pubInfo['url_base'] + '/alpha.xml', getDateString(), None)
 
 
     # GET()
@@ -389,7 +390,7 @@ class alphaList:
         for letter in string.ascii_uppercase:
             lower = letter.lower()
             createOpdsEntry(opds, 'Titles: ' + letter, 'opds:titles:'+lower, 
-                                '/alpha/'+lower+'/0', datestr, 
+                                'alpha/'+lower+'/0', datestr, 
                                 'Titles starting with ' + letter)
             
         web.header('Content-Type', pubInfo['mimetype'])
@@ -445,7 +446,7 @@ class providerList:
                                 '/providers.xml', datestr)
         for provider in providers:
             createOpdsEntry(opds, providers[provider], 'opds:providers:'+provider, 
-                                '/provider/'+provider+'/0', datestr, 
+                                'provider/'+provider+'/0', datestr, 
                                 'All Titles for provider ' + provider)
             
         web.header('Content-Type', pubInfo['mimetype'])
