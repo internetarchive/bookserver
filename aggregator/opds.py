@@ -287,30 +287,6 @@ class index:
 # /alpha/a/0
 #______________________________________________________________________________
 class alpha:
-    def makePrevNextLinks(self, opds, letter, start, numFound):
-        if 0 != start:
-            #from the atom spec:
-            title = 'Previous results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start-1)
-
-            element = ET.SubElement(opds, 'link')
-            element.attrib['rel']  = 'previous'
-            element.attrib['type'] = 'application/atom+xml'
-            element.attrib['href'] = url
-            element.attrib['title'] = title
-
-
-        if (start+1)*numRows < numFound:
-            #from the atom spec:
-            title = 'Next results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start+1)
-
-            element = ET.SubElement(opds, 'link')
-            element.attrib['rel']  = 'next'
-            element.attrib['type'] = 'application/atom+xml'
-            element.attrib['href'] = url
-            element.attrib['title'] = title
-
 
     ### Add some links to ease navigation in firefox's feed reader
     def makePrevNextLinksDebug(self, opds, letter, start, numFound):

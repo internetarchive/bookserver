@@ -29,8 +29,9 @@ numRows = 50
 pubInfo = {
     'name'     : 'Internet Archive',
     'uri'      : 'http://www.archive.org',
-    'opdsroot' : 'http://bookserver.archive.org',
-    'mimetype' : 'application/atom+xml;profile=opds'
+    'opdsroot' : 'http://bookserver.archive.org/catalog',
+    'mimetype' : 'application/atom+xml;profile=opds',
+    'url_base' : '/catalog',
 }
 
 urls = (
@@ -245,15 +246,15 @@ class index:
         opds = createOpdsRoot('Internet Archive OPDS', 'opds', '/', getDateString())
 
         createOpdsEntry(opds, 'Alphabetical By Title', 'opds:titles:all', 
-                        '/alpha.xml', getDateString(),
+                        'alpha.xml', getDateString(),
                         'Alphabetical list of all titles.')
 
         createOpdsEntry(opds, 'Most Downloaded Books', 'opds:downloads', 
-                        '/downloads.xml', getDateString(),
+                        'downloads.xml', getDateString(),
                         'The most downloaded books from the Internet Archive in the last month.')
 
         createOpdsEntry(opds, 'Recent Scans', 'opds:new', 
-                        '/new', getDateString(),
+                        'new', getDateString(),
                         'Books most recently scanned by the Internet Archive.')
         
         web.header('Content-Type', pubInfo['mimetype'])
@@ -263,36 +264,12 @@ class index:
 # /alpha/a/0
 #______________________________________________________________________________
 class alpha:
-    def makePrevNextLinks(self, opds, letter, start, numFound):
-        if 0 != start:
-            #from the atom spec:
-            title = 'Previous results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start-1)
-
-            element = ET.SubElement(opds, 'link')
-            element.attrib['rel']  = 'previous'
-            element.attrib['type'] = 'application/atom+xml'
-            element.attrib['href'] = url
-            element.attrib['title'] = title
-
-
-        if (start+1)*numRows < numFound:
-            #from the atom spec:
-            title = 'Next results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start+1)
-
-            element = ET.SubElement(opds, 'link')
-            element.attrib['rel']  = 'next'
-            element.attrib['type'] = 'application/atom+xml'
-            element.attrib['href'] = url
-            element.attrib['title'] = title
-
 
     ### Add some links to ease navigation in firefox's feed reader
     def makePrevNextLinksDebug(self, opds, letter, start, numFound):
         if 0 != start:
             title = 'Previous results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start-1)
+            url =  pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start-1)
 
             #this test entry is for easier navigation in firefox #TODO: remove this
             createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start-1), 
@@ -310,7 +287,7 @@ class alpha:
     
             
         createOpdsEntry(opds, 'Alphabetical Title Index', 'opds:titles:all', 
-                            '/alpha.xml', getDateString(), None)
+            pubInfo['url_base'] + '/alpha.xml', getDateString(), None)
 
 
     # GET()
@@ -334,7 +311,9 @@ class alpha:
         opds = createOpdsRoot(title, 'opds:titles:'+letter, 
                         '/alpha/%s/%d'%(letter, start), getDateString())
 
-        self.makePrevNextLinks(opds, letter, start, numFound)
+        titleFragment = 'books sorted by title'
+        urlFragment = pubInfo['url_base'] + '/alpha/'+letter+'/'
+        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
         
         for item in obj['response']['docs']:
             description = None
@@ -365,7 +344,7 @@ class alphaList:
         for letter in string.ascii_uppercase:
             lower = letter.lower()
             createOpdsEntry(opds, 'Titles: ' + letter, 'opds:titles:'+lower, 
-                                '/alpha/'+lower+'/0', datestr, 
+                                'alpha/'+lower+'/0', datestr, 
                                 'Titles starting with ' + letter)
             
         web.header('Content-Type', pubInfo['mimetype'])
