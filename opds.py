@@ -279,7 +279,7 @@ class alpha:
         if (start+1)*numRows < numFound:
             #from the atom spec:
             title = 'Next results for books starting with '+letter.upper()
-            url = '/alpha/%s/%d' % (letter, start+1)
+            url =  pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start+1)
 
             #this test entry is for easier navigation in firefox #TODO: remove this
             createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start+1), 

@@ -395,7 +395,7 @@ class provider:
         numFound = int(obj['response']['numFound'])
 
         titleFragment = 'books sorted by provider'        
-        title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
+        title = providers[domain] + ' - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
         opds = createOpdsRoot(title, 'opds:provider:%s:%d' % (domain,start), 
                         '/provider/%s/%d'%(domain, start), getDateString())
 
@@ -422,7 +422,7 @@ class providerList:
         #TODO: get correct updated dates
         datestr = getDateString()
     
-        opds = createOpdsRoot('Internet Archive - All Providers', 'opds:providers:all', 
+        opds = createOpdsRoot('Internet Archive Aggregator - All Providers', 'opds:providers:all', 
                                 '/providers.xml', datestr)
         for provider in providers:
             createOpdsEntry(opds, providers[provider], 'opds:providers:'+provider, 
