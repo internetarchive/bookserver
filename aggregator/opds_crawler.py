@@ -36,10 +36,14 @@ config = {'warc_dir':              '/crawler/data',
           'max_warc_size':         100*1024*1024,
          }
 
+#sorted_by_date is to enable early-exit of the crawl.
+
 feeds = (
          {'domain':'IA', 'url':'http://bookserver.archive.org/new', 'sorted_by_date':True},
-         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/recent.xml', 'sorted_by_date':True},
+         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/alphabetical.xml', 'sorted_by_date':False},
+         {'domain':'Feedbooks', 'url':'http://www.feedbooks.com/discover/authors.atom', 'sorted_by_date':False},
         )
+        
 
 import feedparser #import feedparser before eventlet
 
@@ -58,6 +62,7 @@ import glob
 import re
 import tempfile
 import Queue
+import string
 
 import datetime
 import xml.utils.iso8601
@@ -72,7 +77,7 @@ import warc
 from   wfile   import WFile
 from   wrecord import WRecord 
 
-from   lxml    import etree
+from   lxml    import etree, html
 
 
 #writeLockFile()
@@ -186,45 +191,117 @@ def addField2(element, name, feedElement, key):
 # add feed to solr search engine
 def addToSolr(feed, f, tempdir):
 
+    numBooks = 0
     root = etree.Element("add")
     for e in f.entries:
         doc = etree.SubElement(root, "doc")
-        addField(doc, 'urn',          e.id)
-        addField(doc, 'provider',     feed['domain'])        
-        
-        addField2(doc, 'title',       e, 'title')
-        #ddField2(doc, 'date',        e, 'published') #TODO: fix this
-        addField2(doc, 'updatedate',  e, 'updated')
-        addField2(doc, 'creator',     e, 'author')
-        addField2(doc, 'language',    e, 'language')
-        addField2(doc, 'publisher',   e, 'publisher')
 
-        
+
+        gotBook = False        
         for l in e.links:
             if 'application/pdf' == l.type:
                 addField(doc, 'format', 'pdf')
                 addField(doc, 'link',   l.href)
+                gotBook = True
             elif 'application/epub+zip' == l.type:
                 addField(doc, 'format', 'epub')
-                addField(doc, 'link',   l.href)                
-            #todo: add more formats (what about online ajax/html bookreader?)    
+                addField(doc, 'link',   l.href)
+                gotBook = True 
+            elif ('buynow' == l.rel) and ('text/html' == l.type):
+                #stanza-style link
+                addField(doc, 'format', 'shoppingcart')
+                addField(doc, 'link',   l.href)
+                gotBook = True
+            #else:
+                #print 'skipping link: '
+                #print l
+                #print
+
+
+        if not gotBook:
+            continue
+        else:
+            numBooks += 1
+
+        addField(doc, 'urn',          e.id)
+        addField(doc, 'provider',     feed['domain'])        
         
+        addField2(doc, 'title',       e, 'title')
+        addField2(doc, 'creator',     e, 'author')
+        addField2(doc, 'language',    e, 'language')
+        addField2(doc, 'publisher',   e, 'publisher')
+
+        #dates
+        if e.has_key('updated_parsed'):
+            d = e.updated_parsed
+            date = datetime.datetime(d.tm_year, d.tm_mon, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec)
+            addField(doc, 'updatedate', date.isoformat()+'Z')
+
+        if e.has_key('published'):            
+            date = datetime.datetime(int(e.published), 1, 1)
+            addField(doc, 'date', date.isoformat()+'Z')
+        
+            
         if e.has_key('tags'):
             for t in e.tags:
                 addField(doc, 'subject', t.term)
         
-        #TODO: deal with description, titleSorter, creatorSorter, languageSorter, price
+        # for O'Reilly stanza feeds, price is in <content>
+        if 'OReilly' == feed['domain']: 
+            content = html.fragment_fromstring(e.content[0].value)
+            price = content.xpath("//span[@class='price']")[0]
+            addField(doc, 'price', price.text.lstrip('$'))
+        elif ('IA' == feed['domain']) or ('Feedbooks' == feed['domain']):
+            addField(doc, 'price', '0.00')
+        
+        if e.has_key('title'):
+            addField(doc, 'titleSorter', e.title.lstrip(string.punctuation)[0].upper())
+        
+        #TODO: deal with description, titleSorter, creatorSorter, languageSorter
 
-    solr_import_xml = tempdir + "/solr_import.xml"
-    tree = etree.ElementTree(root)
-    tree.write(solr_import_xml)
-    command = """/solr/example/exampledocs/post.sh '%s'""" % (solr_import_xml)
-    print command
-    (ret, out) = commands.getstatusoutput(command)
-    print out
-    assert 0 == ret
-    
-    os.unlink(solr_import_xml)
+    if numBooks:
+        solr_import_xml = tempdir + "/solr_import.xml"
+        tree = etree.ElementTree(root)
+        tree.write(solr_import_xml)
+        #print etree.tostring(tree, pretty_print=True);
+        command = """/solr/example/exampledocs/post.sh '%s'""" % (solr_import_xml)
+        
+        (ret, out) = commands.getstatusoutput(command)
+        if -1 == out.find('<int name="status">0</int>'):
+            print out
+        assert 0 == ret
+        
+        os.unlink(solr_import_xml)
+
+# addToQueue()
+#_______________________________________________________________________________
+def addToQueue(nexturl, feedurl, queue):
+    #feedparser automatically resolves relative links in link['href'],
+    #but only if we have feedparser pull the url. We use httpc.get()
+    #to pull the url, because we want to archive the raw data. Since
+    #we call feedparser.parse() with a string and not a url, the 
+    #url in link['href'] remains a relative url.
+
+    absurl = urlparse.urljoin(feedurl, nexturl)
+    queue.put(str(absurl))
+    #print 'adding ' + absurl
+
+# parseLinks()
+#_______________________________________________________________________________
+def parseLinks(f, feedurl, queue):
+    if f.feed.has_key('links'):
+        for link in f.feed.links:
+            if 'next' == link['rel']:
+                addToQueue(link['href'], feedurl, queue)
+
+    dont_crawl=('related', 'replies')
+    for e in f.entries:
+        for l in e.links:
+            if 'application/atom+xml' == l.type:
+                if l.rel in dont_crawl:
+                    continue;
+                
+                addToQueue(l.href, feedurl, queue)
 
 # crawlFeedOnePage()
 #_______________________________________________________________________________
@@ -233,8 +310,9 @@ def addToSolr(feed, f, tempdir):
 def crawlFeedOnePage(feed, queue, crawlDateTime, latestWarc, warcDateTime, latestDateTime, tempdir):
 
     url = queue.get()
+    print "<- %s fetching %s for domain %s" % (time.asctime(), url, feed['domain'])
     data = httpc.get(url, headers = {"User-Agent": "Internet Archive OPDS Crawler +http://bookserver.archive.org",})
-    print "%s fetched %s" % (time.asctime(), url)
+    print "-> %s fetched %s for domain %s" % (time.asctime(), url, feed['domain'])
 
     f     = feedparser.parse(data)
     t     = f.feed.updated_parsed
@@ -247,30 +325,19 @@ def crawlFeedOnePage(feed, queue, crawlDateTime, latestWarc, warcDateTime, lates
     #TODO: make new warc if our warc file is too big
     #TODO: only add to warc if not already there.
 
-    if (warcDateTime < dt):
-        print "Feed updated date is newer than warc date. Adding to warc"
-        addToWarc(latestWarc, url, data, f, 'application/atom+xml')
-        latestDateTime = dt
+    ###turn off addToWarc while debugging
+    #if (warcDateTime < dt):
+    #    print "Feed updated date is newer than warc date. Adding to warc"
+    #    addToWarc(latestWarc, url, data, f, 'application/atom+xml')
+    #    latestDateTime = dt
 
     addToSolr(feed, f, tempdir)
 
-    time.sleep(config['default_sleep_seconds'])
+    parseLinks(f, feed['url'], queue)
+    
 
-    #recurse    
-    if f.feed.has_key('links'):
-        for link in f.feed.links:
-        #if 0:
-            if 'next' == link['rel']:
-                #feedparser automatically resolves relative links in link['href'],
-                #but only if we have feedparser pull the url. We use httpc.get()
-                #to pull the url, because we want to archive the raw data. Since
-                #we call feedparser.parse() with a string and not a url, the 
-                #url in link['href'] remains a relative url.
-                
-                starturl = feed['url']
-                nexturl  = link['href']
-                absurl = urlparse.urljoin(starturl, nexturl)
-                queue.put(str(absurl))
+
+    time.sleep(config['default_sleep_seconds'])
 
     return latestDateTime
 
