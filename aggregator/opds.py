@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python
 
 #Copyright(c)2009 Internet Archive. Software license GPL version 3.
 
@@ -30,20 +30,29 @@ pubInfo = {
     'name'     : 'Internet Archive',
     'uri'      : 'http://www.archive.org',
     'opdsroot' : 'http://bookserver.archive.org',
-    'mimetype' : 'application/atom+xml;profile=opds'
+    'mimetype' : 'application/atom+xml;profile=opds',
+    'solr_base': 'http://ia331527.us.archive.org:8983/solr/select/?version=2.2&wt=json'
 }
 
 urls = (
-    '/(.*)/',               'redirect',
-    '/alpha.xml',           'alphaList',
-    '/alpha/(.)(?:/(.*))?', 'alpha',
-    '/downloads.xml',       'downloads',
-    '/new(?:/(.*))?',       'newest',
-    '/opensearch.xml',      'openSearchDescription',
-    '/opensearch(.*)',      'search',
-    '/',                    'index',
-    '/(.*)',                'indexRedirect',        
+    '/(.*)/',                  'redirect',
+    '/alpha.xml',              'alphaList',
+    '/alpha/(.)(?:/(.*))?',    'alpha',
+    '/provider/(\w+)(?:/(.*))?', 'provider',
+    '/providers.xml',          'providerList',
+    #'/downloads.xml',         'downloads',
+    #'/new(?:/(.*))?',         'newest',
+    '/opensearch.xml',         'openSearchDescription',
+    '/opensearch(.*)',         'search',
+    '/',                       'index',
+    '/(.*)',                   'indexRedirect',        
     )
+
+providers = {
+    'OReilly'   : "O'Reilly",
+    'IA'        : "Interent Archive",
+    'Feedbooks' : "Feedbooks",
+}
 
 application = web.application(urls, globals()).wsgifunc()
 
@@ -76,7 +85,7 @@ def createOpdsRoot(title, nss, relurl, datestr):
     opds.attrib['xmlns:dcterms'] = 'http://purl.org/dc/terms/'
     
     createTextElement(opds, 'title',    title)
-    urn = 'urn:x-internet-archive:bookserver:' + nss
+    urn = 'urn:x-internet-archive:bookserver:aggregator:' + nss
     createTextElement(opds, 'id',       urn)
 
     createTextElement(opds, 'updated',  datestr)
@@ -117,13 +126,12 @@ def createOpdsEntryBook(opds, item):
     if not 'title' in item:
         return
 
-    id = item['identifier']
+    urn = item['urn']
 
     entry = ET.SubElement(opds, 'entry')
     
     createTextElement(entry, 'title', item['title'])
 
-    urn = 'urn:x-internet-archive:item:' + id
     createTextElement(entry, 'id',       urn)
 
     if 'creator' in item:
@@ -134,11 +142,15 @@ def createOpdsEntryBook(opds, item):
     if 'oai_updatedate' in item:
         createTextElement(entry, 'updated', item['oai_updatedate'][-1]) #this is sorted, get latest date
 
-    url = 'http://www.archive.org/download/%s/%s.pdf' %(id, id)
-    element = ET.SubElement(entry, 'link')
-    element.attrib['type'] = 'application/pdf'
-    element.attrib['href'] = url;
-
+    if 'link' in item:
+        for url in item['link']:        
+            element = ET.SubElement(entry, 'link')
+            element.attrib['href'] = url;
+            if url.endswith('.pdf'):
+                element.attrib['type'] = 'application/pdf'
+            elif url.endswith('.epub'):
+                element.attrib['type'] = 'application/epub+zip'
+            
     if 'date' in item:
         element = createTextElement(entry, 'dcterms:issued',  item['date'][0:4])
 
@@ -187,6 +199,13 @@ def createOpdsEntryBook(opds, item):
 
     if 'month' in item:
         contentText += str(item['month']) + ' downloads in the last month' + '<br/>'
+
+    if 'price' in item:
+        contentText += '<b>Price: $</b>' + str(item['price']) + '<br/>'
+
+    if 'provider' in item:        
+        contentText += '<b>Provider: </b>' + providers[item['provider']] + '<br/>'
+
 
     element = createTextElement(entry, 'content',  contentText)
     element.attrib['type'] = 'html'
@@ -248,13 +267,17 @@ class index:
                         '/alpha.xml', getDateString(),
                         'Alphabetical list of all titles.')
 
-        createOpdsEntry(opds, 'Most Downloaded Books', 'opds:downloads', 
-                        '/downloads.xml', getDateString(),
-                        'The most downloaded books from the Internet Archive in the last month.')
+        createOpdsEntry(opds, 'By Provider', 'opds:providers:all', 
+                        '/providers.xml', getDateString(),
+                        'Listing of all publishers and sellers.')
 
-        createOpdsEntry(opds, 'Recent Scans', 'opds:new', 
-                        '/new', getDateString(),
-                        'Books most recently scanned by the Internet Archive.')
+        #createOpdsEntry(opds, 'Most Downloaded Books', 'opds:downloads', 
+        #                '/downloads.xml', getDateString(),
+        #                'The most downloaded books from the Internet Archive in the last month.')
+
+        #createOpdsEntry(opds, 'Recent Scans', 'opds:new', 
+        #                '/new', getDateString(),
+        #                'Books most recently scanned by the Internet Archive.')
         
         web.header('Content-Type', pubInfo['mimetype'])
         return prettyPrintET(opds)
@@ -322,7 +345,8 @@ class alpha:
             start = int(start)
         
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+        #TODO: add sort order
+        solrUrl = pubInfo['solr_base'] + '&q=titleSorter%3A'+letter.upper()+'&rows='+str(numRows)+'&start='+str(start*numRows)
         f = urllib.urlopen(solrUrl)        
         contents = f.read()
         f.close()
@@ -367,6 +391,62 @@ class alphaList:
             createOpdsEntry(opds, 'Titles: ' + letter, 'opds:titles:'+lower, 
                                 '/alpha/'+lower+'/0', datestr, 
                                 'Titles starting with ' + letter)
+            
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
+
+# /provider/x/0
+#______________________________________________________________________________
+class provider:
+    def GET(self, domain, start):
+        if not start:
+            start = 0
+        else:
+            start = int(start)
+        
+        #TODO: add Image PDFs to this query
+        solrUrl = pubInfo['solr_base'] + '&q=provider%3A'+domain+'&rows='+str(numRows)+'&start='+str(start*numRows)        
+        f = urllib.urlopen(solrUrl)        
+        contents = f.read()
+        f.close()
+        obj = json.loads(contents)
+        
+        numFound = int(obj['response']['numFound'])
+
+        titleFragment = 'books sorted by provider'        
+        title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
+        opds = createOpdsRoot(title, 'opds:provider:%s:%d' % (domain,start), 
+                        '/provider/%s/%d'%(domain, start), getDateString())
+
+        urlFragment = '/provider/'+domain
+        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
+        
+        for item in obj['response']['docs']:
+            description = None
+            
+            if 'description' in item:
+                description = item['description']
+
+            createOpdsEntryBook(opds, item)
+
+        #self.makePrevNextLinksDebug(opds, letter, start, numFound)
+        
+        web.header('Content-Type', pubInfo['mimetype'])
+        return prettyPrintET(opds)
+        
+# /providers.xml
+#______________________________________________________________________________
+class providerList:
+    def GET(self):
+        #TODO: get correct updated dates
+        datestr = getDateString()
+    
+        opds = createOpdsRoot('Internet Archive - All Providers', 'opds:providers:all', 
+                                '/providers.xml', datestr)
+        for provider in providers:
+            createOpdsEntry(opds, providers[provider], 'opds:providers:'+provider, 
+                                '/provider/'+provider+'/0', datestr, 
+                                'All Titles for provider ' + provider)
             
         web.header('Content-Type', pubInfo['mimetype'])
         return prettyPrintET(opds)
