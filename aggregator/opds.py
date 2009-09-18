@@ -359,7 +359,11 @@ class alpha:
         opds = createOpdsRoot(title, 'opds:titles:'+letter, 
                         '/alpha/%s/%d'%(letter, start), getDateString())
 
-        self.makePrevNextLinks(opds, letter, start, numFound)
+        titleFragment = 'books sorted by title'
+        urlFragment = pubInfo['url_base'] + '/alpha/'+letter+'/'
+        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
+
+        #self.makePrevNextLinks(opds, letter, start, numFound)
         
         for item in obj['response']['docs']:
             description = None
@@ -419,7 +423,7 @@ class provider:
         opds = createOpdsRoot(title, 'opds:provider:%s:%d' % (domain,start), 
                         '/provider/%s/%d'%(domain, start), getDateString())
 
-        urlFragment = '/provider/'+domain
+        urlFragment = pubInfo['url_base'] + '/provider/'+domain+'/'
         createNavLinks(opds, titleFragment, urlFragment, start, numFound)
         
         for item in obj['response']['docs']:
