@@ -1,0 +1,2 @@
+class Navigation:
+    pass
