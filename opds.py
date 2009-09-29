@@ -15,13 +15,19 @@ import string
 import cgi
 import urllib
 import simplejson as json
+
 import xml.etree.ElementTree as ET
+#sys.path.append("/petabox/sw/lib/lxml/lib.linux-i686-2.5")
+#import lxml.etree as ET
+
 
 # For pretty printing... sigh
 from xml.dom.ext.reader import Sax2
 from xml.dom.ext import PrettyPrint
 from StringIO import StringIO
 
+import bookserver.catalog as catalog
+import bookserver.output as output
 
 numRows = 50
 
@@ -243,23 +249,54 @@ def prettyPrintET(etNode):
 #______________________________________________________________________________
 class index:
     def GET(self):
-        opds = createOpdsRoot('Internet Archive OPDS', 'opds', '/', getDateString())
 
-        createOpdsEntry(opds, 'Alphabetical By Title', 'opds:titles:all', 
-                        'alpha.xml', getDateString(),
-                        'Alphabetical list of all titles.')
+        datestr = getDateString()
+        urnroot = 'urn:x-internet-archive:bookserver:catalog'
+        
+        c = catalog.Catalog(
+                            title     = 'Internet Archive OPDS',
+                            urnroot   = urnroot,
+                            url       = pubInfo['opdsroot'],
+                            datestr   = datestr,
+                            author    = 'Internet Archive',
+                            authorUri = 'http://www.archive.org',
+                           )
 
-        createOpdsEntry(opds, 'Most Downloaded Books', 'opds:downloads', 
-                        'downloads.xml', getDateString(),
-                        'The most downloaded books from the Internet Archive in the last month.')
-
-        createOpdsEntry(opds, 'Recent Scans', 'opds:new', 
-                        'new', getDateString(),
-                        'Books most recently scanned by the Internet Archive.')
+        e = catalog.Entry(title   = 'Alphabetical By Title',
+                              urn     = urnroot + ':titles:all',
+                              url     = pubInfo['opdsroot'] + '/alpha.xml',
+                              datestr = datestr,
+                              content = 'Alphabetical list of all titles.'
+                             )
+        c.addEntry(e)
+        
+        e    = catalog.Entry(title   = 'Most Downloaded Books',
+                              urn     = urnroot + ':downloads',
+                              url     = pubInfo['opdsroot'] + '/downloads.xml',
+                              datestr = datestr,
+                              content = 'The most downloaded books from the Internet Archive in the last month.'
+                             )
+        
+        c.addEntry(e)
+        
+        e   = catalog.Entry(title   = 'Recent Scans',
+                              urn     = urnroot + ':new',
+                              url     = pubInfo['opdsroot'] + '/new',
+                              datestr = datestr,
+                              content = 'Books most recently scanned by the Internet Archive.'
+                             )
+        
+        c.addEntry(e)
+        
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
+        
+        r = output.CatalogToAtom(c)
         
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
-
+        return r.toString()
+                
 
 # /alpha/a/0
 #______________________________________________________________________________

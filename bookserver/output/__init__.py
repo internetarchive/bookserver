@@ -23,4 +23,4 @@ This file is part of bookserver.
 
 from CatalogRenderer import CatalogRenderer
 from CatalogToHtml import CatalogToHtml
-from CatalogToXml import CatalogToXml
+from CatalogToAtom import CatalogToAtom

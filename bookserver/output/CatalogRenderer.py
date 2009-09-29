@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2008 Internet Archive. Software license AGPL version 3.
+Copyright(c)2009 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -21,6 +21,25 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
+# For pretty printing... since we don't have lxml
+# from xml.dom.ext.reader import Sax2
+# from xml.dom.ext import PrettyPrint
+# from StringIO import StringIO
+# 
+# import xml.etree.ElementTree as ET
+
+from lxml import etree as ET
+
 class CatalogRenderer:
-    def __init__(self):
-        print "catalogrenderer"
+
+    # prettyPrintET()
+    #______________________________________________________________________________
+    def prettyPrintET(self, etNode):
+        ### we have lxml now
+        #reader = Sax2.Reader()
+        #docNode = reader.fromString(ET.tostring(etNode))
+        #tmpStream = StringIO()
+        #PrettyPrint(docNode, stream=tmpStream)
+        #return tmpStream.getvalue()
+        
+        return ET.tostring(etNode, pretty_print=True)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2008 Internet Archive. Software license AGPL version 3.
+Copyright(c)2009 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -27,12 +27,29 @@ class Catalog:
     Catalog class init        
     """
 
-    def __init__(self):
-        _entries    = []
-        _opensearch = None
-        _navigation = None
-        print "inited Catalog!"
+    def __init__(self, 
+                 title     = 'Internet Archive OPDS',
+                 urnroot   = 'urn:x-internet-archive:bookserver:catalog',
+                 url       = 'http://bookserver.archive.org/catalog', 
+                 datestr   = None,
+                 author    = 'Internet Archive',
+                 authorUri = 'http://www.archive.org',
+                ):
+        self._entries    = []
+        self._opensearch = None
+        self._navigation = None
+        self._title      = title
+        self._urnroot    = urnroot
+        self._url        = url
+        self._datestr    = datestr
+        self._author     = author
+        self._authorUri  = authorUri
     
     def addEntry(self, entry):
-        _entries.append(entry)
+        self._entries.append(entry)
     
+    def addNavigation(self, nav):
+        self._navigation = nav
+
+    def addOpenSearch(self, opensearch):
+        self._opensearch = opensearch
