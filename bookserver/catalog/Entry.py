@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2008 Internet Archive. Software license AGPL version 3.
+Copyright(c)2009 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -23,11 +23,16 @@ This file is part of bookserver.
 >>> import Entry
 >>> d = { 'urn': 'urn:x-internet-archive:item:abuenosairesviaj00gonz'}
 >>> e = Entry.Entry(d)
+
+#getters and setters
+
 >>> e.get('urn')
 'urn:x-internet-archive:item:abuenosairesviaj00gonz'
 >>> e.set('publisher', 'Internet Archive')
 >>> e.get('publisher')
 'Internet Archive'
+
+#error checking examples:
 
 >>> e = Entry.Entry({'foo':'bar'})
 Traceback (most recent call last):
@@ -50,7 +55,7 @@ import copy
 class Entry():
 
     """
-    Entry class init        
+    valid_keys can be str or list
     """
 
     valid_keys = {

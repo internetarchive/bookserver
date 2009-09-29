@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2008 Internet Archive. Software license AGPL version 3.
+Copyright(c)2009 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -19,6 +19,23 @@ This file is part of bookserver.
     along with bookserver.  If not, see <http://www.gnu.org/licenses/>.
     
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
+
+>>> import catalog
+>>> c = catalog.Catalog()
+
+>>> d = {'urn': 'x-internet-archive:item:itemid'}
+>>> e = catalog.Entry(d)
+>>> c.addEntry(e)
+
+>>> nexturl = 'http://bookserver.archive.org/catalog/alpha/a/1'
+>>> prevurl = None
+>>> n = catalog.Navigation(nexturl, prevurl)
+>>> c.addNavigation(n)
+
+>>> osDescription = 'http://bookserver.archive.org/opensearch.xml'
+>>> o = catalog.OpenSearch(osDescription)
+>>> c.addOpenSearch(o)
+
 """
 
 """
@@ -65,3 +82,7 @@ bookserver/
 >>> r.render(c)
 
 """
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

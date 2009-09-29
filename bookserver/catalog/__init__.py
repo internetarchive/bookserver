@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2008 Internet Archive. Software license AGPL version 3.
+Copyright(c)2009 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 

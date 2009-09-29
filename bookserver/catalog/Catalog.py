@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2008 Internet Archive. Software license AGPL version 3.
+Copyright(c)2009 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -28,11 +28,15 @@ class Catalog:
     """
 
     def __init__(self):
-        _entries    = []
-        _opensearch = None
-        _navigation = None
-        print "inited Catalog!"
+        self._entries    = []
+        self._opensearch = None
+        self._navigation = None
     
     def addEntry(self, entry):
-        _entries.append(entry)
+        self._entries.append(entry)
     
+    def addNavigation(self, nav):
+        self._navigation = nav
+
+    def addOpenSearch(self, opensearch):
+        self._opensearch = opensearch
