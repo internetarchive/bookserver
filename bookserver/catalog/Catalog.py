@@ -27,10 +27,23 @@ class Catalog:
     Catalog class init        
     """
 
-    def __init__(self):
+    def __init__(self, 
+                 title     = 'Internet Archive OPDS',
+                 urnroot   = 'urn:x-internet-archive:bookserver:catalog',
+                 url       = 'http://bookserver.archive.org/catalog', 
+                 datestr   = None,
+                 author    = 'Internet Archive',
+                 authorUri = 'http://www.archive.org',
+                ):
         self._entries    = []
         self._opensearch = None
         self._navigation = None
+        self._title      = title
+        self._urnroot    = urnroot
+        self._url        = url
+        self._datestr    = datestr
+        self._author     = author
+        self._authorUri  = authorUri
     
     def addEntry(self, entry):
         self._entries.append(entry)

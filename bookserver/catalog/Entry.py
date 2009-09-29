@@ -21,8 +21,7 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import Entry
->>> d = { 'urn': 'urn:x-internet-archive:item:abuenosairesviaj00gonz'}
->>> e = Entry.Entry(d)
+>>> e = Entry.Entry(urn='urn:x-internet-archive:item:abuenosairesviaj00gonz')
 
 #getters and setters
 
@@ -34,12 +33,12 @@ This file is part of bookserver.
 
 #error checking examples:
 
->>> e = Entry.Entry({'foo':'bar'})
+>>> e = Entry.Entry(foo='bar')
 Traceback (most recent call last):
     ...
 KeyError: 'invalid key in bookserver.catalog.Entry'
 
->>> e = Entry.Entry({'urn': ['urn:x-internet-archive:item:abuenosairesviaj00gonz']})
+>>> e = Entry.Entry(urn=['urn:x-internet-archive:item:abuenosairesviaj00gonz'])
 Traceback (most recent call last):
     ...
 ValueError: invalid value in bookserver.catalog.Entry
@@ -61,9 +60,13 @@ class Entry():
     valid_keys = {
         'publisher' : str,
         'urn'       : str,
+        'url'       : str,
+        'title'     : str,
+        'datestr'   : str,
+        'content'   : str,
     }
     
-    required_keys = ('urn')
+    required_keys = ('urn', 'url', 'title')
     
     def validate(self, key, value):
         if key not in Entry.valid_keys:
@@ -75,7 +78,7 @@ class Entry():
             raise ValueError("invalid value in bookserver.catalog.Entry")
     
     
-    def __init__(self, obj):
+    def __init__(self, **obj):
 
         
         if not type(obj) == dict:
@@ -94,7 +97,10 @@ class Entry():
                 
         
     def get(self, key):
-        return self._entry[key]
+        if key in self._entry:
+            return self._entry[key]
+        else:
+            return None
 
     def set(self, key, value):
         self.validate(key, value)

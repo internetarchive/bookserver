@@ -21,10 +21,17 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import catalog
->>> c = catalog.Catalog()
+>>> c = catalog.Catalog(title='Internet Archive OPDS')
 
->>> d = {'urn': 'x-internet-archive:item:itemid'}
->>> e = catalog.Entry(d)
+#>>> d = {'urn': 'x-internet-archive:item:itemid',
+#... 'url': 'http://archive.org/details/itemid',
+#... 'title': 'test item',
+#... 'datestr': '2009-01-01T00:00:00Z'}
+#>>> e = catalog.Entry(d)
+>>> e = catalog.Entry(urn='x-internet-archive:item:itemid',
+...                   url='http://archive.org/details/itemid',
+...                   title='test item',
+...                   datestr='2009-01-01T00:00:00Z')
 >>> c.addEntry(e)
 
 >>> nexturl = 'http://bookserver.archive.org/catalog/alpha/a/1'
@@ -35,6 +42,11 @@ This file is part of bookserver.
 >>> osDescription = 'http://bookserver.archive.org/opensearch.xml'
 >>> o = catalog.OpenSearch(osDescription)
 >>> c.addOpenSearch(o)
+
+>>> import output
+>>> r = output.CatalogToAtom(c)
+>>> str = r.toString()
+>>> print str
 
 """
 
@@ -82,6 +94,9 @@ bookserver/
 >>> r.render(c)
 
 """
+
+import catalog
+import output
 
 if __name__ == '__main__':
     import doctest
