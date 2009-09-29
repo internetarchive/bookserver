@@ -19,22 +19,83 @@ This file is part of bookserver.
     along with bookserver.  If not, see <http://www.gnu.org/licenses/>.
     
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
+
+>>> import Entry
+>>> d = { 'urn': 'urn:x-internet-archive:item:abuenosairesviaj00gonz'}
+>>> e = Entry.Entry(d)
+>>> e.get('urn')
+'urn:x-internet-archive:item:abuenosairesviaj00gonz'
+>>> e.set('publisher', 'Internet Archive')
+>>> e.get('publisher')
+'Internet Archive'
+
+>>> e = Entry.Entry({'foo':'bar'})
+Traceback (most recent call last):
+    ...
+KeyError: 'invalid key in bookserver.catalog.Entry'
+
+>>> e = Entry.Entry({'urn': ['urn:x-internet-archive:item:abuenosairesviaj00gonz']})
+Traceback (most recent call last):
+    ...
+ValueError: invalid value in bookserver.catalog.Entry
+
+>>> e.set('foo', 'bar')
+Traceback (most recent call last):
+    ...
+KeyError: 'invalid key in bookserver.catalog.Entry'
 """
 
-class Entry:
+import copy
+
+class Entry():
 
     """
     Entry class init        
     """
-    
+
     valid_keys = {
-        'publisher' : 'multi',
-        'urn'       : 'single',
+        'publisher' : str,
+        'urn'       : str,
     }
     
     required_keys = ('urn')
+    
+    def validate(self, key, value):
+        if key not in Entry.valid_keys:
+            raise KeyError("invalid key in bookserver.catalog.Entry")
 
+        valtype = Entry.valid_keys[key]
+        
+        if not type(value) == valtype:
+            raise ValueError("invalid value in bookserver.catalog.Entry")
+    
+    
     def __init__(self, obj):
-        print "inited Entry!"
+
         
+        if not type(obj) == dict:
+            raise TypeError("bookserver.catalog.Entry takes a dict argument!")
         
+        for key, val in obj.iteritems():
+            if key not in Entry.valid_keys:
+                raise KeyError("invalid key in bookserver.catalog.Entry")
+            
+            valtype = Entry.valid_keys[key]
+            
+            if not type(val) == valtype:
+                raise ValueError("invalid value in bookserver.catalog.Entry")
+                        
+        self._entry = copy.deepcopy(obj) 
+                
+        
+    def get(self, key):
+        return self._entry[key]
+
+    def set(self, key, value):
+        self.validate(key, value)
+        self._entry[key] = value
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
