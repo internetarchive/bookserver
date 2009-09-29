@@ -263,28 +263,28 @@ class index:
                            )
 
         e = catalog.Entry(title   = 'Alphabetical By Title',
-                              urn     = urnroot + ':titles:all',
-                              url     = 'alpha.xml',
-                              datestr = datestr,
-                              content = 'Alphabetical list of all titles.'
-                             )
+                          urn     = urnroot + ':titles:all',
+                          url     = 'alpha.xml',
+                          datestr = datestr,
+                          content = 'Alphabetical list of all titles.'
+                         )
         c.addEntry(e)
         
-        e    = catalog.Entry(title   = 'Most Downloaded Books',
-                              urn     = urnroot + ':downloads',
-                              url     = 'downloads.xml',
-                              datestr = datestr,
-                              content = 'The most downloaded books from the Internet Archive in the last month.'
-                             )
+        e = catalog.Entry(title   = 'Most Downloaded Books',
+                          urn     = urnroot + ':downloads',
+                          url     = 'downloads.xml',
+                          datestr = datestr,
+                          content = 'The most downloaded books from the Internet Archive in the last month.'
+                         )
         
         c.addEntry(e)
         
-        e   = catalog.Entry(title   = 'Recent Scans',
-                              urn     = urnroot + ':new',
-                              url     = 'new',
-                              datestr = datestr,
-                              content = 'Books most recently scanned by the Internet Archive.'
-                             )
+        e = catalog.Entry(title   = 'Recent Scans',
+                          urn     = urnroot + ':new',
+                          url     = 'new',
+                          datestr = datestr,
+                          content = 'Books most recently scanned by the Internet Archive.'
+                         )
         
         c.addEntry(e)
         
