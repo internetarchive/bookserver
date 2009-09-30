@@ -266,7 +266,7 @@ class index:
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
                            'urn'     : urnroot + ':titles:all',
                            'url'     : 'alpha.xml',
-                           'datestr' : datestr,
+                           'updated' : datestr,
                            'content' : 'Alphabetical list of all titles.'
                          })
         c.addEntry(e)
@@ -274,7 +274,7 @@ class index:
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
                            'urn'     : urnroot + ':downloads',
                            'url'     : 'downloads.xml',
-                           'datestr' : datestr,
+                           'updated' : datestr,
                            'content' : 'The most downloaded books from the Internet Archive in the last month.'
                          })
         
@@ -283,7 +283,7 @@ class index:
         e = catalog.Entry({'title'   : 'Recent Scans',
                            'urn'     : urnroot + ':new',
                            'url'     : 'new',
-                           'datestr' : datestr,
+                           'updated' : datestr,
                            'content' : 'Books most recently scanned by the Internet Archive.'
                          })
         
@@ -394,7 +394,7 @@ class alphaList:
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
                                'urn'     : urnroot + ':opds:titles:'+lower,
                                'url'     : 'alpha/'+lower+'/0',
-                               'datestr' : datestr,
+                               'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
                              })
             c.addEntry(e)

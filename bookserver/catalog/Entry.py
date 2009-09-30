@@ -21,32 +21,35 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import Entry
->>> e = Entry.Entry({'urn':'urn:x-internet-archive:item:abuenosairesviaj00gonz'})
+>>> e = Entry.Entry({'urn'   :'urn:x-internet-archive:item:abuenosairesviaj00gonz',
+...                  'url'   :'http://www.archive.org/download/abuenosairesviaj00gonz/abuenosairesviaj00gonz.pdf',
+...                  'title' : 'abuenosairesviaj00gonz',
+...                })
 
 #getters and setters
 
 >>> e.get('urn')
 'urn:x-internet-archive:item:abuenosairesviaj00gonz'
->>> e.set('publisher', 'Internet Archive')
->>> e.get('publisher')
-'Internet Archive'
+>>> e.set('publishers', ['Internet Archive'])
+>>> e.get('publishers')
+['Internet Archive']
 
 #error checking examples:
 
 >>> e = Entry.Entry({'foo' : 'bar'})
 Traceback (most recent call last):
     ...
-KeyError: 'invalid key in bookserver.catalog.Entry'
+KeyError: 'invalid key in bookserver.catalog.Entry: foo'
 
 >>> e = Entry.Entry({'urn':['urn:x-internet-archive:item:abuenosairesviaj00gonz']})
 Traceback (most recent call last):
     ...
-ValueError: invalid value in bookserver.catalog.Entry
+ValueError: invalid value in bookserver.catalog.Entry: urn=['urn:x-internet-archive:item:abuenosairesviaj00gonz'] should have type <type 'unicode'>, but got type <type 'list'>
 
 >>> e.set('foo', 'bar')
 Traceback (most recent call last):
     ...
-KeyError: 'invalid key in bookserver.catalog.Entry'
+KeyError: 'invalid key in bookserver.catalog.Entry: foo'
 """
 
 import copy

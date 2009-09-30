@@ -88,21 +88,37 @@ class CatalogToAtom(CatalogRenderer):
 
     # createOpdsEntry()
     #___________________________________________________________________________
-    def createOpdsEntry(self, opds, title, urn, url, datestr, content):
+    def createOpdsEntry(self, opds, obj):
         entry = ET.SubElement(opds, 'entry')
-        self.createTextElement(entry, 'title', title)
+        self.createTextElement(entry, 'title', obj['title'])
     
         #urn = 'urn:x-internet-archive:bookserver:' + nss
-        self.createTextElement(entry, 'id',       urn)
+        self.createTextElement(entry, 'id',       obj['urn'])
     
-        self.createTextElement(entry, 'updated',  datestr)
+        self.createTextElement(entry, 'updated',  obj['updated'])
     
         element = ET.SubElement(entry, 'link')
         element.attrib['type'] = 'application/atom+xml'
-        element.attrib['href'] = url;
+        element.attrib['href'] = obj['url'];
         
-        if content:
-            self.createTextElement(entry, 'content',  content)
+        if 'date' in obj:
+            element = createTextElement(entry, 'dcterms:issued',  obj['date'][0:4])
+    
+        if 'subject' in obj:
+            for subject in obj['subject']:    
+                element = ET.SubElement(entry, 'category')
+                element.attrib['term'] = subject;
+                
+        if 'publisher' in obj: 
+            for publisher in obj['publisher']:    
+                element = createTextElement(entry, 'dcterms:publisher', publisher)
+    
+        if 'language' in obj:
+            for language in item['language']:    
+                element = createTextElement(entry, 'dcterms:language', language);
+        
+        if 'content' in obj:
+            self.createTextElement(entry, 'content',  obj['content'])
 
     # createOpenSearchDescription()
     #___________________________________________________________________________
@@ -116,7 +132,7 @@ class CatalogToAtom(CatalogRenderer):
         self.createOpenSearchDescription(self.opds, c._opensearch)
 
         for e in c._entries:
-            self.createOpdsEntry(self.opds, e.get('title'), e.get('urn'), e.get('url'), e.get('datestr'), e.get('content'))
+            self.createOpdsEntry(self.opds, e._entry)
             
         
     # toString()

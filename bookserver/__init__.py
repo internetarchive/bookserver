@@ -26,7 +26,7 @@ This file is part of bookserver.
 >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
 ...                    'url'     : 'http://archive.org/details/itemid',
 ...                    'title'   : u'test item',
-...                    'datestr' : '2009-01-01T00:00:00Z'})
+...                    'updated' : '2009-01-01T00:00:00Z'})
 >>> c.addEntry(e)
 
 >>> nexturl = 'http://bookserver.archive.org/catalog/alpha/a/1'
