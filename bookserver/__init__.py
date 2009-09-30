@@ -28,10 +28,10 @@ This file is part of bookserver.
 #... 'title': 'test item',
 #... 'datestr': '2009-01-01T00:00:00Z'}
 #>>> e = catalog.Entry(d)
->>> e = catalog.Entry(urn='x-internet-archive:item:itemid',
-...                   url='http://archive.org/details/itemid',
-...                   title='test item',
-...                   datestr='2009-01-01T00:00:00Z')
+>>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
+...                    'url'     : 'http://archive.org/details/itemid',
+...                    'title'   : 'test item',
+...                    'datestr' : '2009-01-01T00:00:00Z'})
 >>> c.addEntry(e)
 
 >>> nexturl = 'http://bookserver.archive.org/catalog/alpha/a/1'
@@ -49,7 +49,7 @@ This file is part of bookserver.
 >>> print str
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <title>Internet Archive OPDS</title>
-  <id>urn:x-internet-archive:bookserver:catalog:</id>
+  <id>urn:x-internet-archive:bookserver:catalog</id>
   <updated/>
   <link rel="self" type="application/atom+xml" href="http://bookserver.archive.org/catalog/"/>
   <author>
@@ -64,6 +64,21 @@ This file is part of bookserver.
     <link type="application/atom+xml" href="http://archive.org/details/itemid"/>
   </entry>
 </feed>
+
+>>> pubInfo = {
+...    'name'     : 'Internet Archive',
+...    'uri'      : 'http://www.archive.org',
+...    'opdsroot' : 'http://bookserver.archive.org/catalog',
+...    'mimetype' : 'application/atom+xml;profile=opds',
+...    'urlroot'  : '/catalog',
+...    'urnroot'  : 'urn:x-internet-archive:bookserver:catalog',
+... }
+>>> solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows=50&wt=json'
+>>> ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
+>>> c = ingestor.getCatalog()
+>>> print c._title
+Internet Archive OPDS
+
 """
 
 """
@@ -77,10 +92,10 @@ bookserver/
         Navigation.py
         OpenSearch.py
     
-    ingest/
-        __init__.py
-        SolrToCatalog.py
-        AtomToCatalog.py (future)
+        ingest/
+            __init__.py
+            SolrToCatalog.py
+            AtomToCatalog.py (future)
 
     output/
         __init__.py

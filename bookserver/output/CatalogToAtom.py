@@ -112,7 +112,7 @@ class CatalogToAtom(CatalogRenderer):
     # __init__()
     #___________________________________________________________________________    
     def __init__(self, c):
-        self.opds = self.createOpdsRoot(c._title, c._urnroot, ':', c._url, '/', c._datestr, c._author, c._authorUri)
+        self.opds = self.createOpdsRoot(c._title, c._urnroot, '', c._url, '/', c._datestr, c._author, c._authorUri)
         self.createOpenSearchDescription(self.opds, c._opensearch)
 
         for e in c._entries:
