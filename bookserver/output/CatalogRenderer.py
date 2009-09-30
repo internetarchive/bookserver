@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2009 Internet Archive. Software license AGPL version 3.
+Copyright(c)2008 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -21,25 +21,34 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
-# For pretty printing... since we don't have lxml
-# from xml.dom.ext.reader import Sax2
-# from xml.dom.ext import PrettyPrint
-# from StringIO import StringIO
-# 
-# import xml.etree.ElementTree as ET
-
-from lxml import etree as ET
-
 class CatalogRenderer:
+    """Base class for catalog renderers"""
 
-    # prettyPrintET()
-    #______________________________________________________________________________
-    def prettyPrintET(self, etNode):
-        ### we have lxml now
-        #reader = Sax2.Reader()
-        #docNode = reader.fromString(ET.tostring(etNode))
-        #tmpStream = StringIO()
-        #PrettyPrint(docNode, stream=tmpStream)
-        #return tmpStream.getvalue()
+    def __init__(self):
+        pass
+
+    def render(self, catalog):
+        """Returns the entire catalog rendered as a self-contained document as string"""
+        return str(catalog)
         
+    def renderCatalog(self, catalog):
+        """Returns entire catalog rendered as string"""
+
+    def renderEntry(self, entry):
+        """Returns single entry as string"""
+        return str(entry)
+        
+    def renderEntries(self, entryList):
+        """Returns list of entries as string"""
+        return str(entryList)
+        
+    def renderNavigation(self, navigation):
+        """Returns navigation as string"""
+        return str(navigation)
+        
+    def renderSearch(self, openSearch):
+        """Returns search as string"""
+        return str(openSearch)
+        
+    def prettyPrintET(self, etNode):
         return ET.tostring(etNode, pretty_print=True)
