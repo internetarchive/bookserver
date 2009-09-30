@@ -21,6 +21,8 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
+from lxml import etree as ET
+
 class CatalogRenderer:
     """Base class for catalog renderers"""
 
