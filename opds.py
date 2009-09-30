@@ -264,7 +264,7 @@ class index:
 
         e = catalog.Entry(title   = 'Alphabetical By Title',
                               urn     = urnroot + ':titles:all',
-                              url     = pubInfo['opdsroot'] + '/alpha.xml',
+                              url     = 'alpha.xml',
                               datestr = datestr,
                               content = 'Alphabetical list of all titles.'
                              )
@@ -272,7 +272,7 @@ class index:
         
         e    = catalog.Entry(title   = 'Most Downloaded Books',
                               urn     = urnroot + ':downloads',
-                              url     = pubInfo['opdsroot'] + '/downloads.xml',
+                              url     = 'downloads.xml',
                               datestr = datestr,
                               content = 'The most downloaded books from the Internet Archive in the last month.'
                              )
@@ -281,7 +281,7 @@ class index:
         
         e   = catalog.Entry(title   = 'Recent Scans',
                               urn     = urnroot + ':new',
-                              url     = pubInfo['opdsroot'] + '/new',
+                              url     = 'new',
                               datestr = datestr,
                               content = 'Books most recently scanned by the Internet Archive.'
                              )
@@ -375,17 +375,36 @@ class alphaList:
         #TODO: create a version of /alpha.xml with the correct updated dates,
         #and cache it for an hour to ease load on solr
         datestr = getDateString()
-    
-        opds = createOpdsRoot('Internet Archive - All Titles', 'opds:titles:all', 
-                                '/alpha.xml', datestr)
+
+        urnroot = 'urn:x-internet-archive:bookserver:catalog'
+        
+        c = catalog.Catalog(
+                            title     = 'Internet Archive - All Titles',
+                            urnroot   = urnroot + ':opds:titles:all',
+                            url       = pubInfo['opdsroot'] + '/alpha.xml',
+                            datestr   = datestr,
+                            author    = 'Internet Archive',
+                            authorUri = 'http://www.archive.org',
+                           )
+
         for letter in string.ascii_uppercase:
             lower = letter.lower()
-            createOpdsEntry(opds, 'Titles: ' + letter, 'opds:titles:'+lower, 
-                                'alpha/'+lower+'/0', datestr, 
-                                'Titles starting with ' + letter)
+
+            e = catalog.Entry(title   = 'Titles: ' + letter,
+                                  urn     = urnroot + ':opds:titles:'+lower,
+                                  url     = 'alpha/'+lower+'/0',
+                                  datestr = datestr,
+                                  content = 'Titles starting with ' + letter
+                                 )
+            c.addEntry(e)        
+
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
             
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
+        r = output.CatalogToAtom(c)
+        return r.toString()
 
 # /downloads.xml
 #______________________________________________________________________________

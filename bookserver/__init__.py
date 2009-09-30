@@ -47,7 +47,23 @@ This file is part of bookserver.
 >>> r = output.CatalogToAtom(c)
 >>> str = r.toString()
 >>> print str
-
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title>Internet Archive OPDS</title>
+  <id>urn:x-internet-archive:bookserver:catalog:</id>
+  <updated/>
+  <link rel="self" type="application/atom+xml" href="http://bookserver.archive.org/catalog/"/>
+  <author>
+    <name>Internet Archive</name>
+    <uri>http://www.archive.org</uri>
+  </author>
+  <link rel="search" type="application/atom+xml" href="http://bookserver.archive.org/opensearch.xml"/>
+  <entry>
+    <title>test item</title>
+    <id>x-internet-archive:item:itemid</id>
+    <updated>2009-01-01T00:00:00Z</updated>
+    <link type="application/atom+xml" href="http://archive.org/details/itemid"/>
+  </entry>
+</feed>
 """
 
 """
