@@ -36,7 +36,8 @@ class CatalogToAtom(CatalogRenderer):
     xmlns_dcterms = 'http://purl.org/dc/terms/'
     
     atom          = "{%s}" % xmlns_atom
-
+    dcterms       = "{%s}" % xmlns_dcterms
+    
     nsmap = {
                 None:      xmlns_atom,
                 'dc':      xmlns_dc,
@@ -102,20 +103,20 @@ class CatalogToAtom(CatalogRenderer):
         element.attrib['href'] = obj['url'];
         
         if 'date' in obj:
-            element = createTextElement(entry, 'dcterms:issued',  obj['date'][0:4])
+            element = self.createTextElement(entry, self.dcterms+'issued',  obj['date'][0:4])
     
-        if 'subject' in obj:
-            for subject in obj['subject']:    
+        if 'subjects' in obj:
+            for subject in obj['subjects']:
                 element = ET.SubElement(entry, 'category')
                 element.attrib['term'] = subject;
                 
-        if 'publisher' in obj: 
-            for publisher in obj['publisher']:    
-                element = createTextElement(entry, 'dcterms:publisher', publisher)
+        if 'publishers' in obj: 
+            for publisher in obj['publishers']:
+                element = self.createTextElement(entry, self.dcterms+'publisher', publisher)
     
-        if 'language' in obj:
-            for language in item['language']:    
-                element = createTextElement(entry, 'dcterms:language', language);
+        if 'languages' in obj:
+            for language in obj['languages']: 
+                element = self.createTextElement(entry, self.dcterms+'language', language);
         
         if 'content' in obj:
             self.createTextElement(entry, 'content',  obj['content'])
