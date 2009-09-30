@@ -1,0 +1,7 @@
+# Copyright(c)2009 Internet Archive. Software license GPL version 3.
+
+# Compiled python files
+*.pyc
+
+# Vim swap files
+*.swp
