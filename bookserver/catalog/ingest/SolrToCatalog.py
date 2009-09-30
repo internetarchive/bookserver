@@ -29,6 +29,7 @@ sys.path.append("/petabox/www/bookserver")
 import simplejson as json
 
 from .. import Catalog
+from .. import Entry
 
 class SolrToCatalog:
 
@@ -47,7 +48,7 @@ class SolrToCatalog:
               'language'       : 'languages',
               'contributor'    : 'contributors',
               
-              'oai_updatedate' : 'oai_updatedate',
+              'oai_updatedate' : 'oai_updatedates',
 
              }
 
@@ -74,7 +75,12 @@ class SolrToCatalog:
 
             if 'oai_updatedate' in item:
                 bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
-                
+
+            bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
+            bookDict['url'] = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier'])
+            
+            e = Entry(bookDict)
+            self.c.addEntry(e)
             #print bookDict
         
     # getCatalog()

@@ -36,7 +36,8 @@ class CatalogToAtom(CatalogRenderer):
     xmlns_dcterms = 'http://purl.org/dc/terms/'
     
     atom          = "{%s}" % xmlns_atom
-
+    dcterms       = "{%s}" % xmlns_dcterms
+    
     nsmap = {
                 None:      xmlns_atom,
                 'dc':      xmlns_dc,
@@ -88,21 +89,37 @@ class CatalogToAtom(CatalogRenderer):
 
     # createOpdsEntry()
     #___________________________________________________________________________
-    def createOpdsEntry(self, opds, title, urn, url, datestr, content):
+    def createOpdsEntry(self, opds, obj):
         entry = ET.SubElement(opds, 'entry')
-        self.createTextElement(entry, 'title', title)
+        self.createTextElement(entry, 'title', obj['title'])
     
         #urn = 'urn:x-internet-archive:bookserver:' + nss
-        self.createTextElement(entry, 'id',       urn)
+        self.createTextElement(entry, 'id',       obj['urn'])
     
-        self.createTextElement(entry, 'updated',  datestr)
+        self.createTextElement(entry, 'updated',  obj['updated'])
     
         element = ET.SubElement(entry, 'link')
         element.attrib['type'] = 'application/atom+xml'
-        element.attrib['href'] = url;
+        element.attrib['href'] = obj['url'];
         
-        if content:
-            self.createTextElement(entry, 'content',  content)
+        if 'date' in obj:
+            element = self.createTextElement(entry, self.dcterms+'issued',  obj['date'][0:4])
+    
+        if 'subjects' in obj:
+            for subject in obj['subjects']:
+                element = ET.SubElement(entry, 'category')
+                element.attrib['term'] = subject;
+                
+        if 'publishers' in obj: 
+            for publisher in obj['publishers']:
+                element = self.createTextElement(entry, self.dcterms+'publisher', publisher)
+    
+        if 'languages' in obj:
+            for language in obj['languages']: 
+                element = self.createTextElement(entry, self.dcterms+'language', language);
+        
+        if 'content' in obj:
+            self.createTextElement(entry, 'content',  obj['content'])
 
     # createOpenSearchDescription()
     #___________________________________________________________________________
@@ -116,7 +133,7 @@ class CatalogToAtom(CatalogRenderer):
         self.createOpenSearchDescription(self.opds, c._opensearch)
 
         for e in c._entries:
-            self.createOpdsEntry(self.opds, e.get('title'), e.get('urn'), e.get('url'), e.get('datestr'), e.get('content'))
+            self.createOpdsEntry(self.opds, e._entry)
             
         
     # toString()

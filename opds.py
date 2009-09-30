@@ -38,6 +38,7 @@ pubInfo = {
     'opdsroot' : 'http://bookserver.archive.org/catalog',
     'mimetype' : 'application/atom+xml;profile=opds',
     'url_base' : '/catalog',
+    'urnroot'  : 'urn:x-internet-archive:bookserver:catalog',
 }
 
 urls = (
@@ -265,7 +266,7 @@ class index:
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
                            'urn'     : urnroot + ':titles:all',
                            'url'     : 'alpha.xml',
-                           'datestr' : datestr,
+                           'updated' : datestr,
                            'content' : 'Alphabetical list of all titles.'
                          })
         c.addEntry(e)
@@ -273,7 +274,7 @@ class index:
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
                            'urn'     : urnroot + ':downloads',
                            'url'     : 'downloads.xml',
-                           'datestr' : datestr,
+                           'updated' : datestr,
                            'content' : 'The most downloaded books from the Internet Archive in the last month.'
                          })
         
@@ -282,7 +283,7 @@ class index:
         e = catalog.Entry({'title'   : 'Recent Scans',
                            'urn'     : urnroot + ':new',
                            'url'     : 'new',
-                           'datestr' : datestr,
+                           'updated' : datestr,
                            'content' : 'Books most recently scanned by the Internet Archive.'
                          })
         
@@ -393,7 +394,7 @@ class alphaList:
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
                                'urn'     : urnroot + ':opds:titles:'+lower,
                                'url'     : 'alpha/'+lower+'/0',
-                               'datestr' : datestr,
+                               'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
                              })
             c.addEntry(e)
@@ -412,19 +413,30 @@ class downloads:
     def GET(self):
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
-        f = urllib.urlopen(solrUrl)        
-        contents = f.read()
-        f.close()
-        obj = json.loads(contents)
+        #f = urllib.urlopen(solrUrl)        
+        #contents = f.read()
+        #f.close()
+        #obj = json.loads(contents)
 
-        opds = createOpdsRoot('Internet Archive - Most Downloaded Books in the last Month', 
-                              'opds:downloads', '/downloads.xml', getDateString())
+        #opds = createOpdsRoot('Internet Archive - Most Downloaded Books in the last Month', 
+                              #'opds:downloads', '/downloads.xml', getDateString())
                               
-        for item in obj['response']['docs']:
-            createOpdsEntryBook(opds, item)
+        #for item in obj['response']['docs']:
+            #createOpdsEntryBook(opds, item)
+
+        #web.header('Content-Type', pubInfo['mimetype'])
+        #return prettyPrintET(opds)
+
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
+        c = ingestor.getCatalog()
+
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
 
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
+        r = output.CatalogToAtom(c)
+        return r.toString()
 
 # /new/0
 #______________________________________________________________________________
