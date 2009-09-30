@@ -26,6 +26,15 @@ from CatalogRenderer import CatalogRenderer
 import lxml.etree as ET
 
 class CatalogToHtml(CatalogRenderer):
+    """
+    The HTML page is organised thus:
+        PageHeader
+        Navigation
+        Search
+        CatalogHeader
+        EntryList
+        PageFooter
+    """
     
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
@@ -36,20 +45,18 @@ class CatalogToHtml(CatalogRenderer):
         html.append(self.createHead(catalog))
         body = self.createBody(catalog)
         html.append(body)
-        
-        # XXX
-        #   nav
-        #   opensearch
+        body.append(self.createHeader(catalog))
+        body.append(self.createNavigation(catalog._navigation))
+        body.append(self.createSearch(catalog._opensearch))
+        body.append(self.createCatalogHeader(catalog))
         body.append(self.createEntryList(catalog._entries))
+        body.append(self.createFooter(catalog))
         
         self.html = html
         return self
         
     def createHtml(self, catalog):
         return ET.Element('html')
-        
-    def createBody(self, catalog):
-        return ET.Element('body')
         
     def createHead(self, catalog):
         # XXX flesh out
@@ -62,11 +69,34 @@ class CatalogToHtml(CatalogRenderer):
         
         return head
         
+    def createBody(self, catalog):
+        return ET.Element('body')
+        
+    def createHeader(self, catalog):
+        div = ET.Element( 'div', {'class':'opdsHeader'} )
+        div.text = 'OPDS Header' # XXX
+        return div
+        
+    def createNavigation(self, navigation):
+        div = ET.Element( 'div', {'class':'opdsNavigation'} )
+        div.text = 'Navigation div' # XXX
+        return div
+        
+    def createSearch(self, opensearch):
+        div = ET.Element( 'div', {'class':'opdsSearch'} )
+        div.text = 'Search div' # XXX
+        return div
+        
+    def createCatalogHeader(self, catalog):
+        div = ET.Element( 'div', {'class':'opdsCatalogHeader'} )
+        title = ET.SubElement(div, 'h1', {'class':'opdsCatalogHeaderTitle'} )
+        title.text = catalog._title # XXX
+        return div
+                
     def createEntry(self, entry):
         e = ET.Element('p')
         e.set('class', 'entry')
-        title = ET.SubElement(e, 'h2')
-        title.set('class', 'entryTitle')
+        title = ET.SubElement(e, 'h2', {'class':'opdsEntryTitle'} )
         title.text = entry.get('title')
         
         # XXX other entryfields
@@ -74,14 +104,18 @@ class CatalogToHtml(CatalogRenderer):
         return e
         
     def createEntryList(self, entries):
-        list = ET.Element('ul')
+        list = ET.Element( 'ul', {'class':'opdsEntryList'} )
         list.set('class', 'entryList')
         for entry in entries:
-            item = ET.SubElement(list, 'li')
-            item.set('class', 'entryListItem')
+            item = ET.SubElement(list, 'li', {'class':'opdsEntryListItem'} )
             item.append(self.createEntry(entry))
             list.append(item)
         return list
+        
+    def createFooter(self, catalog):
+        div = ET.Element('div', {'class':'opdsFooter'} )
+        div.text = 'Page Footer Div' # XXX
+        return div
         
     def toString(self):
         return self.prettyPrintET(self.html)

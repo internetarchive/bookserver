@@ -42,15 +42,15 @@ pubInfo = {
 }
 
 urls = (
-    '/(.*)/',               'redirect',
-    '/alpha.xml',           'alphaList',
-    '/alpha/(.)(?:/(.*))?', 'alpha',
-    '/downloads.xml',       'downloads',
-    '/new(?:/(.*))?',       'newest',
-    '/opensearch.xml',      'openSearchDescription',
-    '/opensearch(.*)',      'search',
-    '/',                    'index',
-    '/(.*)',                'indexRedirect',        
+    '/(.*)/',                       'redirect',
+    '/alpha.xml',                   'alphaList',
+    '/alpha/(.)(?:/(.*))?',         'alpha',
+    '/downloads.(xml|html)',        'downloads',
+    '/new(?:/(.*))?',               'newest',
+    '/opensearch.xml',              'openSearchDescription',
+    '/opensearch(.*)',              'search',
+    '/',                            'index',
+    '/(.*)',                        'indexRedirect',        
     )
 
 application = web.application(urls, globals()).wsgifunc()
@@ -410,7 +410,7 @@ class alphaList:
 # /downloads.xml
 #______________________________________________________________________________
 class downloads:
-    def GET(self):
+    def GET(self, extension):
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
         #f = urllib.urlopen(solrUrl)        
@@ -433,10 +433,17 @@ class downloads:
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
         o = catalog.OpenSearch(osDescriptionDoc)
         c.addOpenSearch(o)
-
-        web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c)
-        return r.toString()
+        
+        if ('xml' == extension):
+            web.header('Content-Type', pubInfo['mimetype'])
+            r = output.CatalogToAtom(c)
+            return r.toString()
+        elif ('html' == extension):
+            web.header('Content-Type', 'text/html')
+            r = output.CatalogToHtml(c)
+            return r.toString()
+        else:
+            web.seeother('/')
 
 # /new/0
 #______________________________________________________________________________
