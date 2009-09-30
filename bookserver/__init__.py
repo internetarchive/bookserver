@@ -65,6 +65,10 @@ This file is part of bookserver.
   </entry>
 </feed>
 
+>>> h = output.CatalogToHtml(c)
+>>> html = h.toString()
+>>> print html
+
 >>> pubInfo = {
 ...    'name'     : 'Internet Archive',
 ...    'uri'      : 'http://www.archive.org',

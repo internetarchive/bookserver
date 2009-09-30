@@ -23,8 +23,65 @@ This file is part of bookserver.
 
 from CatalogRenderer import CatalogRenderer
 
+import lxml.etree as ET
+
 class CatalogToHtml(CatalogRenderer):
-    def __init__(self):
+    
+    def __init__(self, catalog):
         CatalogRenderer.__init__(self)
-        print "catalogtohtml"
+        self.processCatalog(catalog)
         
+    def processCatalog(self, catalog):
+        html = self.createHtml(catalog)
+        html.append(self.createHead(catalog))
+        body = self.createBody(catalog)
+        html.append(body)
+        
+        # XXX
+        #   nav
+        #   opensearch
+        body.append(self.createEntryList(catalog._entries))
+        
+        self.html = html
+        return self
+        
+    def createHtml(self, catalog):
+        return ET.Element('html')
+        
+    def createBody(self, catalog):
+        return ET.Element('body')
+        
+    def createHead(self, catalog):
+        # XXX flesh out
+        # updated
+        # atom link
+        
+        head = ET.Element('head')
+        titleElement = ET.SubElement(head, 'title')
+        titleElement.text = catalog._title
+        
+        return head
+        
+    def createEntry(self, entry):
+        e = ET.Element('p')
+        e.set('class', 'entry')
+        title = ET.SubElement(e, 'h2')
+        title.set('class', 'entryTitle')
+        title.text = entry.get('title')
+        
+        # XXX other entryfields
+        
+        return e
+        
+    def createEntryList(self, entries):
+        list = ET.Element('ul')
+        list.set('class', 'entryList')
+        for entry in entries:
+            item = ET.SubElement(list, 'li')
+            item.set('class', 'entryListItem')
+            item.append(self.createEntry(entry))
+            list.append(item)
+        return list
+        
+    def toString(self):
+        return self.prettyPrintET(self.html)
