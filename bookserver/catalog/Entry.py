@@ -46,6 +46,16 @@ Traceback (most recent call last):
     ...
 ValueError: invalid value in bookserver.catalog.Entry: urn=['urn:x-internet-archive:item:abuenosairesviaj00gonz'] should have type <type 'unicode'>, but got type <type 'list'>
 
+>>> e.get('languages')
+[]
+
+>>> e.get('date') #unset scalar returns None
+
+>>> e.get('foo')
+Traceback (most recent call last):
+    ...
+KeyError: 'requested key foo is not valid in Entry'
+
 >>> e.set('foo', 'bar')
 Traceback (most recent call last):
     ...
@@ -121,7 +131,13 @@ class Entry():
         if key in self._entry:
             return self._entry[key]
         else:
-            return None
+            if key in Entry.valid_keys:
+                if list == Entry.valid_keys[key]:
+                    return []
+                else:
+                    return None
+            else:
+                raise KeyError("requested key %s is not valid in Entry" % key)
 
     def set(self, key, value):
         self.validate(key, value)
