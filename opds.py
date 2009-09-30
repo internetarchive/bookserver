@@ -262,29 +262,29 @@ class index:
                             authorUri = 'http://www.archive.org',
                            )
 
-        e = catalog.Entry(title   = 'Alphabetical By Title',
-                          urn     = urnroot + ':titles:all',
-                          url     = 'alpha.xml',
-                          datestr = datestr,
-                          content = 'Alphabetical list of all titles.'
-                         )
+        e = catalog.Entry({'title'  : 'Alphabetical By Title',
+                           'urn'     : urnroot + ':titles:all',
+                           'url'     : 'alpha.xml',
+                           'datestr' : datestr,
+                           'content' : 'Alphabetical list of all titles.'
+                         })
         c.addEntry(e)
         
-        e = catalog.Entry(title   = 'Most Downloaded Books',
-                          urn     = urnroot + ':downloads',
-                          url     = 'downloads.xml',
-                          datestr = datestr,
-                          content = 'The most downloaded books from the Internet Archive in the last month.'
-                         )
+        e = catalog.Entry({'title'   : 'Most Downloaded Books',
+                           'urn'     : urnroot + ':downloads',
+                           'url'     : 'downloads.xml',
+                           'datestr' : datestr,
+                           'content' : 'The most downloaded books from the Internet Archive in the last month.'
+                         })
         
         c.addEntry(e)
         
-        e = catalog.Entry(title   = 'Recent Scans',
-                          urn     = urnroot + ':new',
-                          url     = 'new',
-                          datestr = datestr,
-                          content = 'Books most recently scanned by the Internet Archive.'
-                         )
+        e = catalog.Entry({'title'   : 'Recent Scans',
+                           'urn'     : urnroot + ':new',
+                           'url'     : 'new',
+                           'datestr' : datestr,
+                           'content' : 'Books most recently scanned by the Internet Archive.'
+                         })
         
         c.addEntry(e)
         
@@ -390,13 +390,13 @@ class alphaList:
         for letter in string.ascii_uppercase:
             lower = letter.lower()
 
-            e = catalog.Entry(title   = 'Titles: ' + letter,
-                                  urn     = urnroot + ':opds:titles:'+lower,
-                                  url     = 'alpha/'+lower+'/0',
-                                  datestr = datestr,
-                                  content = 'Titles starting with ' + letter
-                                 )
-            c.addEntry(e)        
+            e = catalog.Entry({'title'   : 'Titles: ' + letter,
+                               'urn'     : urnroot + ':opds:titles:'+lower,
+                               'url'     : 'alpha/'+lower+'/0',
+                               'datestr' : datestr,
+                               'content' : 'Titles starting with ' + letter
+                             })
+            c.addEntry(e)
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
         o = catalog.OpenSearch(osDescriptionDoc)
