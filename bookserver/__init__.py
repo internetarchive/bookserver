@@ -23,14 +23,9 @@ This file is part of bookserver.
 >>> import catalog
 >>> c = catalog.Catalog(title='Internet Archive OPDS')
 
-#>>> d = {'urn': 'x-internet-archive:item:itemid',
-#... 'url': 'http://archive.org/details/itemid',
-#... 'title': 'test item',
-#... 'datestr': '2009-01-01T00:00:00Z'}
-#>>> e = catalog.Entry(d)
 >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
 ...                    'url'     : 'http://archive.org/details/itemid',
-...                    'title'   : 'test item',
+...                    'title'   : u'test item',
 ...                    'datestr' : '2009-01-01T00:00:00Z'})
 >>> c.addEntry(e)
 

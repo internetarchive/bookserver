@@ -58,24 +58,42 @@ class Entry():
     """
 
     valid_keys = {
-        'publisher' : str,
-        'urn'       : str,
-        'url'       : str,
-        'title'     : str,
-        'datestr'   : str,
-        'content'   : str,
+        'urn'                 : unicode,
+        'url'                 : unicode,
+        'title'               : unicode,
+        'datestr'             : unicode,
+        'content'             : unicode,
+        'downloadsPerMonth'   : unicode,
+        'updated'             : unicode,
+        'identifier'          : unicode,
+        'date'                : unicode,
+        
+        'publishers'          : list,
+        'contributors'        : list,
+        'languages'           : list,
+        'subjects'            : list,
+        'oai_updatedates'     : list,
+        'authors'             : list,
     }
     
     required_keys = ('urn', 'url', 'title')
     
     def validate(self, key, value):
         if key not in Entry.valid_keys:
-            raise KeyError("invalid key in bookserver.catalog.Entry")
+            raise KeyError("invalid key in bookserver.catalog.Entry: %s" % (key))
 
-        valtype = Entry.valid_keys[key]
+        wantedType = Entry.valid_keys[key]
         
-        if not type(value) == valtype:
-            raise ValueError("invalid value in bookserver.catalog.Entry")
+        gotType = type(value)
+        if not gotType == wantedType:
+            error = True
+            if unicode == wantedType:
+                #we can convert types to unicode if needed
+                if str == gotType or int == gotType:
+                    error = False
+            
+            if error:
+                raise ValueError("invalid value in bookserver.catalog.Entry: %s=%s should have type %s, but got type %s" % (key, value, wantedType, gotType))
     
 
     # Entry()
@@ -87,14 +105,12 @@ class Entry():
             raise TypeError("bookserver.catalog.Entry takes a dict argument!")
         
         for key, val in obj.iteritems():
-            if key not in Entry.valid_keys:
-                raise KeyError("invalid key in bookserver.catalog.Entry")
-            
-            valtype = Entry.valid_keys[key]
-            
-            if not type(val) == valtype:
-                raise ValueError("invalid value in bookserver.catalog.Entry")
-                        
+            self.validate(key, val)
+
+        for req_key in Entry.required_keys:
+            if not req_key in obj:
+                raise KeyError("required key %s not supplied!" % (req_key))
+
         self._entry = copy.deepcopy(obj) 
                 
         
