@@ -21,7 +21,7 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import Entry
->>> e = Entry.Entry(urn='urn:x-internet-archive:item:abuenosairesviaj00gonz')
+>>> e = Entry.Entry({'urn':'urn:x-internet-archive:item:abuenosairesviaj00gonz'})
 
 #getters and setters
 
@@ -33,12 +33,12 @@ This file is part of bookserver.
 
 #error checking examples:
 
->>> e = Entry.Entry(foo='bar')
+>>> e = Entry.Entry({'foo' : 'bar'})
 Traceback (most recent call last):
     ...
 KeyError: 'invalid key in bookserver.catalog.Entry'
 
->>> e = Entry.Entry(urn=['urn:x-internet-archive:item:abuenosairesviaj00gonz'])
+>>> e = Entry.Entry({'urn':['urn:x-internet-archive:item:abuenosairesviaj00gonz']})
 Traceback (most recent call last):
     ...
 ValueError: invalid value in bookserver.catalog.Entry
@@ -77,8 +77,10 @@ class Entry():
         if not type(value) == valtype:
             raise ValueError("invalid value in bookserver.catalog.Entry")
     
-    
-    def __init__(self, **obj):
+
+    # Entry()
+    #___________________________________________________________________________        
+    def __init__(self, obj):
 
         
         if not type(obj) == dict:

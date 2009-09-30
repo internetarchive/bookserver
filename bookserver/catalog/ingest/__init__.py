@@ -21,10 +21,8 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
+#this is needed to be able to import catalog class from SolrToCatalog
+#import pkgutil
+#__path__ = pkgutil.extend_path(__path__, '..')
 
-from Catalog    import Catalog
-from Entry      import Entry
-from Navigation import Navigation
-from OpenSearch import OpenSearch
-
-import ingest
+from SolrToCatalog import SolrToCatalog

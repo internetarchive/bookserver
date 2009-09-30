@@ -53,3 +53,4 @@ class Catalog:
 
     def addOpenSearch(self, opensearch):
         self._opensearch = opensearch
+
