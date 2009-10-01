@@ -22,6 +22,7 @@ This file is part of bookserver.
 """
 
 from CatalogRenderer import CatalogRenderer
+from .. import Entry
 
 import lxml.etree as ET
 
@@ -98,8 +99,27 @@ class CatalogToHtml(CatalogRenderer):
         e.set('class', 'entry')
         title = ET.SubElement(e, 'h2', {'class':'opdsEntryTitle'} )
         title.text = entry.get('title')
-        # XXX other entryfields
         
+        # TODO sort for display order
+        for key in Entry.valid_keys.keys():
+            formattedEntryKey = self.createEntryKey(key, entry.get(key))
+            if (formattedEntryKey):
+                e.append( formattedEntryKey )
+        
+        return e
+        
+    def createEntryKey(self, key, value):
+        if not value:
+            # empty
+            return None
+        
+        # XXX handle lists, pretty format key, order keys
+        e = ET.Element('span', { 'class': 'opds-entry-%s' % key })
+        keyName = ET.SubElement(e, 'em')
+        keyName.text = unicode(key, 'utf-8')
+        keyValue = ET.SubElement(e, 'span')
+        keyValue.text = ': %s' % unicode(value)
+        ET.SubElement(e, 'br')
         return e
         
     def createEntryList(self, entries):
@@ -118,3 +138,5 @@ class CatalogToHtml(CatalogRenderer):
         
     def toString(self):
         return self.prettyPrintET(self.html)
+        
+    
