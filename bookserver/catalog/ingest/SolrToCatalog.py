@@ -54,8 +54,13 @@ class SolrToCatalog:
 
     # SolrToCatalog()
     #___________________________________________________________________________    
-    def __init__(self, pubInfo, url):
+    def __init__(self, pubInfo, url, start, numRows):
         
+        if None != start:
+            url += '&start='+str(start*numRows)
+
+        url += '&rows='+str(numRows)
+                    
         self.url = url
         f = urllib.urlopen(self.url)
         contents = f.read()

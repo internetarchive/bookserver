@@ -336,35 +336,18 @@ class alpha:
             start = int(start)
         
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
-        f = urllib.urlopen(solrUrl)        
-        contents = f.read()
-        f.close()
-        obj = json.loads(contents)
-        
-        numFound = int(obj['response']['numFound'])
-        
-        title = 'Internet Archive - %d to %d of %d books starting with "%s"' % (start*numRows, min((start+1)*numRows, numFound), numFound, letter.upper())
-        opds = createOpdsRoot(title, 'opds:titles:'+letter, 
-                        '/alpha/%s/%d'%(letter, start), getDateString())
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows=&wt=json'
 
-        titleFragment = 'books sorted by title'
-        urlFragment = pubInfo['url_base'] + '/alpha/'+letter+'/'
-        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
-        
-        for item in obj['response']['docs']:
-            description = None
-            
-            if 'description' in item:
-                description = item['description']
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, start, numRows)
+        c = ingestor.getCatalog()
 
-            createOpdsEntryBook(opds, item)
-
-        self.makePrevNextLinksDebug(opds, letter, start, numFound)
-        
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
+    
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
-                
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        return r.toString()
         
 # /alpha.xml
 #______________________________________________________________________________
@@ -409,22 +392,9 @@ class alphaList:
 class downloads:
     def GET(self, extension):
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
-        #f = urllib.urlopen(solrUrl)        
-        #contents = f.read()
-        #f.close()
-        #obj = json.loads(contents)
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&wt=json'
 
-        #opds = createOpdsRoot('Internet Archive - Most Downloaded Books in the last Month', 
-                              #'opds:downloads', '/downloads.xml', getDateString())
-                              
-        #for item in obj['response']['docs']:
-            #createOpdsEntryBook(opds, item)
-
-        #web.header('Content-Type', pubInfo['mimetype'])
-        #return prettyPrintET(opds)
-
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, None, numRows)
         c = ingestor.getCatalog()
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
