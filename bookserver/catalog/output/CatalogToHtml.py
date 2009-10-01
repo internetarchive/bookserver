@@ -35,7 +35,7 @@ class CatalogToHtml(CatalogRenderer):
         EntryList
         PageFooter
     """
-    
+        
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
         self.processCatalog(catalog)
@@ -98,7 +98,6 @@ class CatalogToHtml(CatalogRenderer):
         e.set('class', 'entry')
         title = ET.SubElement(e, 'h2', {'class':'opdsEntryTitle'} )
         title.text = entry.get('title')
-        
         # XXX other entryfields
         
         return e
