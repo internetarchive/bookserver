@@ -74,30 +74,30 @@ class CatalogToHtml(CatalogRenderer):
         return ET.Element('body')
         
     def createHeader(self, catalog):
-        div = ET.Element( 'div', {'class':'opdsHeader'} )
+        div = ET.Element( 'div', {'class':'opds-header'} )
         div.text = 'OPDS Header' # XXX
         return div
         
     def createNavigation(self, navigation):
-        div = ET.Element( 'div', {'class':'opdsNavigation'} )
+        div = ET.Element( 'div', {'class':'opds-navigation'} )
         div.text = 'Navigation div' # XXX
         return div
         
     def createSearch(self, opensearch):
-        div = ET.Element( 'div', {'class':'opdsSearch'} )
+        div = ET.Element( 'div', {'class':'opds-search'} )
         div.text = 'Search div' # XXX
         return div
         
     def createCatalogHeader(self, catalog):
-        div = ET.Element( 'div', {'class':'opdsCatalogHeader'} )
-        title = ET.SubElement(div, 'h1', {'class':'opdsCatalogHeaderTitle'} )
+        div = ET.Element( 'div', {'class':'opds-catalog-header'} )
+        title = ET.SubElement(div, 'h1', {'class':'opds-catalog-header-title'} )
         title.text = catalog._title # XXX
         return div
                 
     def createEntry(self, entry):
         e = ET.Element('p')
         e.set('class', 'entry')
-        title = ET.SubElement(e, 'h2', {'class':'opdsEntryTitle'} )
+        title = ET.SubElement(e, 'h2', {'class':'opds-entry-title'} )
         title.text = entry.get('title')
         
         # TODO sort for display order
@@ -114,26 +114,26 @@ class CatalogToHtml(CatalogRenderer):
             return None
         
         # XXX handle lists, pretty format key, order keys   
-        e = ET.Element('span', { 'class': 'opds-entry-%s-key' % key })
+        e = ET.Element('span', { 'class': 'opds-entry-key' })
         keyName = ET.SubElement(e, 'em')
         keyName.text = unicode(key, 'utf-8')
         keyName.tail = ': '
-        keyValue = ET.SubElement(e, 'span', { 'class': 'opds-entry-%s' % key })
+        keyValue = ET.SubElement(e, 'span', { 'class': 'opds-entry-value opds-entry-%s' % key })
         keyValue.text = unicode(value)
         ET.SubElement(e, 'br')
         return e
         
     def createEntryList(self, entries):
-        list = ET.Element( 'ul', {'class':'opdsEntryList'} )
+        list = ET.Element( 'ul', {'class':'opds-entry-list'} )
         list.set('class', 'entryList')
         for entry in entries:
-            item = ET.SubElement(list, 'li', {'class':'opdsEntryListItem'} )
+            item = ET.SubElement(list, 'li', {'class':'opds-entry-list-item'} )
             item.append(self.createEntry(entry))
             list.append(item)
         return list
         
     def createFooter(self, catalog):
-        div = ET.Element('div', {'class':'opdsFooter'} )
+        div = ET.Element('div', {'class':'opds-footer'} )
         div.text = 'Page Footer Div' # XXX
         return div
         
