@@ -134,7 +134,6 @@ class CatalogToHtml(CatalogRenderer):
         
     def createEntryList(self, entries):
         list = ET.Element( 'ul', {'class':'opds-entry-list'} )
-        list.set('class', 'entryList')
         for entry in entries:
             item = ET.SubElement(list, 'li', {'class':'opds-entry-list-item'} )
             item.append(self.createEntry(entry))
