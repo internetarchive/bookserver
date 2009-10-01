@@ -27,7 +27,7 @@ from xml.dom.ext import PrettyPrint
 from StringIO import StringIO
 
 import bookserver.catalog as catalog
-import bookserver.output as output
+import bookserver.catalog.output as output
 
 numRows = 50
 
@@ -436,7 +436,7 @@ class downloads:
         
         if ('xml' == extension):
             web.header('Content-Type', pubInfo['mimetype'])
-            r = output.CatalogToAtom(c)
+            r = output.CatalogToAtom(c, fabricateContentElement=True)
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
