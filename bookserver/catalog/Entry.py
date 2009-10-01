@@ -124,9 +124,11 @@ class Entry():
             if not req_key in obj:
                 raise KeyError("required key %s not supplied!" % (req_key))
 
-        self._entry = copy.deepcopy(obj) 
+        self._entry = copy.deepcopy(obj)        
                 
-        
+
+    # get()
+    #___________________________________________________________________________        
     def get(self, key):
         if key in self._entry:
             return self._entry[key]
@@ -139,6 +141,8 @@ class Entry():
             else:
                 raise KeyError("requested key %s is not valid in Entry" % key)
 
+    # set()
+    #___________________________________________________________________________        
     def set(self, key, value):
         self.validate(key, value)
         self._entry[key] = value

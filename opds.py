@@ -436,7 +436,7 @@ class downloads:
         
         if ('xml' == extension):
             web.header('Content-Type', pubInfo['mimetype'])
-            r = output.CatalogToAtom(c)
+            r = output.CatalogToAtom(c, fabricateContentElement=True)
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
