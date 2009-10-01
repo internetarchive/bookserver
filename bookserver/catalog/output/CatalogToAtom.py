@@ -89,7 +89,7 @@ class CatalogToAtom(CatalogRenderer):
 
     # createOpdsEntry()
     #___________________________________________________________________________
-    def createOpdsEntry(self, opds, obj):
+    def createOpdsEntry(self, opds, obj, fabricateContentElement):
         entry = ET.SubElement(opds, 'entry')
         self.createTextElement(entry, 'title', obj['title'])
     
@@ -120,6 +120,41 @@ class CatalogToAtom(CatalogRenderer):
         
         if 'content' in obj:
             self.createTextElement(entry, 'content',  obj['content'])
+        elif fabricateContentElement:
+            ### fabricate an atom:content element if asked to
+            ### FireFox won't show the content element if it contains nested html elements
+            contentText=''
+        
+            if 'creator' in obj:
+                if 1 == len(obj['creator']):
+                    authorStr = '<b>Author: </b>'
+                else:
+                    authorStr = '<b>Authors: </b>'
+                
+                authorStr += ', '.join(obj['creator'])
+                contentText += authorStr + '<br/>'
+        
+            #TODO: refactor
+            if 'subjects' in obj:
+                contentText += '<b>Subject </b>' + ', '.join(obj['subjects']) + '<br/>'
+        
+            if 'publishers' in obj:
+                contentText += '<b>Publisher: </b>' + ', '.join(obj['publishers']) + '<br/>'
+                
+            if 'date' in obj:
+                contentText += '<b>Year published: </b>' + obj['date'][0:4] + '<br/>'
+        
+            if 'contributors' in obj:
+                contentText += '<b>Book contributor: </b>' + ', '.join(obj['contributors']) + '<br/>'
+        
+            if 'languages' in obj:
+                contentText += '<b>Language: </b>' + ', '.join(obj['languages']) + '<br/>'
+        
+            if 'downloadsPerMonth' in obj:
+                contentText += str(obj['downloadsPerMonth']) + ' downloads in the last month' + '<br/>'
+        
+            element = self.createTextElement(entry, 'content',  contentText)
+            element.attrib['type'] = 'html'        
 
     # createOpenSearchDescription()
     #___________________________________________________________________________
@@ -128,12 +163,12 @@ class CatalogToAtom(CatalogRenderer):
 
     # __init__()
     #___________________________________________________________________________    
-    def __init__(self, c):
+    def __init__(self, c, fabricateContentElement=False):
         self.opds = self.createOpdsRoot(c._title, c._urnroot, '', c._url, '/', c._datestr, c._author, c._authorUri)
         self.createOpenSearchDescription(self.opds, c._opensearch)
 
         for e in c._entries:
-            self.createOpdsEntry(self.opds, e._entry)
+            self.createOpdsEntry(self.opds, e._entry, fabricateContentElement)
             
         
     # toString()
