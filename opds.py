@@ -27,7 +27,7 @@ from xml.dom.ext import PrettyPrint
 from StringIO import StringIO
 
 import bookserver.catalog as catalog
-import bookserver.output as output
+import bookserver.catalog.output as output
 
 numRows = 50
 
