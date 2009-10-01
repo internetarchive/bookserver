@@ -252,11 +252,10 @@ class index:
     def GET(self):
 
         datestr = getDateString()
-        urnroot = 'urn:x-internet-archive:bookserver:catalog'
         
         c = catalog.Catalog(
                             title     = 'Internet Archive OPDS',
-                            urnroot   = urnroot,
+                            urnroot   = pubInfo['urnroot'],
                             url       = pubInfo['opdsroot'],
                             datestr   = datestr,
                             author    = 'Internet Archive',
@@ -264,7 +263,7 @@ class index:
                            )
 
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
-                           'urn'     : urnroot + ':titles:all',
+                           'urn'     : pubInfo['urnroot'] + ':titles:all',
                            'url'     : 'alpha.xml',
                            'updated' : datestr,
                            'content' : 'Alphabetical list of all titles.'
@@ -272,7 +271,7 @@ class index:
         c.addEntry(e)
         
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
-                           'urn'     : urnroot + ':downloads',
+                           'urn'     : pubInfo['urnroot'] + ':downloads',
                            'url'     : 'downloads.xml',
                            'updated' : datestr,
                            'content' : 'The most downloaded books from the Internet Archive in the last month.'
@@ -281,7 +280,7 @@ class index:
         c.addEntry(e)
         
         e = catalog.Entry({'title'   : 'Recent Scans',
-                           'urn'     : urnroot + ':new',
+                           'urn'     : pubInfo['urnroot'] + ':new',
                            'url'     : 'new',
                            'updated' : datestr,
                            'content' : 'Books most recently scanned by the Internet Archive.'
@@ -376,12 +375,10 @@ class alphaList:
         #TODO: create a version of /alpha.xml with the correct updated dates,
         #and cache it for an hour to ease load on solr
         datestr = getDateString()
-
-        urnroot = 'urn:x-internet-archive:bookserver:catalog'
         
         c = catalog.Catalog(
                             title     = 'Internet Archive - All Titles',
-                            urnroot   = urnroot + ':opds:titles:all',
+                            urnroot   = pubInfo['urnroot'] + ':opds:titles:all',
                             url       = pubInfo['opdsroot'] + '/alpha.xml',
                             datestr   = datestr,
                             author    = 'Internet Archive',
@@ -392,7 +389,7 @@ class alphaList:
             lower = letter.lower()
 
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
-                               'urn'     : urnroot + ':opds:titles:'+lower,
+                               'urn'     : pubInfo['urnroot'] + ':opds:titles:'+lower,
                                'url'     : 'alpha/'+lower+'/0',
                                'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
