@@ -113,12 +113,13 @@ class CatalogToHtml(CatalogRenderer):
             # empty
             return None
         
-        # XXX handle lists, pretty format key, order keys
-        e = ET.Element('span', { 'class': 'opds-entry-%s' % key })
+        # XXX handle lists, pretty format key, order keys   
+        e = ET.Element('span', { 'class': 'opds-entry-%s-key' % key })
         keyName = ET.SubElement(e, 'em')
         keyName.text = unicode(key, 'utf-8')
-        keyValue = ET.SubElement(e, 'span')
-        keyValue.text = ': %s' % unicode(value)
+        keyName.tail = ': '
+        keyValue = ET.SubElement(e, 'span', { 'class': 'opds-entry-%s' % key })
+        keyValue.text = unicode(value)
         ET.SubElement(e, 'br')
         return e
         
