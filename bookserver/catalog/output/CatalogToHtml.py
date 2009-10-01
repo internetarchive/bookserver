@@ -67,8 +67,17 @@ class CatalogToHtml(CatalogRenderer):
         head = ET.Element('head')
         titleElement = ET.SubElement(head, 'title')
         titleElement.text = catalog._title
+        head.append(self.createStyleSheet('/static/catalog.css'))
         
         return head
+        
+    def createStyleSheet(self, url):
+        # TODO add ?v={version}
+        return ET.Element('link', {
+            'rel':'stylesheet',
+            'type':'text/css', 
+            'href':url
+        })
         
     def createBody(self, catalog):
         return ET.Element('body')
