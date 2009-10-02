@@ -433,42 +433,25 @@ class search:
 
         q  = params['?q'][0]
         qq = urllib.quote(q)
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
-        f = urllib.urlopen(solrUrl)        
-        contents = f.read()
-        f.close()
-        obj = json.loads(contents)
-        
-        numFound    = int(obj['response']['numFound'])
-        firstResult = start*numRows
-        lastResult  = min((start+1)*numRows, numFound)
-
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
         titleFragment = 'search results for ' + q
-        title = 'Internet Archive - %d to %d of %d %s.' % (firstResult, lastResult, numFound, titleFragment)
-        opds = createOpdsRoot(title, 'opds:search:%s:%d' % (qq, start), 
-                        '/opensearch?q=%s&start=%d'%(qq, start), getDateString())
-                        
-        opds.attrib['xmlns:opensearch'] = 'http://a9.com/-/spec/opensearch/1.1/'
-        createTextElement(opds, 'opensearch:totalResults', str(numFound))
-        createTextElement(opds, 'opensearch:itemsPerPage', str(lastResult-firstResult))
-        createTextElement(opds, 'opensearch:startIndex',   str(firstResult))
+        urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
-        urlFragment = '/opensearch?q=%s&start=' % (qq)
-        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
-        
-        for item in obj['response']['docs']:
-            description = None
-            
-            if 'description' in item:
-                description = item['description']
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+                                                start=start, numRows=numRows,
+                                                urlBase='/opensearch?q=%s&start=' % (qq),
+                                                titleFragment = titleFragment)
 
-            createOpdsEntryBook(opds, item)
+        c = ingestor.getCatalog()
 
-        #self.makePrevNextLinksDebug(opds, letter, start, numFound)
-        
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
+    
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
-
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        return r.toString()
+        
 
 # /opensearch.xml - Open Search Description
 #______________________________________________________________________________        
