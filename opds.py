@@ -302,8 +302,6 @@ class index:
 #______________________________________________________________________________
 class alpha:
 
-    # GET()
-    #___________________________________________________________________________
     def GET(self, letter, start):
         if not start:
             start = 0
@@ -402,33 +400,21 @@ class newest:
         
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
-        f = urllib.urlopen(solrUrl)        
-        contents = f.read()
-        f.close()
-        obj = json.loads(contents)
+        titleFragment = 'books sorted by update date'
         
-        numFound = int(obj['response']['numFound'])
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl,
+                                                start=start, numRows=numRows,
+                                                urlBase='/new/',
+                                                titleFragment = titleFragment)
+        c = ingestor.getCatalog()
 
-        titleFragment = 'books sorted by update date'        
-        title = 'Internet Archive - %d to %d of %d %s.' % (start*numRows, min((start+1)*numRows, numFound), numFound, titleFragment)
-        opds = createOpdsRoot(title, 'opds:new:%d' % (start), 
-                        '/new/%d'%(start), getDateString())
-
-        urlFragment = '/new/'
-        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
-        
-        for item in obj['response']['docs']:
-            description = None
-            
-            if 'description' in item:
-                description = item['description']
-
-            createOpdsEntryBook(opds, item)
-
-        #self.makePrevNextLinksDebug(opds, letter, start, numFound)
-        
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
+    
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        return r.toString()
 
 
 # /search
