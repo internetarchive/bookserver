@@ -14,17 +14,6 @@ import time
 import string
 import cgi
 import urllib
-import simplejson as json
-
-import xml.etree.ElementTree as ET
-#sys.path.append("/petabox/sw/lib/lxml/lib.linux-i686-2.5")
-#import lxml.etree as ET
-
-
-# For pretty printing... sigh
-from xml.dom.ext.reader import Sax2
-from xml.dom.ext import PrettyPrint
-from StringIO import StringIO
 
 import bookserver.catalog as catalog
 import bookserver.catalog.output as output
