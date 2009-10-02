@@ -336,9 +336,11 @@ class alpha:
             start = int(start)
         
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows=&wt=json'
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
 
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, start, numRows)
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl,
+                                                start=start, numRows=numRows,
+                                                urlBase='/alpha/a/')
         c = ingestor.getCatalog()
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
@@ -392,9 +394,9 @@ class alphaList:
 class downloads:
     def GET(self, extension):
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&wt=json'
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
 
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, None, numRows)
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
         c = ingestor.getCatalog()
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
