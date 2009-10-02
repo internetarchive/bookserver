@@ -318,10 +318,6 @@ class alpha:
                                                 urlBase='/alpha/a/',
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
-
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
-        o = catalog.OpenSearch(osDescriptionDoc)
-        c.addOpenSearch(o)
     
         web.header('Content-Type', pubInfo['mimetype'])
         r = output.CatalogToAtom(c, fabricateContentElement=True)
@@ -376,10 +372,6 @@ class downloads:
         urn           = pubInfo['urnroot'] + ':downloads'
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn, titleFragment=titleFragment)
         c = ingestor.getCatalog()
-
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
-        o = catalog.OpenSearch(osDescriptionDoc)
-        c.addOpenSearch(o)
         
         if ('xml' == extension):
             web.header('Content-Type', pubInfo['mimetype'])
@@ -410,10 +402,6 @@ class newest:
                                                 urlBase='/new/',
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
-
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
-        o = catalog.OpenSearch(osDescriptionDoc)
-        c.addOpenSearch(o)
     
         web.header('Content-Type', pubInfo['mimetype'])
         r = output.CatalogToAtom(c, fabricateContentElement=True)
@@ -444,10 +432,6 @@ class search:
 
         c = ingestor.getCatalog()
 
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
-        o = catalog.OpenSearch(osDescriptionDoc)
-        c.addOpenSearch(o)
-    
         web.header('Content-Type', pubInfo['mimetype'])
         r = output.CatalogToAtom(c, fabricateContentElement=True)
         return r.toString()

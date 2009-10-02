@@ -31,6 +31,7 @@ import simplejson as json
 from .. import Catalog
 from .. import Entry
 from .. import Navigation
+from .. import OpenSearch
 
 class SolrToCatalog:
 
@@ -86,6 +87,10 @@ class SolrToCatalog:
 
         nav = Navigation(start, numRows, numFound, urlBase)
         self.c.addNavigation(nav)
+
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = OpenSearch(osDescriptionDoc)
+        self.c.addOpenSearch(o)
 
         for item in obj['response']['docs']:
             #use generator expression to map dictionary key names
