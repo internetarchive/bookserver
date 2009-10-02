@@ -302,31 +302,6 @@ class index:
 #______________________________________________________________________________
 class alpha:
 
-    ### Add some links to ease navigation in firefox's feed reader
-    def makePrevNextLinksDebug(self, opds, letter, start, numFound):
-        if 0 != start:
-            title = 'Previous results for books starting with '+letter.upper()
-            url =  pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start-1)
-
-            #this test entry is for easier navigation in firefox #TODO: remove this
-            createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start-1), 
-                                url, getDateString(), None)
-
-    
-        if (start+1)*numRows < numFound:
-            #from the atom spec:
-            title = 'Next results for books starting with '+letter.upper()
-            url =  pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start+1)
-
-            #this test entry is for easier navigation in firefox #TODO: remove this
-            createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start+1), 
-                                url, getDateString(), None)
-    
-            
-        createOpdsEntry(opds, 'Alphabetical Title Index', 'opds:titles:all', 
-            pubInfo['url_base'] + '/alpha.xml', getDateString(), None)
-
-
     # GET()
     #___________________________________________________________________________
     def GET(self, letter, start):
