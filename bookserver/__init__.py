@@ -29,9 +29,11 @@ This file is part of bookserver.
 ...                    'updated' : '2009-01-01T00:00:00Z'})
 >>> c.addEntry(e)
 
->>> nexturl = 'http://bookserver.archive.org/catalog/alpha/a/1'
->>> prevurl = None
->>> n = catalog.Navigation(nexturl, prevurl)
+>>> start    = 0
+>>> numFound = 2
+>>> numRows  = 1
+>>> urlBase  = '/alpha/a/'
+>>> n = catalog.Navigation(start, numRows, numFound, urlBase)
 >>> c.addNavigation(n)
 
 >>> osDescription = 'http://bookserver.archive.org/opensearch.xml'
@@ -51,6 +53,7 @@ This file is part of bookserver.
     <uri>http://www.archive.org</uri>
   </author>
   <link rel="search" type="application/atom+xml" href="http://bookserver.archive.org/opensearch.xml"/>
+  <link rel="next" type="application/atom+xml" href="/alpha/a/1" title="Next results"/>
   <entry>
     <title>test item</title>
     <id>x-internet-archive:item:itemid</id>

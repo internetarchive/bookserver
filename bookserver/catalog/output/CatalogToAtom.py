@@ -161,11 +161,27 @@ class CatalogToAtom(CatalogRenderer):
     def createOpenSearchDescription(self, opds, opensearch):
         self.createRelLink(opds, 'search', opensearch.osddUrl, '', None)
 
+    # createNavLinks()
+    #___________________________________________________________________________
+    def createNavLinks(self, opds, nav):
+        print 'creating links'
+        print 'nextTitle ' + nav.nextTitle
+        
+        if nav.prevLink:
+            self.createRelLink(opds, 'prev', '', nav.prevLink, nav.prevTitle)
+
+        if nav.nextLink:
+            print 'creating next link'        
+            self.createRelLink(opds, 'next', '', nav.nextLink, nav.nextTitle)
+
     # __init__()
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
         self.opds = self.createOpdsRoot(c._title, c._urnroot, '', c._url, '/', c._datestr, c._author, c._authorUri)
         self.createOpenSearchDescription(self.opds, c._opensearch)
+
+        if c._navigation:
+            self.createNavLinks(self.opds, c._navigation)
 
         for e in c._entries:
             self.createOpdsEntry(self.opds, e._entry, fabricateContentElement)

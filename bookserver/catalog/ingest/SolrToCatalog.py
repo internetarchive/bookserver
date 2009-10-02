@@ -30,6 +30,7 @@ import simplejson as json
 
 from .. import Catalog
 from .. import Entry
+from .. import Navigation
 
 class SolrToCatalog:
 
@@ -54,8 +55,8 @@ class SolrToCatalog:
 
     # SolrToCatalog()
     #___________________________________________________________________________    
-    def __init__(self, pubInfo, url):
-        
+    def __init__(self, pubInfo, url, start=None, numRows=None, urlBase=None):       
+                    
         self.url = url
         f = urllib.urlopen(self.url)
         contents = f.read()
@@ -69,6 +70,11 @@ class SolrToCatalog:
                                  authorUri = pubInfo['uri'],
                                  datestr   = self.getDateString(),                                 
                                 )
+
+        numFound = int(obj['response']['numFound'])
+        nav = Navigation(start, numRows, numFound, urlBase)
+        self.c.addNavigation(nav)
+
         for item in obj['response']['docs']:
             #use generator expression to map dictionary key names
             bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )

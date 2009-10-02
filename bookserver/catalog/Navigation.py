@@ -23,9 +23,36 @@ This file is part of bookserver.
 
 class Navigation:
 
-    def __init__(self, nexturl, prevurl):
-        self.nexturl = nexturl
-        self.prevurl = prevurl
+    def getNext(self, start, numRows, numFound, urlBase):
+        url   = None
+        title = None
+
+        if None == start:
+            return url, title
+
+        if (start+1)*numRows < numFound:
+            title = 'Next results'
+            url = '%s%d' % (urlBase, start+1)
+    
+        return url, title        
+
+    def getPrev(self, start, numRows, numFound, urlBase):
+        url   = None
+        title = None
+
+        if None == start:
+            return url, title
+
+        if 0 != start:
+            title = 'Prev results'
+            url = '%s%d' % (urlBase, start-1)
+    
+        return url, title        
+
+    
+    def __init__(self, start, numRows, numFound, urlBase):
+        (self.nextLink, self.nextTitle) = self.getNext(start, numRows, numFound, urlBase)
+        (self.prevLink, self.prevTitle) = self.getPrev(start, numRows, numFound, urlBase)
         
 if __name__ == '__main__':
     import doctest

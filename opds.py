@@ -252,11 +252,10 @@ class index:
     def GET(self):
 
         datestr = getDateString()
-        urnroot = 'urn:x-internet-archive:bookserver:catalog'
         
         c = catalog.Catalog(
                             title     = 'Internet Archive OPDS',
-                            urnroot   = urnroot,
+                            urnroot   = pubInfo['urnroot'],
                             url       = pubInfo['opdsroot'],
                             datestr   = datestr,
                             author    = 'Internet Archive',
@@ -264,7 +263,7 @@ class index:
                            )
 
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
-                           'urn'     : urnroot + ':titles:all',
+                           'urn'     : pubInfo['urnroot'] + ':titles:all',
                            'url'     : 'alpha.xml',
                            'updated' : datestr,
                            'content' : 'Alphabetical list of all titles.'
@@ -272,7 +271,7 @@ class index:
         c.addEntry(e)
         
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
-                           'urn'     : urnroot + ':downloads',
+                           'urn'     : pubInfo['urnroot'] + ':downloads',
                            'url'     : 'downloads.xml',
                            'updated' : datestr,
                            'content' : 'The most downloaded books from the Internet Archive in the last month.'
@@ -281,7 +280,7 @@ class index:
         c.addEntry(e)
         
         e = catalog.Entry({'title'   : 'Recent Scans',
-                           'urn'     : urnroot + ':new',
+                           'urn'     : pubInfo['urnroot'] + ':new',
                            'url'     : 'new',
                            'updated' : datestr,
                            'content' : 'Books most recently scanned by the Internet Archive.'
@@ -303,31 +302,6 @@ class index:
 #______________________________________________________________________________
 class alpha:
 
-    ### Add some links to ease navigation in firefox's feed reader
-    def makePrevNextLinksDebug(self, opds, letter, start, numFound):
-        if 0 != start:
-            title = 'Previous results for books starting with '+letter.upper()
-            url =  pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start-1)
-
-            #this test entry is for easier navigation in firefox #TODO: remove this
-            createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start-1), 
-                                url, getDateString(), None)
-
-    
-        if (start+1)*numRows < numFound:
-            #from the atom spec:
-            title = 'Next results for books starting with '+letter.upper()
-            url =  pubInfo['url_base'] + '/alpha/%s/%d' % (letter, start+1)
-
-            #this test entry is for easier navigation in firefox #TODO: remove this
-            createOpdsEntry(opds, title, 'opds:titles:%s:%d'%(letter, start+1), 
-                                url, getDateString(), None)
-    
-            
-        createOpdsEntry(opds, 'Alphabetical Title Index', 'opds:titles:all', 
-            pubInfo['url_base'] + '/alpha.xml', getDateString(), None)
-
-
     # GET()
     #___________________________________________________________________________
     def GET(self, letter, start):
@@ -338,34 +312,19 @@ class alpha:
         
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
-        f = urllib.urlopen(solrUrl)        
-        contents = f.read()
-        f.close()
-        obj = json.loads(contents)
-        
-        numFound = int(obj['response']['numFound'])
-        
-        title = 'Internet Archive - %d to %d of %d books starting with "%s"' % (start*numRows, min((start+1)*numRows, numFound), numFound, letter.upper())
-        opds = createOpdsRoot(title, 'opds:titles:'+letter, 
-                        '/alpha/%s/%d'%(letter, start), getDateString())
 
-        titleFragment = 'books sorted by title'
-        urlFragment = pubInfo['url_base'] + '/alpha/'+letter+'/'
-        createNavLinks(opds, titleFragment, urlFragment, start, numFound)
-        
-        for item in obj['response']['docs']:
-            description = None
-            
-            if 'description' in item:
-                description = item['description']
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl,
+                                                start=start, numRows=numRows,
+                                                urlBase='/alpha/a/')
+        c = ingestor.getCatalog()
 
-            createOpdsEntryBook(opds, item)
-
-        self.makePrevNextLinksDebug(opds, letter, start, numFound)
-        
+        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
+    
         web.header('Content-Type', pubInfo['mimetype'])
-        return prettyPrintET(opds)
-                
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        return r.toString()
         
 # /alpha.xml
 #______________________________________________________________________________
@@ -376,12 +335,10 @@ class alphaList:
         #TODO: create a version of /alpha.xml with the correct updated dates,
         #and cache it for an hour to ease load on solr
         datestr = getDateString()
-
-        urnroot = 'urn:x-internet-archive:bookserver:catalog'
         
         c = catalog.Catalog(
                             title     = 'Internet Archive - All Titles',
-                            urnroot   = urnroot + ':opds:titles:all',
+                            urnroot   = pubInfo['urnroot'] + ':opds:titles:all',
                             url       = pubInfo['opdsroot'] + '/alpha.xml',
                             datestr   = datestr,
                             author    = 'Internet Archive',
@@ -392,7 +349,7 @@ class alphaList:
             lower = letter.lower()
 
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
-                               'urn'     : urnroot + ':opds:titles:'+lower,
+                               'urn'     : pubInfo['urnroot'] + ':opds:titles:'+lower,
                                'url'     : 'alpha/'+lower+'/0',
                                'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
@@ -413,19 +370,6 @@ class downloads:
     def GET(self, extension):
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
-        #f = urllib.urlopen(solrUrl)        
-        #contents = f.read()
-        #f.close()
-        #obj = json.loads(contents)
-
-        #opds = createOpdsRoot('Internet Archive - Most Downloaded Books in the last Month', 
-                              #'opds:downloads', '/downloads.xml', getDateString())
-                              
-        #for item in obj['response']['docs']:
-            #createOpdsEntryBook(opds, item)
-
-        #web.header('Content-Type', pubInfo['mimetype'])
-        #return prettyPrintET(opds)
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
         c = ingestor.getCatalog()
