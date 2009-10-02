@@ -64,16 +64,12 @@ class CatalogToAtom(CatalogRenderer):
         
     # createOpdsRoot()
     #___________________________________________________________________________
-    def createOpdsRoot(self, title, urnroot, nss, urlroot, relurl, datestr, authorName, authorUri):
+    def createOpdsRoot(self, title, urn, urlroot, relurl, datestr, authorName, authorUri):
         ### TODO: add updated element and uuid element
-        opds = ET.Element(CatalogToAtom.atom + "feed", nsmap=CatalogToAtom.nsmap)
-        #opds.attrib['xmlns']         = 'http://www.w3.org/2005/Atom'
-        #opds.attrib['xmlns:dc']      = 'http://purl.org/dc/elements/1.1/'
-        #opds.attrib['xmlns:dcterms'] = 'http://purl.org/dc/terms/'
-                    
+        opds = ET.Element(CatalogToAtom.atom + "feed", nsmap=CatalogToAtom.nsmap)                    
         
         self.createTextElement(opds, 'title',    title)
-        urn = urnroot + nss
+
         self.createTextElement(opds, 'id',       urn)
     
         self.createTextElement(opds, 'updated',  datestr)
@@ -173,7 +169,7 @@ class CatalogToAtom(CatalogRenderer):
     # __init__()
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
-        self.opds = self.createOpdsRoot(c._title, c._urnroot, '', c._url, '/', c._datestr, c._author, c._authorUri)
+        self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
         self.createOpenSearchDescription(self.opds, c._opensearch)
 
         if c._navigation:

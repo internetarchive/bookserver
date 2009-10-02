@@ -255,7 +255,7 @@ class index:
         
         c = catalog.Catalog(
                             title     = 'Internet Archive OPDS',
-                            urnroot   = pubInfo['urnroot'],
+                            urn       = pubInfo['urnroot'],
                             url       = pubInfo['opdsroot'],
                             datestr   = datestr,
                             author    = 'Internet Archive',
@@ -309,9 +309,11 @@ class alpha:
             start = int(start)
         
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
         titleFragment = 'books starting with "%s"' % (letter.upper())
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl,
+        urn           = pubInfo['urnroot'] + ':%s:%d'%(letter, start)
+
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
                                                 urlBase='/alpha/a/',
                                                 titleFragment = titleFragment)
@@ -337,7 +339,7 @@ class alphaList:
         
         c = catalog.Catalog(
                             title     = 'Internet Archive - All Titles',
-                            urnroot   = pubInfo['urnroot'] + ':opds:titles:all',
+                            urn       = pubInfo['urnroot'] + ':titles:all',
                             url       = pubInfo['opdsroot'] + '/alpha.xml',
                             datestr   = datestr,
                             author    = 'Internet Archive',
@@ -348,7 +350,7 @@ class alphaList:
             lower = letter.lower()
 
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
-                               'urn'     : pubInfo['urnroot'] + ':opds:titles:'+lower,
+                               'urn'     : pubInfo['urnroot'] + ':titles:'+lower,
                                'url'     : 'alpha/'+lower+'/0',
                                'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
@@ -371,7 +373,8 @@ class downloads:
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
 
         titleFragment = 'Most Downloaded Books in the last Month'
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, titleFragment=titleFragment)
+        urn           = pubInfo['urnroot'] + ':downloads'
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn, titleFragment=titleFragment)
         c = ingestor.getCatalog()
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
@@ -399,10 +402,10 @@ class newest:
             start = int(start)
         
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
         titleFragment = 'books sorted by update date'
-        
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl,
+        urn           = pubInfo['urnroot'] + ':new:%d' % (start)
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
                                                 urlBase='/new/',
                                                 titleFragment = titleFragment)

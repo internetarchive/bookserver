@@ -55,7 +55,7 @@ class SolrToCatalog:
 
     # SolrToCatalog()
     #___________________________________________________________________________    
-    def __init__(self, pubInfo, url, start=None, numRows=None, urlBase=None, titleFragment=None):
+    def __init__(self, pubInfo, url, urn, start=None, numRows=None, urlBase=None, titleFragment=None):
                     
         self.url = url
         f = urllib.urlopen(self.url)
@@ -76,7 +76,7 @@ class SolrToCatalog:
             title += titleFragment
             
         self.c = Catalog(title     = title,
-                         urnroot   = pubInfo['urnroot'],
+                         urn       = urn,
                          url       = pubInfo['opdsroot'],
                          author    = pubInfo['name'],
                          authorUri = pubInfo['uri'],

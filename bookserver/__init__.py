@@ -21,7 +21,8 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import catalog
->>> c = catalog.Catalog(title='Internet Archive OPDS')
+>>> urn = 'urn:x-internet-archive:bookserver:catalog'
+>>> c = catalog.Catalog(title='Internet Archive OPDS', urn=urn)
 
 >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
 ...                    'url'     : 'http://archive.org/details/itemid',
@@ -75,7 +76,7 @@ This file is part of bookserver.
 ...    'urnroot'  : 'urn:x-internet-archive:bookserver:catalog',
 ... }
 >>> solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows=50&wt=json'
->>> ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
+>>> ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn)
 >>> c = ingestor.getCatalog()
 >>> print c._title
 Internet Archive OPDS

@@ -29,7 +29,7 @@ class Catalog:
 
     def __init__(self, 
                  title     = 'Internet Archive OPDS',
-                 urnroot   = 'urn:x-internet-archive:bookserver:catalog',
+                 urn       = 'urn:x-internet-archive:bookserver:catalog',
                  url       = 'http://bookserver.archive.org/catalog', 
                  datestr   = None,
                  author    = 'Internet Archive',
@@ -39,7 +39,7 @@ class Catalog:
         self._opensearch = None
         self._navigation = None
         self._title      = title
-        self._urnroot    = urnroot
+        self._urn        = urn
         self._url        = url
         self._datestr    = datestr
         self._author     = author
