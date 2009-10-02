@@ -312,10 +312,11 @@ class alpha:
         
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
-
+        titleFragment = 'books starting with "%s"' % (letter.upper())
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl,
                                                 start=start, numRows=numRows,
-                                                urlBase='/alpha/a/')
+                                                urlBase='/alpha/a/',
+                                                titleFragment = titleFragment)
         c = ingestor.getCatalog()
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
@@ -371,7 +372,8 @@ class downloads:
         #TODO: add Image PDFs to this query
         solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
 
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl)
+        titleFragment = 'Most Downloaded Books in the last Month'
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, titleFragment=titleFragment)
         c = ingestor.getCatalog()
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'

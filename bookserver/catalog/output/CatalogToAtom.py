@@ -163,15 +163,11 @@ class CatalogToAtom(CatalogRenderer):
 
     # createNavLinks()
     #___________________________________________________________________________
-    def createNavLinks(self, opds, nav):
-        print 'creating links'
-        print 'nextTitle ' + nav.nextTitle
-        
+    def createNavLinks(self, opds, nav):        
         if nav.prevLink:
             self.createRelLink(opds, 'prev', '', nav.prevLink, nav.prevTitle)
 
         if nav.nextLink:
-            print 'creating next link'        
             self.createRelLink(opds, 'next', '', nav.nextLink, nav.nextTitle)
 
     # __init__()

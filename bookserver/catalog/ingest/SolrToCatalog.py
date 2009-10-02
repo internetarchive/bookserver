@@ -55,23 +55,35 @@ class SolrToCatalog:
 
     # SolrToCatalog()
     #___________________________________________________________________________    
-    def __init__(self, pubInfo, url, start=None, numRows=None, urlBase=None):       
+    def __init__(self, pubInfo, url, start=None, numRows=None, urlBase=None, titleFragment=None):
                     
         self.url = url
         f = urllib.urlopen(self.url)
         contents = f.read()
         f.close()
         obj = json.loads(contents)
-        
-        self.c = Catalog(title     = pubInfo['name'] + ' OPDS',
-                                 urnroot   = pubInfo['urnroot'],
-                                 url       = pubInfo['opdsroot'],
-                                 author    = pubInfo['name'],
-                                 authorUri = pubInfo['uri'],
-                                 datestr   = self.getDateString(),                                 
-                                )
 
         numFound = int(obj['response']['numFound'])
+        
+        title = pubInfo['name'] + ' OPDS'        
+
+        if None != start:
+            title += " - %d to %d of %d " % (start*numRows, min((start+1)*numRows, numFound), numFound)
+        elif None != titleFragment:
+            title += " - "
+            
+        if None != titleFragment:
+            title += titleFragment
+            
+        self.c = Catalog(title     = title,
+                         urnroot   = pubInfo['urnroot'],
+                         url       = pubInfo['opdsroot'],
+                         author    = pubInfo['name'],
+                         authorUri = pubInfo['uri'],
+                         datestr   = self.getDateString(),                                 
+                        )
+
+
         nav = Navigation(start, numRows, numFound, urlBase)
         self.c.addNavigation(nav)
 
