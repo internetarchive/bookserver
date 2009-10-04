@@ -131,7 +131,7 @@ class alpha:
         c = ingestor.getCatalog()
     
         web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
         return r.toString()
         
 # /alpha.xml
@@ -186,7 +186,7 @@ class downloads:
         
         if ('xml' == extension):
             web.header('Content-Type', pubInfo['mimetype'])
-            r = output.CatalogToAtom(c, fabricateContentElement=True)
+            r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
@@ -215,7 +215,7 @@ class newest:
         c = ingestor.getCatalog()
     
         web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
         return r.toString()
 
 
@@ -244,7 +244,7 @@ class search:
         c = ingestor.getCatalog()
 
         web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
         return r.toString()
         
 
