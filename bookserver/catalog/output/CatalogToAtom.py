@@ -102,10 +102,10 @@ class CatalogToAtom(CatalogRenderer):
         downloadLinks = []
         element = ET.SubElement(entry, 'link')
         element.attrib['href'] = obj['url'];        
-        element.attrib['rel']  = 'http://opds-spec.org/acquisition'
         (urlStart, sep, ext) = obj['url'].rpartition('.')
         if ext in CatalogToAtom.fileExtMap:
             element.attrib['type'] = CatalogToAtom.fileExtMap[ext]
+            element.attrib['rel']  = 'http://opds-spec.org/acquisition'
             downloadLinks.append(obj['url'])
         else:
             element.attrib['type'] = 'application/atom+xml'
