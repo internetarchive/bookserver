@@ -65,7 +65,7 @@ This file is part of bookserver.
 
 >>> h = catalog.output.CatalogToHtml(c)
 >>> html = h.toString()
->>> print html
+>>> # print html
 
 >>> pubInfo = {
 ...    'name'     : 'Internet Archive',
