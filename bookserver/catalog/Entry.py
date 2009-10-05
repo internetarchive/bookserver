@@ -71,22 +71,22 @@ class Entry():
     """
 
     valid_keys = {
-        'urn'                 : unicode,
-        'url'                 : unicode,
-        'title'               : unicode,
-        'datestr'             : unicode,
-        'content'             : unicode,
-        'downloadsPerMonth'   : unicode,
-        'updated'             : unicode,
-        'identifier'          : unicode,
-        'date'                : unicode,
+        'urn'                 : unicode, # Site-specific identifier, used to uniquely identify Atom entry
+        'url'                 : unicode, # Acquisition links, there may be multiple with different types - soon to be list of multiple links, with different types
+        'title'               : unicode, # Item title
+        'content'             : unicode, # Free-form text or HTML that describes the item
+        'downloadsPerMonth'   : unicode, # IA-specific, downloads of item in last 30 days
+        'updated'             : unicode, # The last time information about this entry (not the book content) was updated
+        'identifier'          : unicode, # Archive item ID
+        'date'                : unicode, # Publication date
         
-        'publishers'          : list,
-        'contributors'        : list,
-        'languages'           : list,
-        'subjects'            : list,
-        'oai_updatedates'     : list,
-        'authors'             : list,
+        'publishers'          : list, # Publishers of the book, (usually just one listed, or none)
+        'contributors'        : list, # IA-specific, includes libraries who contributed book
+        'languages'           : list, # Languages, currently copied directly from IA metadata (MARC 21 code list 3 letter codes)
+                                      # See http://www.loc.gov/marc/languages/language_code.html
+        'subjects'            : list, # For IA, typically come from MARC records
+        'oai_updatedates'     : list, # From Solr, list of dates when item was modified
+        'authors'             : list, # List of authors
     }
     
     required_keys = ('urn', 'url', 'title')

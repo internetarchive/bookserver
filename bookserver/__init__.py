@@ -59,7 +59,7 @@ This file is part of bookserver.
     <title>test item</title>
     <id>x-internet-archive:item:itemid</id>
     <updated>2009-01-01T00:00:00Z</updated>
-    <link type="application/atom+xml" href="http://archive.org/details/itemid"/>
+    <link href="http://archive.org/details/itemid" type="application/atom+xml"/>
   </entry>
 </feed>
 
