@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright(c)2009 Internet Archive. Software license AGPL version 3.
+Copyright(c)2008 Internet Archive. Software license AGPL version 3.
 
 This file is part of bookserver.
 
@@ -19,13 +19,25 @@ This file is part of bookserver.
     along with bookserver.  If not, see <http://www.gnu.org/licenses/>.
     
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
+    
 """
 
-from CatalogRenderer import CatalogRenderer
+from Catalog import Catalog
+from Entry import Entry
 
 import lxml.etree as ET
-#import xml.etree.ElementTree as ET
 
+class CatalogRenderer:
+    """Base class for catalog renderers"""
+
+    def __init__(self):
+        pass
+        
+    def toString(self):
+        return ''
+        
+    def prettyPrintET(self, etNode):
+        return ET.tostring(etNode, pretty_print=True)
 
 class CatalogToAtom(CatalogRenderer):
 
@@ -215,4 +227,150 @@ class CatalogToAtom(CatalogRenderer):
     def toElementTree(self):
         return self.opds
         
+
+class CatalogToHtml(CatalogRenderer):
+    """
+    The HTML page is organised thus:
+        PageHeader
+        Navigation
+        Search
+        CatalogHeader
+        EntryList
+        PageFooter
+    """
         
+    def __init__(self, catalog):
+        CatalogRenderer.__init__(self)
+        self.processCatalog(catalog)
+        
+    def processCatalog(self, catalog):
+        html = self.createHtml(catalog)
+        html.append(self.createHead(catalog))
+        body = self.createBody(catalog)
+        html.append(body)
+        body.append(self.createHeader(catalog))
+        body.append(self.createNavigation(catalog._navigation))
+        body.append(self.createSearch(catalog._opensearch))
+        body.append(self.createCatalogHeader(catalog))
+        body.append(self.createEntryList(catalog._entries))
+        body.append(self.createFooter(catalog))
+        
+        self.html = html
+        return self
+        
+    def createHtml(self, catalog):
+        return ET.Element('html')
+        
+    def createHead(self, catalog):
+        # XXX flesh out
+        # updated
+        # atom link
+        
+        head = ET.Element('head')
+        titleElement = ET.SubElement(head, 'title')
+        titleElement.text = catalog._title
+        head.append(self.createStyleSheet('/static/catalog.css'))
+        
+        return head
+            
+    def createStyleSheet(self, url):
+        """
+        Returns a <link> element for the CSS stylesheet at given URL
+        
+        >>> l = testToHtml.createStyleSheet('/static/catalog.css')
+        >>> ET.tostring(l)
+        '<link href="/static/catalog.css" type="text/css" rel="stylesheet"/>'
+        """
+    
+        # TODO add ?v={version}
+        return ET.Element('link', {
+            'rel':'stylesheet',
+            'type':'text/css', 
+            'href':url
+        })
+        
+    def createBody(self, catalog):
+        return ET.Element('body')
+        
+    def createHeader(self, catalog):
+        div = ET.Element( 'div', {'class':'opds-header'} )
+        div.text = 'OPDS Header' # XXX
+        return div
+        
+    def createNavigation(self, navigation):
+        div = ET.Element( 'div', {'class':'opds-navigation'} )
+        div.text = 'Navigation div' # XXX
+        return div
+        
+    def createSearch(self, opensearch):
+        div = ET.Element( 'div', {'class':'opds-search'} )
+        div.text = 'Search div' # XXX
+        return div
+        
+    def createCatalogHeader(self, catalog):
+        div = ET.Element( 'div', {'class':'opds-catalog-header'} )
+        title = ET.SubElement(div, 'h1', {'class':'opds-catalog-header-title'} )
+        title.text = catalog._title # XXX
+        return div
+                
+    def createEntry(self, entry):
+        e = ET.Element('p')
+        e.set('class', 'entry')
+        title = ET.SubElement(e, 'h2', {'class':'opds-entry-title'} )
+        title.text = entry.get('title')
+        
+        # TODO sort for display order
+        for key in Entry.valid_keys.keys():
+            formattedEntryKey = self.createEntryKey(key, entry.get(key))
+            if (formattedEntryKey):
+                e.append( formattedEntryKey )
+        
+        return e
+        
+    def createEntryKey(self, key, value):
+        if not value:
+            # empty
+            return None
+        
+        # XXX handle lists, pretty format key, order keys
+        e = ET.Element('span', { 'class': 'opds-entry' })
+        keyName = ET.SubElement(e, 'em', {'class':'opds-entry-key'})
+        keyName.text = unicode(key, 'utf-8') + ':'
+        keyName.tail = ' '
+        keyValue = ET.SubElement(e, 'span', { 'class': 'opds-entry-value opds-entry-%s' % key })
+        keyValue.text = unicode(value)
+        ET.SubElement(e, 'br')
+        return e
+        
+    def createEntryList(self, entries):
+        list = ET.Element( 'ul', {'class':'opds-entry-list'} )
+        for entry in entries:
+            item = ET.SubElement(list, 'li', {'class':'opds-entry-list-item'} )
+            item.append(self.createEntry(entry))
+            list.append(item)
+        return list
+        
+    def createFooter(self, catalog):
+        div = ET.Element('div', {'class':'opds-footer'} )
+        div.text = 'Page Footer Div' # XXX
+        return div
+        
+    def toString(self):
+        return self.prettyPrintET(self.html)
+        
+        
+if __name__ == "__main__":
+    import doctest
+    global testToHtml
+    
+    urn = 'urn:x-internet-archive:bookserver:catalog'
+    c = Catalog(title='Internet Archive OPDS', urn=urn)
+    e = Entry({'urn'  : 'x-internet-archive:item:itemid',
+                        'url'     : 'http://archive.org/details/itemid',
+                        'title'   : u'test item',
+                        'updated' : '2009-01-01T00:00:00Z'})
+    c.addEntry(e)
+    testToHtml = CatalogToHtml(c)
+    
+    doctest.testmod()
+    
