@@ -32,6 +32,7 @@ from .. import Catalog
 from .. import Entry
 from .. import Navigation
 from .. import OpenSearch
+from .. import Link
 
 class SolrToCatalog:
 
@@ -100,9 +101,14 @@ class SolrToCatalog:
                 bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
 
             bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
-            bookDict['url'] = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier'])
-            
-            e = Entry(bookDict)
+
+            pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
+                           type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
+
+            epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
+                           type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
+                                       
+            e = Entry(bookDict, links=(pdfLink, epubLink))
             self.c.addEntry(e)
             #print bookDict
         

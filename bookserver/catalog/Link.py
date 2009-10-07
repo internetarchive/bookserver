@@ -21,12 +21,12 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
+class Link:
 
-from Catalog    import Catalog
-from Entry      import Entry
-from Navigation import Navigation
-from OpenSearch import OpenSearch
-from Link       import Link
-
-import ingest
-import output
+    def __init__(self, url=None, type=None, rel=None):
+        assert url
+        assert type
+        
+        self._url  = url
+        self._type = type
+        self._rel  = rel

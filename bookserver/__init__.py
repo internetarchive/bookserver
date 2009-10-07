@@ -24,10 +24,11 @@ This file is part of bookserver.
 >>> urn = 'urn:x-internet-archive:bookserver:catalog'
 >>> c = catalog.Catalog(title='Internet Archive OPDS', urn=urn)
 
+>>> l = catalog.Link(url  = 'http://archive.org/details/itemid',
+...                  type = 'application/atom+xml')
 >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
-...                    'url'     : 'http://archive.org/details/itemid',
 ...                    'title'   : u'test item',
-...                    'updated' : '2009-01-01T00:00:00Z'})
+...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l])
 >>> c.addEntry(e)
 
 >>> start    = 0
@@ -62,6 +63,7 @@ This file is part of bookserver.
     <link href="http://archive.org/details/itemid" type="application/atom+xml"/>
   </entry>
 </feed>
+
 
 >>> h = catalog.output.CatalogToHtml(c)
 >>> html = h.toString()

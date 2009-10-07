@@ -26,6 +26,7 @@ from Catalog import Catalog
 from Entry import Entry
 from OpenSearch import OpenSearch
 from Navigation import Navigation
+from Link  import Link
 
 import lxml.etree as ET
 
@@ -62,6 +63,9 @@ class CatalogToAtom(CatalogRenderer):
         'pdf'  : 'application/pdf',
         'epub' : 'application/epub+zip'
     }
+    
+    ebookTypes = ('application/pdf',
+                  'application/epub+zip')
     
     # createTextElement()
     #___________________________________________________________________________
@@ -102,9 +106,18 @@ class CatalogToAtom(CatalogRenderer):
         #self.createRelLink(opds, 'search', '/opensearch.xml', 'Search ') # + author)
         return opds
 
+    # createOpdsLink()
+    #___________________________________________________________________________
+    def createOpdsLink(self, entry, link):
+        element = ET.SubElement(entry, 'link')
+        element.attrib['href'] = link._url
+        element.attrib['type'] = link._type
+        if link._rel:
+            element.attrib['rel']  = link._rel
+    
     # createOpdsEntry()
     #___________________________________________________________________________
-    def createOpdsEntry(self, opds, obj, fabricateContentElement, fabricateEpub):
+    def createOpdsEntry(self, opds, obj, links, fabricateContentElement):
         entry = ET.SubElement(opds, 'entry')
         self.createTextElement(entry, 'title', obj['title'])
     
@@ -114,24 +127,11 @@ class CatalogToAtom(CatalogRenderer):
         self.createTextElement(entry, 'updated',  obj['updated'])
     
         downloadLinks = []
-        element = ET.SubElement(entry, 'link')
-        element.attrib['href'] = obj['url'];        
-        (urlStart, sep, ext) = obj['url'].rpartition('.')
-        if ext in CatalogToAtom.fileExtMap:
-            element.attrib['type'] = CatalogToAtom.fileExtMap[ext]
-            element.attrib['rel']  = 'http://opds-spec.org/acquisition'
-            downloadLinks.append(obj['url'])
-        else:
-            element.attrib['type'] = 'application/atom+xml'
-                
-        if ('pdf' == ext) and fabricateEpub:
-            epubUrl = obj['url'].rstrip('pdf') + 'epub'
-            element = ET.SubElement(entry, 'link')
-            element.attrib['href'] = epubUrl
-            element.attrib['rel']  = 'http://opds-spec.org/acquisition'
-            element.attrib['type'] = CatalogToAtom.fileExtMap['epub']
-            downloadLinks.append(epubUrl)
-        
+        for link in links:
+            self.createOpdsLink(entry, link)
+            if link._type in CatalogToAtom.ebookTypes:
+                downloadLinks.append(link)
+                    
         if 'date' in obj:
             element = self.createTextElement(entry, self.dcterms+'issued',  obj['date'][0:4])
     
@@ -186,8 +186,8 @@ class CatalogToAtom(CatalogRenderer):
             if len(downloadLinks):
                 contentText += '<b>Download Ebook: </b>'
                 for link in downloadLinks:
-                    (start, sep, ext) = link.rpartition('.')
-                    contentText += '(<a href="%s">%s</a>) '%(link, ext.upper())
+                    (start, sep, ext) = link._url.rpartition('.')
+                    contentText += '(<a href="%s">%s</a>) '%(link._url, ext.upper())
         
             element = self.createTextElement(entry, 'content',  contentText)
             element.attrib['type'] = 'html'        
@@ -208,7 +208,7 @@ class CatalogToAtom(CatalogRenderer):
 
     # __init__()
     #___________________________________________________________________________    
-    def __init__(self, c, fabricateContentElement=False, fabricateEpub=False):
+    def __init__(self, c, fabricateContentElement=False):
         self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
         self.createOpenSearchDescription(self.opds, c._opensearch)
 
@@ -216,7 +216,7 @@ class CatalogToAtom(CatalogRenderer):
             self.createNavLinks(self.opds, c._navigation)
 
         for e in c._entries:
-            self.createOpdsEntry(self.opds, e._entry, fabricateContentElement, fabricateEpub)
+            self.createOpdsEntry(self.opds, e._entry, e._links, fabricateContentElement)
             
         
     # toString()
@@ -473,10 +473,11 @@ if __name__ == "__main__":
     
     urn = 'urn:x-internet-archive:bookserver:catalog'
     testCatalog = Catalog(title='Internet Archive OPDS', urn=urn)
+    testLink    = Link(url  = 'http://archive.org/details/itemid',
+                       type = 'application/atom+xml', rel='alternate')
     testEntry = Entry({'urn'  : 'x-internet-archive:item:itemid',
-                        'url'     : 'http://archive.org/details/itemid',
                         'title'   : u'test item',
-                        'updated' : '2009-01-01T00:00:00Z'})
+                        'updated' : '2009-01-01T00:00:00Z'}, links=[testLink])
                         
     start    = 0
     numFound = 2

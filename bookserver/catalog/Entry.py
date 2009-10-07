@@ -21,10 +21,11 @@ This file is part of bookserver.
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import Entry
+>>> import Link
+>>> l = Link.Link(url  = 'http://www.archive.org/download/abuenosairesviaj00gonz/abuenosairesviaj00gonz.pdf',
+...               type = 'application/pdf', rel='http://opds-spec.org/acquisition')
 >>> e = Entry.Entry({'urn'   :'urn:x-internet-archive:item:abuenosairesviaj00gonz',
-...                  'url'   :'http://www.archive.org/download/abuenosairesviaj00gonz/abuenosairesviaj00gonz.pdf',
-...                  'title' : 'abuenosairesviaj00gonz',
-...                })
+...                  'title' : 'abuenosairesviaj00gonz'}, links = [l])
 
 #getters and setters
 
@@ -89,7 +90,7 @@ class Entry():
         'authors'             : list, # List of authors
     }
     
-    required_keys = ('urn', 'url', 'title')
+    required_keys = ('urn', 'title')
     
     def validate(self, key, value):
         if key not in Entry.valid_keys:
@@ -111,7 +112,7 @@ class Entry():
 
     # Entry()
     #___________________________________________________________________________        
-    def __init__(self, obj):
+    def __init__(self, obj, links=None):
 
         
         if not type(obj) == dict:
@@ -124,7 +125,11 @@ class Entry():
             if not req_key in obj:
                 raise KeyError("required key %s not supplied!" % (req_key))
 
-        self._entry = copy.deepcopy(obj)        
+        if not links:
+            raise KeyError("links not supplied!")
+
+        self._entry = copy.deepcopy(obj)
+        self._links = links
                 
 
     # get()
