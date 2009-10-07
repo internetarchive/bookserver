@@ -543,11 +543,13 @@ class CatalogToHtml(CatalogRenderer):
 class ArchiveCatalogToHtml(CatalogToHtml):
     def createEntry(self, entry):
         e = CatalogToHtml.createEntry(self, entry)
-        s = ET.SubElement(e, 'span')
-        ET.SubElement(s, 'br')
-        a = ET.SubElement(s, 'a', {'href': 'http://www.archive.org/details/%s' % entry.get('identifier') })
-        a.text = 'More information about this book'
-        ET.SubElement(s, 'br')
+        identifier = entry.get('identifier')
+        if identifier:
+            s = ET.SubElement(e, 'span')
+            ET.SubElement(s, 'br')
+            a = ET.SubElement(s, 'a', {'href': 'http://www.archive.org/details/%s' % entry.get('identifier') })
+            a.text = 'More information about this book'
+            ET.SubElement(s, 'br')
         return e
 
 
