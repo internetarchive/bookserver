@@ -252,6 +252,13 @@ class CatalogToHtml(CatalogRenderer):
         'languages': ('Language', 'Languages'),
         'downloadsPerMonth': ('Recent downloads', 'Recent downloads')
     }
+    
+    entryLinkTitles = {
+        'application/pdf': 'PDF',
+        'application/epub': 'EPUB',
+        'application/epub+zip': 'EPUB',
+        'text/html': 'Online',
+    }
         
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
@@ -392,7 +399,7 @@ class CatalogToHtml(CatalogRenderer):
         """
         >>> e = testToHtml.createEntry(testEntry)
         >>> print ET.tostring(e)
-        <p class="opds-entry"><h2 class="opds-entry-title">test item</h2><span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://archive.org/details/itemid" class="opds-entry-value">http://archive.org/details/itemid</a></span><br/></p>
+        <p class="opds-entry"><h2 class="opds-entry-title">test item</h2><span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://archive.org/details/itemid" class="opds-entry-link">http://archive.org/details/itemid</a></span></p>
         """
         
         e = ET.Element('p', { 'class':'opds-entry'} )
@@ -422,10 +429,9 @@ class CatalogToHtml(CatalogRenderer):
                 itemValue = ET.SubElement(entryItem, 'span', {'class': 'opds-entry-value' } )
                 itemValue.text = unicode(displayValue)
                 ET.SubElement(entryItem, 'br')
-                
-        for link in entry._links:
-            e.append( self.createEntryLink(link) )
-            ET.SubElement(e, 'br')
+
+        if entry._links:
+            e.append(self.createEntryLinks(entry._links))
                         
         # TODO sort for display order
         # for key in Entry.valid_keys.keys():
@@ -435,23 +441,52 @@ class CatalogToHtml(CatalogRenderer):
         
         return e
 
-    def createEntryLink(self, link):
+    def createEntryLinks(self, links):
         """
-        >>> l = Link(url = 'http://a.o/item.pdf', type='application/pdf')
-        >>> e = testToHtml.createEntryLink(l)
+        >>> pdf = Link(url = 'http://a.o/item.pdf', type='application/pdf')
+        >>> epub = Link(url = 'http://a.o/item.epub', type='application/epub+zip')
+        >>> links = [pdf, epub]
+        >>> e = testToHtml.createEntryLinks(links)
         >>> print ET.tostring(e)
-        <span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://a.o/item.pdf" class="opds-entry-value">http://a.o/item.pdf</a></span>
+        <span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">EPUB</a></span>
         """
         s = ET.Element('span', { 'class':'opds-entry-item' } )
         title = ET.SubElement(s, 'em', {'class':'opds-entry-key'} )
         # $$$ TODO different formatting for different link types
         title.text = 'Download:'
         title.tail = ' '
-        a = ET.SubElement(s, 'a', {'class':'opds-entry-value',
+        
+        linkElems = [self.createEntryLink(link) for link in links]
+        for linkElem in linkElems:
+            s.append(linkElem)
+            if linkElem != linkElems[-1]:
+                linkElem.tail = ', '
+        
+        return s
+        
+    def createEntryLink(self, link):
+        """
+        >>> l = Link(url = 'http://foo.com/bar.pdf', type='application/pdf')
+        >>> e = testToHtml.createEntryLink(l)
+        >>> print ET.tostring(e)
+        <a href="http://foo.com/bar.pdf" class="opds-entry-link">PDF</a>
+        
+        >>> l = Link(url = '/blah.epub', type='application/epub')
+        >>> e = testToHtml.createEntryLink(l)
+        >>> print ET.tostring(e)
+        <a href="/blah.epub" class="opds-entry-link">EPUB</a>
+        """
+        
+        if self.entryLinkTitles.has_key(link._type):
+            title = self.entryLinkTitles[link._type]
+        else:
+            title = link._url
+        
+        a = ET.Element('a', {'class':'opds-entry-link',
             'href' : link._url
         })
-        a.text = link._url # XXX
-        return s
+        a.text = title
+        return a
         
     def createEntryKey(self, key, value):
         # $$$ legacy
