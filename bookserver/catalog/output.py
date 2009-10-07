@@ -24,6 +24,8 @@ This file is part of bookserver.
 
 from Catalog import Catalog
 from Entry import Entry
+from OpenSearch import OpenSearch
+from Navigation import Navigation
 
 import lxml.etree as ET
 
@@ -301,9 +303,60 @@ class CatalogToHtml(CatalogRenderer):
         return div
         
     def createNavigation(self, navigation):
+        """
+        >>> start    = 5
+        >>> numFound = 100
+        >>> numRows  = 10
+        >>> urlBase  = '/alpha/a/'
+        >>> nav = Navigation(start, numRows, numFound, urlBase)
+        >>> div = testToHtml.createNavigation(nav)
+        >>> print ET.tostring(div)
+        <div class="opds-navigation"><a href="/alpha/a/4" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/alpha/a/6" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
+        """
+        
         div = ET.Element( 'div', {'class':'opds-navigation'} )
-        div.text = 'Navigation div' # XXX
+        if not navigation:
+            # No navigation provided, return empty div
+            return div
+                    
+        # print '%s %s - %s %s' % (navigation.nextLink, navigation.nextTitle,
+        #    navigation.prevLink, navigation.prevTitle)
+            
+        nextLink, nextTitle = navigation.nextLink, navigation.nextTitle
+        prevLink, prevTitle = navigation.prevLink, navigation.prevTitle
+        
+        if (prevLink):
+            prevA = self.createNavigationAnchor('prev', navigation.prevLink, navigation.prevTitle)
+            div.append(prevA)
+        else:
+            # $$$ no further results, append appropriate element
+            pass
+
+        if (nextLink):
+            nextA = self.createNavigationAnchor('next', navigation.nextLink, navigation.nextTitle)
+            div.append(nextA)
+        else:
+            # $$$ no next results, append appropriate element
+            pass
+        
         return div
+        
+    def createNavigationAnchor(self, rel, url, title = None):
+        """
+        >>> a = testToHtml.createNavigationAnchor('next', 'a/1', 'Next results')
+        >>> print ET.tostring(a)
+        <a href="a/1" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a>
+        """
+        attribs = {'class':'opds-navigation-anchor',
+            'rel': rel,
+            'href': url}
+        if title is not None:
+            attribs['title'] = title    
+        a = ET.Element('a', attribs)
+        
+        if title is not None:
+            a.text = title
+        return a
         
     def createSearch(self, opensearch):
         div = ET.Element( 'div', {'class':'opds-search'} )
@@ -372,6 +425,18 @@ if __name__ == "__main__":
                         'url'     : 'http://archive.org/details/itemid',
                         'title'   : u'test item',
                         'updated' : '2009-01-01T00:00:00Z'})
+                        
+    start    = 0
+    numFound = 2
+    numRows  = 1
+    urlBase  = '/alpha/a/'
+    testNavigation = Navigation(start, numRows, numFound, urlBase)
+    testCatalog.addNavigation(testNavigation)
+    
+    osDescription = 'http://bookserver.archive.org/opensearch.xml'
+    testSearch = OpenSearch(osDescription)
+    testCatalog.addOpenSearch(testSearch)
+    
     testCatalog.addEntry(testEntry)
     testToHtml = CatalogToHtml(testCatalog)
     

@@ -32,7 +32,7 @@ pubInfo = {
 
 urls = (
     '/(.*)/',                       'redirect',
-    '/alpha.xml',                   'alphaList',
+    '/alpha.(xml|html)',            'alphaList',
     '/alpha/(.)(?:/(.*))?',         'alpha',
     '/downloads.(xml|html)',        'downloads',
     '/new(?:/(.*))?',               'newest',
@@ -137,7 +137,13 @@ class alpha:
 # /alpha.xml
 #______________________________________________________________________________
 class alphaList:
-    def GET(self):
+    def alphaURL(self, extension, letter, start):
+        url = 'alpha/%s/%d' % (letter, start)
+        if 'xml' != extension:
+            url += '.' + extension
+        return url
+
+    def GET(self, extension):
         #IA is continuously scanning books. Since this OPDS file is constructed
         #from search engine results, let's change the updated date every midnight
         #TODO: create a version of /alpha.xml with the correct updated dates,
@@ -158,7 +164,7 @@ class alphaList:
 
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
                                'urn'     : pubInfo['urnroot'] + ':titles:'+lower,
-                               'url'     : 'alpha/'+lower+'/0',
+                               'url'     : self.alphaURL(extension, lower, 0),
                                'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
                              })
@@ -167,10 +173,15 @@ class alphaList:
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
         o = catalog.OpenSearch(osDescriptionDoc)
         c.addOpenSearch(o)
-            
-        web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c)
-        return r.toString()
+        
+        if ('xml' == extension):
+            web.header('Content-Type', pubInfo['mimetype'])
+            r = output.CatalogToAtom(c)
+            return r.toString()
+        else:
+            web.header('Content-Type', 'text/html')
+            r = output.CatalogToHtml(c)
+            return r.toString()
 
 # /downloads.xml
 #______________________________________________________________________________
