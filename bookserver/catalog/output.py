@@ -243,6 +243,15 @@ class CatalogToHtml(CatalogRenderer):
         >>> h = CatalogToHtml(testCatalog)
         >>> # print(h.toString())
     """
+    
+    entryMap = {
+        'authors': ('Author', 'Authors'),
+        'date': ('Published', 'Published'),
+        'publishers': ( 'Publisher', 'Publishers'),
+        'contributors': ('Contributor', 'Contributors'),
+        'languages': ('Language', 'Languages'),
+        'downloadsPerMonth': ('Recent downloads', 'Recent downloads')
+    }
         
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
@@ -380,20 +389,53 @@ class CatalogToHtml(CatalogRenderer):
         return div
                 
     def createEntry(self, entry):
+        """
+        >>> e = testToHtml.createEntry(testEntry)
+        >>> print ET.tostring(e)
+        <p class="entry"><h2 class="opds-entry-title">test item</h2></p>
+        """
+        
         e = ET.Element('p')
         e.set('class', 'entry')
         title = ET.SubElement(e, 'h2', {'class':'opds-entry-title'} )
         title.text = entry.get('title')
         
+        for key, titles in self.entryMap.items():
+            value = entry.get(key)
+            if value:
+                if type(value) == type([]):
+                    if len(value) == 1:
+                       displayTitle = titles[0]
+                       displayValue = value[0]
+                    else:
+                        # Multiple items
+                        displayTitle = titles[1]
+                        displayValue = ', '.join(value)
+                else:
+                    # Single item
+                    displayTitle = titles[0]
+                    displayValue = value
+                    
+                entryItem = ET.SubElement(e, 'span', {'class':'opds-entry'} )
+                itemName = ET.SubElement(entryItem, 'em', {'class':'opds-entry-key'} )
+                itemName.text = displayTitle + ':'
+                itemName.tail = ' '
+                itemValue = ET.SubElement(entryItem, 'span', {'class': 'opds-entry-value' } )
+                itemValue.text = unicode(displayValue)
+                ET.SubElement(entryItem, 'br')
+                        
         # TODO sort for display order
-        for key in Entry.valid_keys.keys():
-            formattedEntryKey = self.createEntryKey(key, entry.get(key))
-            if (formattedEntryKey):
-                e.append( formattedEntryKey )
+        # for key in Entry.valid_keys.keys():
+        #    formattedEntryKey = self.createEntryKey(key, entry.get(key))
+        #    if (formattedEntryKey):
+        #        e.append( formattedEntryKey )
         
         return e
+                
         
     def createEntryKey(self, key, value):
+        # $$$ legacy
+        
         if not value:
             # empty
             return None
