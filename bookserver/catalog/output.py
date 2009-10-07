@@ -408,7 +408,7 @@ class CatalogToHtml(CatalogRenderer):
         """
         >>> e = testToHtml.createEntry(testEntry)
         >>> print ET.tostring(e)
-        <p class="opds-entry"><h2 class="opds-entry-title">test item</h2><span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://archive.org/details/itemid" class="opds-entry-link">http://archive.org/details/itemid</a></span></p>
+        <p class="opds-entry"><h2 class="opds-entry-title">test item</h2><span class="opds-entry-item"><em class="opds-entry-key">Published:</em> <span class="opds-entry-value">1977</span><br/></span><span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://archive.org/details/itemid" class="opds-entry-link">http://archive.org/details/itemid</a></span></p>
         """
         
         e = ET.Element('p', { 'class':'opds-entry'} )
@@ -418,19 +418,8 @@ class CatalogToHtml(CatalogRenderer):
         for key in self.entryDisplayKeys:
             value = entry.get(key)
             if value:
-                if type(value) == type([]):
-                    if len(value) == 1:
-                       displayTitle = self.entryDisplayTitles[key][0]
-                       displayValue = value[0]
-                    else:
-                        # Multiple items
-                        displayTitle = self.entryDisplayTitles[key][1]
-                        displayValue = ', '.join(value)
-                else:
-                    # Single item
-                    displayTitle = self.entryDisplayTitles[key][0]
-                    displayValue = value
-                    
+                displayTitle, displayValue = self.formatEntryValue(key, value)
+                
                 entryItem = ET.SubElement(e, 'span', {'class':'opds-entry-item'} )
                 itemName = ET.SubElement(entryItem, 'em', {'class':'opds-entry-key'} )
                 itemName.text = displayTitle + ':'
@@ -449,6 +438,25 @@ class CatalogToHtml(CatalogRenderer):
         #        e.append( formattedEntryKey )
         
         return e
+        
+    def formatEntryValue(self, key, value):
+        if type(value) == type([]):
+            if len(value) == 1:
+                displayTitle = self.entryDisplayTitles[key][0]
+                displayValue = value[0]
+                               
+            else:
+                # Multiple items
+                displayTitle = self.entryDisplayTitles[key][1]
+                displayValue = ', '.join(value)
+        else:
+            # Single item
+            displayTitle = self.entryDisplayTitles[key][0]
+            displayValue = value
+            if 'date' == key:
+                displayValue = displayValue[:4]
+
+        return (displayTitle, displayValue)
 
     def createEntryLinks(self, links):
         """
@@ -542,7 +550,9 @@ def testmod():
                        type = 'application/atom+xml', rel='alternate')
     testEntry = Entry({'urn'  : 'x-internet-archive:item:itemid',
                         'title'   : u'test item',
-                        'updated' : '2009-01-01T00:00:00Z'}, links=[testLink])
+                        'updated' : '2009-01-01T00:00:00Z',
+                        'date': '1977-06-17T00:00:55Z'},
+                        links=[testLink])
                         
     start    = 0
     numFound = 2
