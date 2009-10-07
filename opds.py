@@ -73,29 +73,29 @@ class index:
                             authorUri = 'http://www.archive.org',
                            )
 
+        l = catalog.Link(url = 'alpha.xml', type = 'application/atom+xml')
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
                            'urn'     : pubInfo['urnroot'] + ':titles:all',
-                           'url'     : 'alpha.xml',
                            'updated' : datestr,
                            'content' : 'Alphabetical list of all titles.'
-                         })
+                         }, links=(l,))
         c.addEntry(e)
         
+        l = catalog.Link(url = 'downloads.xml', type = 'application/atom+xml')
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
                            'urn'     : pubInfo['urnroot'] + ':downloads',
-                           'url'     : 'downloads.xml',
                            'updated' : datestr,
                            'content' : 'The most downloaded books from the Internet Archive in the last month.'
-                         })
+                         }, links=(l,))
         
         c.addEntry(e)
-        
+
+        l = catalog.Link(url = 'new', type = 'application/atom+xml')        
         e = catalog.Entry({'title'   : 'Recent Scans',
                            'urn'     : pubInfo['urnroot'] + ':new',
-                           'url'     : 'new',
                            'updated' : datestr,
                            'content' : 'Books most recently scanned by the Internet Archive.'
-                         })
+                         }, links=(l,))
         
         c.addEntry(e)
         
@@ -131,7 +131,7 @@ class alpha:
         c = ingestor.getCatalog()
     
         web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
         return r.toString()
         
 # /alpha.xml
@@ -156,12 +156,12 @@ class alphaList:
         for letter in string.ascii_uppercase:
             lower = letter.lower()
 
+            l = catalog.Link(url = 'alpha/'+lower+'/0', type = 'application/atom+xml')        
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
                                'urn'     : pubInfo['urnroot'] + ':titles:'+lower,
-                               'url'     : 'alpha/'+lower+'/0',
                                'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
-                             })
+                             }, links=(l,))
             c.addEntry(e)
 
         osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
@@ -186,7 +186,7 @@ class downloads:
         
         if ('xml' == extension):
             web.header('Content-Type', pubInfo['mimetype'])
-            r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
+            r = output.CatalogToAtom(c, fabricateContentElement=True)
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
@@ -215,7 +215,7 @@ class newest:
         c = ingestor.getCatalog()
     
         web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
         return r.toString()
 
 
@@ -244,7 +244,7 @@ class search:
         c = ingestor.getCatalog()
 
         web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
         return r.toString()
         
 
