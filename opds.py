@@ -114,10 +114,16 @@ class index:
 class alpha:
 
     def GET(self, letter, start):
+        mode = 'xml'
         if not start:
             start = 0
         else:
+            if start.endswith('.html'):
+                start = start[:-5]
+                mode = 'html'
             start = int(start)
+           
+            
         
         #TODO: add Image PDFs to this query
         solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
@@ -130,9 +136,14 @@ class alpha:
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
-        web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
-        return r.toString()
+        if 'html' == mode:
+            web.header('Content-Type', 'text/html')
+            r = output.CatalogToHtml(c)
+            return r.toString()
+        else:
+            web.header('Content-Type', pubInfo['mimetype'])
+            r = output.CatalogToAtom(c, fabricateContentElement=True, fabricateEpub=True)
+            return r.toString()
         
 # /alpha.xml
 #______________________________________________________________________________

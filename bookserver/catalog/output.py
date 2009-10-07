@@ -311,7 +311,7 @@ class CatalogToHtml(CatalogRenderer):
         >>> nav = Navigation(start, numRows, numFound, urlBase)
         >>> div = testToHtml.createNavigation(nav)
         >>> print ET.tostring(div)
-        <div class="opds-navigation"><a href="/alpha/a/4" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/alpha/a/6" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
+        <div class="opds-navigation"><a href="/alpha/a/4.html" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/alpha/a/6.html" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
         """
         
         div = ET.Element( 'div', {'class':'opds-navigation'} )
@@ -345,8 +345,18 @@ class CatalogToHtml(CatalogRenderer):
         """
         >>> a = testToHtml.createNavigationAnchor('next', 'a/1', 'Next results')
         >>> print ET.tostring(a)
-        <a href="a/1" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a>
+        <a href="a/1.html" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a>
+        >>> a = testToHtml.createNavigationAnchor('prev', 'a/0.xml', 'Previous')
+        >>> print ET.tostring(a)
+        <a href="a/0.html" class="opds-navigation-anchor" rel="prev" title="Previous">Previous</a>
         """
+        
+        # Munge URL
+        if url.endswith('.xml'):
+            url = url[:-4]
+        if not url.endswith('.html'):
+            url += '.html'
+        
         attribs = {'class':'opds-navigation-anchor',
             'rel': rel,
             'href': url}
