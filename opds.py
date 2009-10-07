@@ -35,7 +35,7 @@ urls = (
     '/alpha.(xml|html)',            'alphaList',
     '/alpha/(.)(?:/(.*))?',         'alpha',
     '/downloads.(xml|html)',        'downloads',
-    '/new(?:/(.*))?',               'newest',
+    '/new(?:/(.*))?(|.html)',       'newest',
     '/opensearch.xml',              'openSearchDescription',
     '/opensearch(.*)',              'search',
     '/',                            'index',
@@ -227,10 +227,18 @@ class downloads:
 # /new/0
 #______________________________________________________________________________
 class newest:
-    def GET(self, start):
+    def GET(self, start, extension):
+        if extension == '.html':
+            extension = 'html'
+        else:
+            extension = 'xml'
+        
         if not start:
             start = 0
         else:
+            if start.endswith('.html'):
+                extension = 'html'
+                start = start[:-5]
             start = int(start)
         
         #TODO: add Image PDFs to this query
@@ -243,9 +251,14 @@ class newest:
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
-        web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True)
-        return r.toString()
+        if 'html' == extension:
+            web.header('Content-Type', 'text/html')
+            r = output.ArchiveCatalogToHtml(c)
+            return r.toString()
+        else:
+            web.header('Content-Type', pubInfo['mimetype'])
+            r = output.CatalogToAtom(c, fabricateContentElement=True)
+            return r.toString()
 
 
 # /search
