@@ -244,7 +244,16 @@ class CatalogToHtml(CatalogRenderer):
         >>> # print(h.toString())
     """
     
-    entryMap = {
+    entryDisplayKeys = [
+        'authors',
+        'date',
+        'publishers',
+        'contributors',
+        'languages',
+        'downloadsPerMonth'
+    ]
+
+    entryDisplayTitles = {
         'authors': ('Author', 'Authors'),
         'date': ('Published', 'Published'),
         'publishers': ( 'Publisher', 'Publishers'),
@@ -252,7 +261,7 @@ class CatalogToHtml(CatalogRenderer):
         'languages': ('Language', 'Languages'),
         'downloadsPerMonth': ('Recent downloads', 'Recent downloads')
     }
-    
+        
     entryLinkTitles = {
         'application/pdf': 'PDF',
         'application/epub': 'EPUB',
@@ -406,20 +415,20 @@ class CatalogToHtml(CatalogRenderer):
         title = ET.SubElement(e, 'h2', {'class':'opds-entry-title'} )
         title.text = entry.get('title')
         
-        for key, titles in self.entryMap.items():
+        for key in self.entryDisplayKeys:
             value = entry.get(key)
             if value:
                 if type(value) == type([]):
                     if len(value) == 1:
-                       displayTitle = titles[0]
+                       displayTitle = self.entryDisplayTitles[key][0]
                        displayValue = value[0]
                     else:
                         # Multiple items
-                        displayTitle = titles[1]
+                        displayTitle = self.entryDisplayTitles[key][1]
                         displayValue = ', '.join(value)
                 else:
                     # Single item
-                    displayTitle = titles[0]
+                    displayTitle = self.entryDisplayTitles[key][0]
                     displayValue = value
                     
                 entryItem = ET.SubElement(e, 'span', {'class':'opds-entry-item'} )

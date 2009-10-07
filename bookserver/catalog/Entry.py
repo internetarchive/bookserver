@@ -89,7 +89,7 @@ class Entry():
         'oai_updatedates'     : list, # From Solr, list of dates when item was modified
         'authors'             : list, # List of authors
     }
-    
+        
     required_keys = ('urn', 'title')
     
     def validate(self, key, value):
