@@ -138,7 +138,7 @@ class alpha:
     
         if 'html' == mode:
             web.header('Content-Type', 'text/html')
-            r = output.CatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c)
             return r.toString()
         else:
             web.header('Content-Type', pubInfo['mimetype'])
@@ -198,7 +198,7 @@ class alphaList:
             return r.toString()
         else:
             web.header('Content-Type', 'text/html')
-            r = output.CatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c)
             return r.toString()
 
 # /downloads.xml
@@ -219,7 +219,7 @@ class downloads:
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
-            r = output.CatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c)
             return r.toString()
         else:
             web.seeother('/')

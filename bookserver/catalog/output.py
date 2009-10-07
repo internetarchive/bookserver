@@ -259,7 +259,8 @@ class CatalogToHtml(CatalogRenderer):
         'publishers': ( 'Publisher', 'Publishers'),
         'contributors': ('Contributor', 'Contributors'),
         'languages': ('Language', 'Languages'),
-        'downloadsPerMonth': ('Recent downloads', 'Recent downloads')
+        'downloadsPerMonth': ('Recent downloads', 'Recent downloads'),
+        'title': ('Title', 'Title')
     }
         
     entryLinkTitles = {
@@ -430,7 +431,7 @@ class CatalogToHtml(CatalogRenderer):
 
         if entry._links:
             e.append(self.createEntryLinks(entry._links))
-                        
+                                
         # TODO sort for display order
         # for key in Entry.valid_keys.keys():
         #    formattedEntryKey = self.createEntryKey(key, entry.get(key))
@@ -538,6 +539,16 @@ class CatalogToHtml(CatalogRenderer):
     def toString(self):
         return self.prettyPrintET(self.html)
         
+        
+class ArchiveCatalogToHtml(CatalogToHtml):
+    def createEntry(self, entry):
+        e = CatalogToHtml.createEntry(self, entry)
+        s = ET.SubElement(e, 'span')
+        ET.SubElement(s, 'br')
+        a = ET.SubElement(s, 'a', {'href': 'http://www.archive.org/details/%s' % entry.get('identifier') })
+        a.text = 'More information about this book'
+        ET.SubElement(s, 'br')
+        return e
 
 
 def testmod():
