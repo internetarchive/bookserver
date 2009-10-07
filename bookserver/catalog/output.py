@@ -392,11 +392,10 @@ class CatalogToHtml(CatalogRenderer):
         """
         >>> e = testToHtml.createEntry(testEntry)
         >>> print ET.tostring(e)
-        <p class="entry"><h2 class="opds-entry-title">test item</h2></p>
+        <p class="opds-entry"><h2 class="opds-entry-title">test item</h2><span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://archive.org/details/itemid" class="opds-entry-value">http://archive.org/details/itemid</a></span><br/></p>
         """
         
-        e = ET.Element('p')
-        e.set('class', 'entry')
+        e = ET.Element('p', { 'class':'opds-entry'} )
         title = ET.SubElement(e, 'h2', {'class':'opds-entry-title'} )
         title.text = entry.get('title')
         
@@ -416,13 +415,17 @@ class CatalogToHtml(CatalogRenderer):
                     displayTitle = titles[0]
                     displayValue = value
                     
-                entryItem = ET.SubElement(e, 'span', {'class':'opds-entry'} )
+                entryItem = ET.SubElement(e, 'span', {'class':'opds-entry-item'} )
                 itemName = ET.SubElement(entryItem, 'em', {'class':'opds-entry-key'} )
                 itemName.text = displayTitle + ':'
                 itemName.tail = ' '
                 itemValue = ET.SubElement(entryItem, 'span', {'class': 'opds-entry-value' } )
                 itemValue.text = unicode(displayValue)
                 ET.SubElement(entryItem, 'br')
+                
+        for link in entry._links:
+            e.append( self.createEntryLink(link) )
+            ET.SubElement(e, 'br')
                         
         # TODO sort for display order
         # for key in Entry.valid_keys.keys():
@@ -431,7 +434,24 @@ class CatalogToHtml(CatalogRenderer):
         #        e.append( formattedEntryKey )
         
         return e
-                
+
+    def createEntryLink(self, link):
+        """
+        >>> l = Link(url = 'http://a.o/item.pdf', type='application/pdf')
+        >>> e = testToHtml.createEntryLink(l)
+        >>> print ET.tostring(e)
+        <span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://a.o/item.pdf" class="opds-entry-value">http://a.o/item.pdf</a></span>
+        """
+        s = ET.Element('span', { 'class':'opds-entry-item' } )
+        title = ET.SubElement(s, 'em', {'class':'opds-entry-key'} )
+        # $$$ TODO different formatting for different link types
+        title.text = 'Download:'
+        title.tail = ' '
+        a = ET.SubElement(s, 'a', {'class':'opds-entry-value',
+            'href' : link._url
+        })
+        a.text = link._url # XXX
+        return s
         
     def createEntryKey(self, key, value):
         # $$$ legacy
@@ -466,8 +486,9 @@ class CatalogToHtml(CatalogRenderer):
     def toString(self):
         return self.prettyPrintET(self.html)
         
-        
-if __name__ == "__main__":
+
+
+def testmod():
     import doctest
     global testEntry, testCatalog, testToHtml
     
@@ -494,4 +515,7 @@ if __name__ == "__main__":
     testToHtml = CatalogToHtml(testCatalog)
     
     doctest.testmod()
+        
+if __name__ == "__main__":
+    testmod()
     
