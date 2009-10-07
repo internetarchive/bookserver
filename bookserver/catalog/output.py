@@ -237,6 +237,9 @@ class CatalogToHtml(CatalogRenderer):
         CatalogHeader
         EntryList
         PageFooter
+        
+        >>> h = CatalogToHtml(testCatalog)
+        >>> # print(h.toString())
     """
         
     def __init__(self, catalog):
@@ -361,16 +364,16 @@ class CatalogToHtml(CatalogRenderer):
         
 if __name__ == "__main__":
     import doctest
-    global testToHtml
+    global testEntry, testCatalog, testToHtml
     
     urn = 'urn:x-internet-archive:bookserver:catalog'
-    c = Catalog(title='Internet Archive OPDS', urn=urn)
-    e = Entry({'urn'  : 'x-internet-archive:item:itemid',
+    testCatalog = Catalog(title='Internet Archive OPDS', urn=urn)
+    testEntry = Entry({'urn'  : 'x-internet-archive:item:itemid',
                         'url'     : 'http://archive.org/details/itemid',
                         'title'   : u'test item',
                         'updated' : '2009-01-01T00:00:00Z'})
-    c.addEntry(e)
-    testToHtml = CatalogToHtml(c)
+    testCatalog.addEntry(testEntry)
+    testToHtml = CatalogToHtml(testCatalog)
     
     doctest.testmod()
     
