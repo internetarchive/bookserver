@@ -38,7 +38,7 @@ urls = (
     '/new(?:/(.*))?(|.html)',       'newest',
     '/opensearch.xml',              'openSearchDescription',
     '/opensearch(.*)',              'search',
-    '/',                            'index',
+    '/(|index.html)',               'index',
     '/(.*)',                        'indexRedirect',        
     )
 
@@ -60,7 +60,10 @@ def getDateString():
 # /
 #______________________________________________________________________________
 class index:
-    def GET(self):
+    def GET(self, url):
+        mode = 'xml'
+        if url and url.endswith('.html'):
+            mode = 'html'
 
         datestr = getDateString()
         
@@ -73,7 +76,20 @@ class index:
                             authorUri = 'http://www.archive.org',
                            )
 
-        l = catalog.Link(url = 'alpha.xml', type = 'application/atom+xml')
+        if 'html' == mode:
+            links = { 'alpha': 'alpha.html',
+                      'downloads': 'downloads.html',
+                      'new': 'new.html'
+            }
+            type = 'text/html'
+        else:
+            links = {'alpha': 'alpha.xml',
+                     'downloads': 'downloads.xml',
+                     'new': 'new'
+            }
+            type = 'application/atom+xml'
+            
+        l = catalog.Link(url = links['alpha'], type = type)
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
                            'urn'     : pubInfo['urnroot'] + ':titles:all',
                            'updated' : datestr,
@@ -81,7 +97,7 @@ class index:
                          }, links=(l,))
         c.addEntry(e)
         
-        l = catalog.Link(url = 'downloads.xml', type = 'application/atom+xml')
+        l = catalog.Link(url = links['downloads'], type = type)
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
                            'urn'     : pubInfo['urnroot'] + ':downloads',
                            'updated' : datestr,
@@ -90,7 +106,7 @@ class index:
         
         c.addEntry(e)
 
-        l = catalog.Link(url = 'new', type = 'application/atom+xml')        
+        l = catalog.Link(url = links['new'], type = type)        
         e = catalog.Entry({'title'   : 'Recent Scans',
                            'urn'     : pubInfo['urnroot'] + ':new',
                            'updated' : datestr,
@@ -103,10 +119,14 @@ class index:
         o = catalog.OpenSearch(osDescriptionDoc)
         c.addOpenSearch(o)
         
-        r = output.CatalogToAtom(c)
-        
-        web.header('Content-Type', pubInfo['mimetype'])
-        return r.toString()
+        if url and url.endswith('.html'):
+            r = output.ArchiveCatalogToHtml(c)
+            web.header('Content-Type', 'text/html')
+            return r.toString()
+        else:        
+            r = output.CatalogToAtom(c)
+            web.header('Content-Type', pubInfo['mimetype'])
+            return r.toString()
                 
 
 # /alpha/a/0
