@@ -22,20 +22,36 @@ This file is part of bookserver.
 
 The OpdsToCatalog class takes a string with OPDS Atom data and returns
 a Catalog instance.
+
+See usage example in /test/OpdsToCatalog.txt
 """
 
-"""
->>> import urllib
->>> url = 'http://bookserver.archive.org/catalog/'
->>> fh = urllib.urlopen(url)
->>> content = fh.read()
->>> fh.close()
->>> ingestor = catalog.ingest.OpdsToCatalog(content)
->>> c = ingestor.getCatalog()
+import sys
+sys.path.append("/petabox/www/bookserver")
+import feedparser
 
->>> #change atom+xml urls to b.a.o/view/IA/... scheme
+from .. import Catalog
+from .. import Entry
+from .. import Navigation
+from .. import OpenSearch
+from .. import Link
 
->>> h = catalog.output.CatalogToHtml(c)
->>> html = h.toString()
->>> print html
-"""
+class OpdsToCatalog():
+
+    # OpdsToCatalog()
+    #___________________________________________________________________________        
+    def __init__(self, content):
+        f = feedparser.parse(content)
+
+        c = Catalog(title     = f.feed.title,
+                    urn       = f.feed.id,
+                    url       = f.feed.href,
+                    author    = f.feed.author,
+                    authorUri = f.feed.author_detail.href,
+                    datestr   = f.feed.updated,                                 
+                   )
+        
+        
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

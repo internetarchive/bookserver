@@ -17,13 +17,23 @@ This file is part of bookserver.
 
     You should have received a copy of the GNU Affero General Public License
     along with bookserver.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
-#this is needed to be able to import catalog class from SolrToCatalog
-#import pkgutil
-#__path__ = pkgutil.extend_path(__path__, '..')
+import doctest
+import glob
 
-from SolrToCatalog import SolrToCatalog
-from OpdsToCatalog import OpdsToCatalog
+import sys
+sys.path.append('..')
+
+testfiles = glob.glob('*.txt')
+testfiles.insert(0, '../README')
+
+for test in testfiles:
+    (numFail, numTests) = doctest.testfile(test)
+    print '%s: %d out of %d passed' % (test, (numTests - numFail), numTests)
+
+    if numFail:
+       print 'Rerunning test in verbose mode!'
+       doctest.testfile(test, verbose=True)
