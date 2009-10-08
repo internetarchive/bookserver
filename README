@@ -17,19 +17,24 @@ To create a Catalog instance from scratch, you can use this code:
     ...                    'title'   : u'test item',
     ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l])
     >>> c.addEntry(e)
-    
+
+The catalog.Navigation class can help with creating prev and next rel links,
+although you can just pass these in as args to __init__
+
     >>> start    = 0
     >>> numFound = 2
     >>> numRows  = 1
     >>> urlBase  = '/alpha/a/'
-    >>> n = catalog.Navigation(start, numRows, numFound, urlBase)
+    >>> n = catalog.Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
     >>> c.addNavigation(n)
+
+The catalog.OpenSearch class just holds OpenSearch Description Document for now:
     
     >>> osDescription = 'http://bookserver.archive.org/opensearch.xml'
     >>> o = catalog.OpenSearch(osDescription)
     >>> c.addOpenSearch(o)
 
-We can now create an OPDS feed in Atom format:
+From our Catalog instance, we can now create an OPDS feed in Atom format:
     
     >>> r = catalog.output.CatalogToAtom(c)
     >>> str = r.toString()

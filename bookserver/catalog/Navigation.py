@@ -23,6 +23,7 @@ This file is part of bookserver.
 
 class Navigation:
 
+    @classmethod
     def getNext(self, start, numRows, numFound, urlBase):
         url   = None
         title = None
@@ -36,6 +37,7 @@ class Navigation:
     
         return url, title        
 
+    @classmethod
     def getPrev(self, start, numRows, numFound, urlBase):
         url   = None
         title = None
@@ -49,11 +51,20 @@ class Navigation:
     
         return url, title        
 
+    @classmethod
+    def initWithBaseUrl(cls, start, numRows, numFound, urlBase):
+        (nextLink, nextTitle) = cls.getNext(start, numRows, numFound, urlBase)
+        (prevLink, prevTitle) = cls.getPrev(start, numRows, numFound, urlBase)
+        return cls(nextLink, nextTitle, prevLink, prevTitle)
     
-    def __init__(self, start, numRows, numFound, urlBase):
-        (self.nextLink, self.nextTitle) = self.getNext(start, numRows, numFound, urlBase)
-        (self.prevLink, self.prevTitle) = self.getPrev(start, numRows, numFound, urlBase)
-        
+
+    def __init__(self, nextLink, nextTitle, prevLink, prevTitle):
+        self.nextLink  = nextLink
+        self.nextTitle = nextTitle
+        self.prevLink  = prevLink
+        self.prevTitle  = prevTitle
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

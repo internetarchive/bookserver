@@ -152,7 +152,7 @@ class alpha:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/alpha/a/',
+                                                urlBase='/alpha/%s/' % (letter),
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
