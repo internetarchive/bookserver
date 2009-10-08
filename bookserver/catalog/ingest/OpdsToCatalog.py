@@ -40,6 +40,21 @@ from .. import Link
 
 class OpdsToCatalog():
 
+    keymap = {'author': 'author',
+     'author_detail': 'author_detail',
+     'content': 'content',
+     'dcterms_language': 'dcterms_language',
+     'dcterms_publisher': 'dcterms_publisher',
+     'id': 'urn',
+     'links': 'links',
+     'published': 'published',
+     'published_parsed': 'published_parsed',
+     'subtitle': 'subtitle',
+     'title': 'title',
+     'title_detail': 'title_detail',
+     'updated': 'updated',
+     'updated_parsed': 'updated_parsed'}
+
     # addNavigation()
     #___________________________________________________________________________        
     def addNavigation(self, c, f, url):
@@ -58,7 +73,18 @@ class OpdsToCatalog():
             if nextLink or prevLink:
                 nav = Navigation(nextLink, nextTitle, prevLink, prevTitle)
                 c.addNavigation(nav)
-        
+
+    # removeKeys()
+    #___________________________________________________________________________        
+    def removeKeys(self, d, keys):
+        for key in keys:
+            d.pop(key, None)
+
+    # getCatalog()
+    #___________________________________________________________________________    
+    def getCatalog(self):        
+        return self.c
+            
     # OpdsToCatalog()
     #___________________________________________________________________________        
     def __init__(self, content, url):
@@ -73,9 +99,21 @@ class OpdsToCatalog():
                    )
 
         self.addNavigation(self.c, f, url)
-                    
-                
 
+        for entry in f.entries:
+            bookDict = dict( (OpdsToCatalog.keymap[key], val) for key, val in entry.iteritems() )
+            links = []
+            for l in entry.links:
+                link = Link(url = l['href'], type = l['type'], rel = l['rel'])
+                links.append(link)
+            
+            bookDict['content'] = bookDict['subtitle']
+            self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail'))
+            
+            e = Entry(bookDict, links=links)
+            self.c.addEntry(e)
+            
+            
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

@@ -69,8 +69,11 @@ class Entry():
 
     """
     valid_keys can be str or list
+    TODO: These key names come from the IA solr keys.
+          We should rename them to be similar to feedparser keys
+          i.e. dcterms_language instead of languages
     """
-
+    
     valid_keys = {
         'urn'                 : unicode, # Site-specific identifier, used to uniquely identify Atom entry
         'url'                 : unicode, # Acquisition links, there may be multiple with different types - soon to be list of multiple links, with different types
