@@ -30,6 +30,8 @@ import sys
 sys.path.append("/petabox/www/bookserver")
 import feedparser
 
+import urlparse
+
 from .. import Catalog
 from .. import Entry
 from .. import Navigation
@@ -38,6 +40,25 @@ from .. import Link
 
 class OpdsToCatalog():
 
+    # addNavigation()
+    #___________________________________________________________________________        
+    def addNavigation(self, c, f, url):
+        for link in f.feed.links:
+            nextLink  = None
+            nextTitle = None
+            prevLink  = None
+            prevTitle = None
+            if 'next' == link.rel:
+                nextLink  = urlparse.urljoin(url, link.href)
+                nextTitle = link.title
+            if 'prev' == link.rel:
+                prevLink  = urlparse.urljoin(url, link.href)
+                prevTitle = link.title
+
+            if nextLink or prevLink:
+                nav = Navigation(nextLink, nextTitle, prevLink, prevTitle)
+                c.addNavigation(nav)
+        
     # OpdsToCatalog()
     #___________________________________________________________________________        
     def __init__(self, content, url):
@@ -50,8 +71,11 @@ class OpdsToCatalog():
                     authorUri = f.feed.author_detail.href,
                     datestr   = f.feed.updated,                                 
                    )
-        
-        
+
+        self.addNavigation(self.c, f, url)
+                    
+                
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
