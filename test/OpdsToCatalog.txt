@@ -13,5 +13,5 @@ a Catalog instance from it.
 >>> fh.close()
 
 >>> import bookserver.catalog.ingest.OpdsToCatalog as OpdsToCatalog
->>> ingestor = OpdsToCatalog(content)
+>>> ingestor = OpdsToCatalog(content, url)
 

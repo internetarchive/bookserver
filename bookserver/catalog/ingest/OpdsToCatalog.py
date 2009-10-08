@@ -40,12 +40,12 @@ class OpdsToCatalog():
 
     # OpdsToCatalog()
     #___________________________________________________________________________        
-    def __init__(self, content):
+    def __init__(self, content, url):
         f = feedparser.parse(content)
 
-        c = Catalog(title     = f.feed.title,
+        self.c = Catalog(title     = f.feed.title,
                     urn       = f.feed.id,
-                    url       = f.feed.href,
+                    url       = url,
                     author    = f.feed.author,
                     authorUri = f.feed.author_detail.href,
                     datestr   = f.feed.updated,                                 
