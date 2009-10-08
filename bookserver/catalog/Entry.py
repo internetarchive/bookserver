@@ -90,16 +90,16 @@ class Entry():
                                       # See http://www.loc.gov/marc/languages/language_code.html
         'subjects'            : list, # For IA, typically come from MARC records
         'oai_updatedates'     : list, # From Solr, list of dates when item was modified
-        'authors'             : list, # List of authors
+        'authors'             : list, # List of authors        
     }
-    
+        
     required_keys = ('urn', 'title')
     
     def validate(self, key, value):
-        if key not in Entry.valid_keys:
+        if key not in self.valid_keys:
             raise KeyError("invalid key in bookserver.catalog.Entry: %s" % (key))
 
-        wantedType = Entry.valid_keys[key]
+        wantedType = self.valid_keys[key]
         
         gotType = type(value)
         if not gotType == wantedType:
@@ -141,8 +141,8 @@ class Entry():
         if key in self._entry:
             return self._entry[key]
         else:
-            if key in Entry.valid_keys:
-                if list == Entry.valid_keys[key]:
+            if key in self.valid_keys:
+                if list == self.valid_keys[key]:
                     return []
                 else:
                     return None
@@ -155,6 +155,14 @@ class Entry():
         self.validate(key, value)
         self._entry[key] = value
 
+
+class IAEntry(Entry):
+    """
+    Catalog entry with extra keys specific tothe Internet Archive.
+    """
+    # Add our IA-specific "formats" key
+    valid_keys = Entry.valid_keys.copy()
+    valid_keys['formats'] = list
 
 if __name__ == '__main__':
     import doctest

@@ -101,12 +101,11 @@ bookserver/
             SolrToCatalog.py
             AtomToCatalog.py (future)
 
-    output/
-        __init__.py
-        CatalogRenderer.py
-        CatalogToXml.py
-        CatalogToHtml.py
-        CatalogToJson.py
+    output.py
+        CatalogRenderer
+        CatalogToAtom
+        CatalogToHtml
+        CatalogToJson (future)
 
 
 >>> import bookserver.catalog as catalog

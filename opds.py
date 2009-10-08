@@ -35,10 +35,10 @@ urls = (
     '/alpha.(xml|html)',            'alphaList',
     '/alpha/(.)(?:/(.*))?',         'alpha',
     '/downloads.(xml|html)',        'downloads',
-    '/new(?:/(.*))?',               'newest',
+    '/new(?:/(.*))?(|.html)',       'newest',
     '/opensearch.xml',              'openSearchDescription',
     '/opensearch(.*)',              'search',
-    '/',                            'index',
+    '/(|index.html)',               'index',
     '/(.*)',                        'indexRedirect',        
     )
 
@@ -60,7 +60,10 @@ def getDateString():
 # /
 #______________________________________________________________________________
 class index:
-    def GET(self):
+    def GET(self, url):
+        mode = 'xml'
+        if url and url.endswith('.html'):
+            mode = 'html'
 
         datestr = getDateString()
         
@@ -73,7 +76,20 @@ class index:
                             authorUri = 'http://www.archive.org',
                            )
 
-        l = catalog.Link(url = 'alpha.xml', type = 'application/atom+xml')
+        if 'html' == mode:
+            links = { 'alpha': 'alpha.html',
+                      'downloads': 'downloads.html',
+                      'new': 'new.html'
+            }
+            type = 'text/html'
+        else:
+            links = {'alpha': 'alpha.xml',
+                     'downloads': 'downloads.xml',
+                     'new': 'new'
+            }
+            type = 'application/atom+xml'
+            
+        l = catalog.Link(url = links['alpha'], type = type)
         e = catalog.Entry({'title'  : 'Alphabetical By Title',
                            'urn'     : pubInfo['urnroot'] + ':titles:all',
                            'updated' : datestr,
@@ -81,7 +97,7 @@ class index:
                          }, links=(l,))
         c.addEntry(e)
         
-        l = catalog.Link(url = 'downloads.xml', type = 'application/atom+xml')
+        l = catalog.Link(url = links['downloads'], type = type)
         e = catalog.Entry({'title'   : 'Most Downloaded Books',
                            'urn'     : pubInfo['urnroot'] + ':downloads',
                            'updated' : datestr,
@@ -90,7 +106,7 @@ class index:
         
         c.addEntry(e)
 
-        l = catalog.Link(url = 'new', type = 'application/atom+xml')        
+        l = catalog.Link(url = links['new'], type = type)        
         e = catalog.Entry({'title'   : 'Recent Scans',
                            'urn'     : pubInfo['urnroot'] + ':new',
                            'updated' : datestr,
@@ -103,10 +119,14 @@ class index:
         o = catalog.OpenSearch(osDescriptionDoc)
         c.addOpenSearch(o)
         
-        r = output.CatalogToAtom(c)
-        
-        web.header('Content-Type', pubInfo['mimetype'])
-        return r.toString()
+        if url and url.endswith('.html'):
+            r = output.ArchiveCatalogToHtml(c)
+            web.header('Content-Type', 'text/html')
+            return r.toString()
+        else:        
+            r = output.CatalogToAtom(c)
+            web.header('Content-Type', pubInfo['mimetype'])
+            return r.toString()
                 
 
 # /alpha/a/0
@@ -126,7 +146,7 @@ class alpha:
             
         
         #TODO: add Image PDFs to this query
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
         titleFragment = 'books starting with "%s"' % (letter.upper())
         urn           = pubInfo['urnroot'] + ':%s:%d'%(letter, start)
 
@@ -138,7 +158,7 @@ class alpha:
     
         if 'html' == mode:
             web.header('Content-Type', 'text/html')
-            r = output.CatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c)
             return r.toString()
         else:
             web.header('Content-Type', pubInfo['mimetype'])
@@ -198,7 +218,7 @@ class alphaList:
             return r.toString()
         else:
             web.header('Content-Type', 'text/html')
-            r = output.CatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c)
             return r.toString()
 
 # /downloads.xml
@@ -206,7 +226,7 @@ class alphaList:
 class downloads:
     def GET(self, extension):
         #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows='+str(numRows)+'&wt=json'
+        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month,format&sort=month+desc&rows='+str(numRows)+'&wt=json'
 
         titleFragment = 'Most Downloaded Books in the last Month'
         urn           = pubInfo['urnroot'] + ':downloads'
@@ -219,7 +239,7 @@ class downloads:
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
-            r = output.CatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c)
             return r.toString()
         else:
             web.seeother('/')
@@ -227,14 +247,22 @@ class downloads:
 # /new/0
 #______________________________________________________________________________
 class newest:
-    def GET(self, start):
+    def GET(self, start, extension):
+        if extension == '.html':
+            extension = 'html'
+        else:
+            extension = 'xml'
+        
         if not start:
             start = 0
         else:
+            if start.endswith('.html'):
+                extension = 'html'
+                start = start[:-5]
             start = int(start)
         
         #TODO: add Image PDFs to this query
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
         titleFragment = 'books sorted by update date'
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
@@ -243,9 +271,14 @@ class newest:
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
-        web.header('Content-Type', pubInfo['mimetype'])
-        r = output.CatalogToAtom(c, fabricateContentElement=True)
-        return r.toString()
+        if 'html' == extension:
+            web.header('Content-Type', 'text/html')
+            r = output.ArchiveCatalogToHtml(c)
+            return r.toString()
+        else:
+            web.header('Content-Type', pubInfo['mimetype'])
+            r = output.CatalogToAtom(c, fabricateContentElement=True)
+            return r.toString()
 
 
 # /search
@@ -261,7 +294,7 @@ class search:
 
         q  = params['?q'][0]
         qq = urllib.quote(q)
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
