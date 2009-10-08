@@ -118,12 +118,16 @@ def getLatestWarc(domain_warc_dir, tempdir):
 
 #createNewWarc()
 #_______________________________________________________________________________
-def createNewWarc(domain, domain_warc_dir, tempdir):
+def createNewWarc(domain, domain_warc_dir, tempdir, crawlDateTime):
+    
     #Name the warc file based on the domain and the date of the last update date
     #Since this is a new warc, we will use 01-01-1970 as update date. It will
     #get renamed with the crawl is finished to whatever is the lastest update
     #date in the feed
-    warcDateTime = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    
+    ### We are now creating a new warc everytime, instead of adding to old ones
+    #warcDateTime = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    warcDateTime = crawlDateTime
 
     warcFileName = '%s/%s_%s_warc.gz' % (domain_warc_dir, domain, warcDateTime.isoformat())
     print 'creating new warc file ' + warcFileName
@@ -328,10 +332,12 @@ def crawlFeedOnePage(feed, queue, crawlDateTime, latestWarc, warcDateTime, lates
     ###turn off addToWarc while debugging
     #if (warcDateTime < dt):
     #    print "Feed updated date is newer than warc date. Adding to warc"
-    #    addToWarc(latestWarc, url, data, f, 'application/atom+xml')
-    #    latestDateTime = dt
+    if True:
+        addToWarc(latestWarc, url, data, f, 'application/atom+xml')
+        latestDateTime = dt
 
-    addToSolr(feed, f, tempdir)
+    #just archive, no longer feed solr from this script
+    #addToSolr(feed, f, tempdir)
 
     parseLinks(f, feed['url'], queue)
     
@@ -356,10 +362,12 @@ def crawlDomain(feed, crawlDateTime):
     tempdir = tempfile.mkdtemp(prefix='opds-crawler-')
     print 'created tempdir ' + tempdir
     
-    (latestWarc, warcFileName, warcDateTime) = getLatestWarc(domain_warc_dir, tempdir)    
-    
-    if None == latestWarc:
-        (latestWarc, warcFileName, warcDateTime) = createNewWarc(feed['domain'], domain_warc_dir, tempdir)
+    ### Create a new warc everytime instead of adding to an old one
+    #(latestWarc, warcFileName, warcDateTime) = getLatestWarc(domain_warc_dir, tempdir)    
+    #
+    #if None == latestWarc:
+    #    (latestWarc, warcFileName, warcDateTime) = createNewWarc(feed['domain'], domain_warc_dir, tempdir)
+    (latestWarc, warcFileName, warcDateTime) = createNewWarc(feed['domain'], domain_warc_dir, tempdir, crawlDateTime)
 
     queue = Queue.Queue() #a Queue might be overkill here; could probably use a list
     queue.put(feed['url'])
@@ -372,7 +380,8 @@ def crawlDomain(feed, crawlDateTime):
     os.rmdir(tempdir)
     latestWarc.destroy()
 
-    renameWarc(warcFileName, feed['domain'], domain_warc_dir, latestDateTime)
+    ### Create a new warc everytime instead of adding to an old one
+    #renameWarc(warcFileName, feed['domain'], domain_warc_dir, latestDateTime)
     
 # __main__
 #_______________________________________________________________________________

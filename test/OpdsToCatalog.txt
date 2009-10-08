@@ -1,0 +1,17 @@
+OPDS To Catalog Test
+====================
+
+This test grabs an fetches an ODPS feed using urllib, and create a
+a Catalog instance from it.
+
+>>> import bookserver
+
+>>> import urllib
+>>> url = 'http://bookserver.archive.org/catalog/'
+>>> fh = urllib.urlopen(url)
+>>> content = fh.read()
+>>> fh.close()
+
+>>> import bookserver.catalog.ingest.OpdsToCatalog as OpdsToCatalog
+>>> ingestor = OpdsToCatalog(content, url)
+
