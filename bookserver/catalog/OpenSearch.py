@@ -25,6 +25,7 @@ import lxml.etree as ET
 
 class OpenSearch:
     namespace = 'http://a9.com/-/spec/opensearch/1.1/'
+    contentType = 'application/atom+xml'
 
     def __init__(self, osddUrl):
         #OpenSearch Description Document URL
@@ -41,7 +42,7 @@ class OpenSearch:
            <Description>Use Example.com to search the Web.</Description>
            <Tags>example web</Tags>
            <Contact>admin@example.com</Contact>
-           <Url type="application/rss+xml" template="http://example.com/?q={searchTerms}&amp;pw={startPage?}&amp;format=rss"/>
+           <Url type="application/atom+xml" template="http://example.com/?q={searchTerms}&amp;pw={startPage?}"/>
         </OpenSearchDescription>
         
         """
@@ -50,23 +51,66 @@ class OpenSearch:
     @classmethod
     def selector(cls, tag):
         """
-        Returns an ElementTree selector in the OpenSearch namespace
+        Returns an xpath selector in the OpenSearch namespace
         >>> print OpenSearch.selector('ShortName')
         {http://a9.com/-/spec/opensearch/1.1/}ShortName
         """
         return '{%s}%s' % (cls.namespace, tag)
+
+    @classmethod
+    def getElements(cls, tree, tag, attribute = None, attributeValue = None):
+        selector = 'os:%s' % tag
+        if attribute:
+            if attributeValue:
+                selector += "[@%s='%s']" % (attribute, attributeValue)
+            else:
+                selector += "[@%s]" % attribute
+                
+        return tree.xpath(selector, namespaces = {'os': cls.namespace})
         
     @classmethod
-    def getShortName(cls, tree):
+    def getElement(cls, tree, tag, attribute = None, attributeValue = None):
         """
         >>> t = OpenSearch.createTree(testXml)
-        >>> print OpenSearch.getShortName(t)
+        >>> e = OpenSearch.getElement(t, 'Url', 'type', 'application/atom+xml')
+        >>> print e.get('template')
+        http://example.com/?q={searchTerms}&pw={startPage?}
+        >>> n = OpenSearch.getElement(t, 'Url', 'type', 'application/atom+rss')
+        >>> print n
+        None
+        """
+        elements = cls.getElements(tree, tag, attribute, attributeValue)
+        if elements and len(elements) >= 1:
+            return elements[0]
+        else:
+            return None
+            
+    @classmethod
+    def getText(cls, tree, tag, attribute = None, attributeValue = None):
+        """
+        >>> t = OpenSearch.createTree(testXml)
+        >>> print OpenSearch.getText(t, 'ShortName')
         Web Search
         """
-        e = tree.findtext(cls.selector('ShortName'))
-        return e
-        
-
+        e = cls.getElement(tree, tag, attribute, attributeValue)
+        if e is not None:
+            return e.text
+        else:
+            return ''
+    
+    @classmethod
+    def getTemplate(cls, tree):
+        """
+        >>> t = OpenSearch.createTree(testXml)
+        >>> print OpenSearch.getTemplate(t)
+        http://example.com/?q={searchTerms}&pw={startPage?}
+        """
+        # $$$ deal with multiple urls
+        e = cls.getElement(tree, 'Url', 'type', cls.contentType)
+        if e is not None:
+            return e.get('template')
+        else:
+            raise ValueError('Could not find search template')
 
 
 def testmod():
@@ -81,8 +125,8 @@ def testmod():
    <Description>Use Example.com to search the Web.</Description>
    <Tags>example web</Tags>
    <Contact>admin@example.com</Contact>
-   <Url type="application/rss+xml" 
-        template="http://example.com/?q={searchTerms}&amp;pw={startPage?}&amp;format=rss"/>
+   <Url type="application/atom+xml" 
+        template="http://example.com/?q={searchTerms}&amp;pw={startPage?}"/>
 </OpenSearchDescription>
 """
 
