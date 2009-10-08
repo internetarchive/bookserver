@@ -29,7 +29,7 @@ sys.path.append("/petabox/www/bookserver")
 import simplejson as json
 
 from .. import Catalog
-from .. import Entry
+from ..Entry import IAEntry
 from .. import Navigation
 from .. import OpenSearch
 from .. import Link
@@ -52,6 +52,7 @@ class SolrToCatalog:
               'contributor'    : 'contributors',
               
               'oai_updatedate' : 'oai_updatedates',
+              'format'         : 'formats',
 
              }
 
@@ -108,7 +109,7 @@ class SolrToCatalog:
             epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
                            type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
                                        
-            e = Entry(bookDict, links=(pdfLink, epubLink))
+            e = IAEntry(bookDict, links=(pdfLink, epubLink))
             self.c.addEntry(e)
             #print bookDict
         

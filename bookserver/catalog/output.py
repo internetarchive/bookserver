@@ -546,6 +546,7 @@ class CatalogToHtml(CatalogRenderer):
         
         
 class ArchiveCatalogToHtml(CatalogToHtml):
+
     def createEntry(self, entry):
         e = CatalogToHtml.createEntry(self, entry)
         identifier = entry.get('identifier')
@@ -555,7 +556,12 @@ class ArchiveCatalogToHtml(CatalogToHtml):
             a = ET.SubElement(s, 'a', {'href': 'http://www.archive.org/details/%s' % entry.get('identifier') })
             a.text = 'More information about this book'
             ET.SubElement(s, 'br')
+            
+            # XXX check for readonline
+            #a = ET.SubElement(s, 'span')
+            #a.text = str(entry.get('formats'))
         return e
+        
 
 
 def testmod():
