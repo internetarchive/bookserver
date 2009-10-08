@@ -25,7 +25,7 @@ import lxml.etree as ET
 
 class OpenSearch:
     namespace = 'http://a9.com/-/spec/opensearch/1.1/'
-    contentType = 'application/atom+xml'
+    atomXmlType = 'application/atom+xml'
 
     def __init__(self, osddUrl):
         #OpenSearch Description Document URL
@@ -99,14 +99,14 @@ class OpenSearch:
             return ''
     
     @classmethod
-    def getTemplate(cls, tree):
+    def getTemplate(cls, tree, type):
         """
         >>> t = OpenSearch.createTree(testXml)
-        >>> print OpenSearch.getTemplate(t)
+        >>> print OpenSearch.getTemplate(t, OpenSearch.atomXmlType)
         http://example.com/?q={searchTerms}&pw={startPage?}
         """
         # $$$ deal with multiple urls
-        e = cls.getElement(tree, 'Url', 'type', cls.contentType)
+        e = cls.getElement(tree, 'Url', 'type', type)
         if e is not None:
             return e.get('template')
         else:
