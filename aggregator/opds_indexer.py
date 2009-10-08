@@ -33,6 +33,8 @@ from   wfile   import WFile
 from   wrecord import WRecord
 from   wbloc   import WBloc
 
+sys.path.append('..')
+import bookserver
 
 config = {'warc_dir':              '/crawler/data',
           'default_sleep_seconds': 5,  #TODO: set this per domain from robots.txt
@@ -57,8 +59,9 @@ def indexWarc(warcFileName):
             w.destroy ()
             print "bad record.. bailing!"
             return
-          
-        print r.getContentType()
+        
+        url = r.getTargetUri()
+        print 'processing ' + url
         b = WBloc (w, r, False, 64 * 1024)
         
         content = ''
@@ -70,7 +73,11 @@ def indexWarc(warcFileName):
             else:
                 break
 
-        print content
+        if 'application/atom+xml' == r.getContentType():
+            ingestor = bookserver.catalog.ingest.OpdsToCatalog(content, url)
+            c = ingestor.getCatalog()
+            renderer = bookserver.catalog.output.CatalogToAtom(c)
+
         b.destroy()
         r.destroy()
         

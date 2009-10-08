@@ -72,3 +72,4 @@ cmd('installing python-xml', 'DEBIAN_FRONTEND=noninteractive apt-get --force-yes
 if not os.path.exists(warc_dir):
     print 'making warc_dir ' + warc_dir
     os.makedirs(warc_dir)
+    

@@ -59,6 +59,9 @@ class OpdsToCatalog():
     # addNavigation()
     #___________________________________________________________________________        
     def addNavigation(self, c, f, url):
+        if not 'links' in f.feed:
+            return
+            
         for link in f.feed.links:
             nextLink  = None
             nextTitle = None
@@ -115,11 +118,15 @@ class OpdsToCatalog():
     def __init__(self, content, url):
         f = feedparser.parse(content)
 
+        authorUri = None
+        if 'href' in f.feed.author_detail:
+            authorUri = f.feed.author_detail.href
+            
         self.c = Catalog(title     = f.feed.title,
                     urn       = f.feed.id,
                     url       = url,
                     author    = f.feed.author,
-                    authorUri = f.feed.author_detail.href,
+                    authorUri = authorUri,
                     datestr   = f.feed.updated,                                 
                    )
 
@@ -137,7 +144,8 @@ class OpdsToCatalog():
             #feedparser retuns both a content, which is a list of dicts,
             # and a subtitle, which is a string fabricated from atom:content
             # Remove the existing content, and replace with subtitle.
-            bookDict['content'] = bookDict['subtitle']
+            if 'subtitle' in bookDict:
+                bookDict['content'] = bookDict['subtitle']
             
             self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail', 'published_parsed', 'author_detail'))
             
