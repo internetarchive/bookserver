@@ -29,6 +29,7 @@ from Navigation import Navigation
 from Link  import Link
 
 import lxml.etree as ET
+import re
 
 class CatalogRenderer:
     """Base class for catalog renderers"""
@@ -546,7 +547,31 @@ class CatalogToHtml(CatalogRenderer):
         
         
 class ArchiveCatalogToHtml(CatalogToHtml):
+    """
+    Used to create an HTML catalog with Archive specific data and formatting
+    """
 
+    scandataRegex = re.compile('Scandata')
+
+    def canReadOnline(self, entry):
+        """
+        Returns true if this item can be read in the online bookreader.
+        """
+        
+        if not entry.get('identifier'):
+            return False
+        
+        # Check for a readable format
+        for format in entry.get('formats'):
+            if self.scandataRegex.search(format):
+                return True
+            
+        return False
+    
+    def readOnlineUrl(self, entry):
+        return 'http://www.archive.org/stream/%s' % entry.get('identifier')
+        
+    
     def createEntry(self, entry):
         e = CatalogToHtml.createEntry(self, entry)
         identifier = entry.get('identifier')
@@ -557,9 +582,12 @@ class ArchiveCatalogToHtml(CatalogToHtml):
             a.text = 'More information about this book'
             ET.SubElement(s, 'br')
             
-            # XXX check for readonline
-            #a = ET.SubElement(s, 'span')
-            #a.text = str(entry.get('formats'))
+            if self.canReadOnline(entry):
+                s = ET.SubElement(s, 'span')
+                a = ET.SubElement(s, 'a', {'href': self.readOnlineUrl(entry), 'title':'Read online'} )
+                a.text = 'Read online'
+                ET.SubElement(s, 'br')
+                
         return e
         
 
