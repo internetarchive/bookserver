@@ -340,7 +340,7 @@ class CatalogToHtml(CatalogRenderer):
         >>> numFound = 100
         >>> numRows  = 10
         >>> urlBase  = '/alpha/a/'
-        >>> nav = Navigation(start, numRows, numFound, urlBase)
+        >>> nav = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
         >>> div = testToHtml.createNavigation(nav)
         >>> print ET.tostring(div)
         <div class="opds-navigation"><a href="/alpha/a/4.html" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/alpha/a/6.html" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
@@ -610,7 +610,7 @@ def testmod():
     numFound = 2
     numRows  = 1
     urlBase  = '/alpha/a/'
-    testNavigation = Navigation(start, numRows, numFound, urlBase)
+    testNavigation = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
     testCatalog.addNavigation(testNavigation)
     
     osDescription = 'http://bookserver.archive.org/opensearch.xml'
