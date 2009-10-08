@@ -135,6 +135,11 @@ class CatalogToAtom(CatalogRenderer):
         if 'date' in obj:
             element = self.createTextElement(entry, self.dcterms+'issued',  obj['date'][0:4])
     
+        if 'authors' in obj:
+            for author in obj['authors']:
+                element = ET.SubElement(entry, 'author')
+                self.createTextElement(element, 'name',  author)
+                
         if 'subjects' in obj:
             for subject in obj['subjects']:
                 element = ET.SubElement(entry, 'category')
@@ -155,13 +160,13 @@ class CatalogToAtom(CatalogRenderer):
             ### FireFox won't show the content element if it contains nested html elements
             contentText=''
         
-            if 'creator' in obj:
-                if 1 == len(obj['creator']):
+            if 'authors' in obj:
+                if 1 == len(obj['authors']):
                     authorStr = '<b>Author: </b>'
                 else:
                     authorStr = '<b>Authors: </b>'
                 
-                authorStr += ', '.join(obj['creator'])
+                authorStr += ', '.join(obj['authors'])
                 contentText += authorStr + '<br/>'
         
             #TODO: refactor
