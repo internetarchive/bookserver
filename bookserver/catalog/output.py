@@ -216,7 +216,9 @@ class CatalogToAtom(CatalogRenderer):
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
         self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
-        self.createOpenSearchDescription(self.opds, c._opensearch)
+
+        if c._opensearch:
+            self.createOpenSearchDescription(self.opds, c._opensearch)
 
         if c._navigation:
             self.createNavLinks(self.opds, c._navigation)

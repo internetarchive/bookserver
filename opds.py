@@ -320,8 +320,8 @@ class openSearchDescription:
     <ShortName>Internet Archive Search</ShortName>
     <Description>Search archive.org's OPDS Catalog.</Description>
     <Url type="application/atom+xml" 
-        template="http://bookserver.archive.org/opensearch?q={searchTerms}&amp;start={startPage?}"/>
-</OpenSearchDescription>"""        
+        template="%s/opensearch?q={searchTerms}&amp;start={startPage?}"/>
+</OpenSearchDescription>""" % (pubInfo['opdsroot'])
 
 
 # redirect to remove trailing slash

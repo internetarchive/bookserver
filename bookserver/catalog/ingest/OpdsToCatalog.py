@@ -30,6 +30,8 @@ import sys
 sys.path.append("/petabox/www/bookserver")
 import feedparser
 
+import urlparse
+
 from .. import Catalog
 from .. import Entry
 from .. import Navigation
@@ -38,6 +40,76 @@ from .. import Link
 
 class OpdsToCatalog():
 
+    keymap = {'author': 'authors',
+     'author_detail': 'author_detail',
+     'content': 'content',
+     'dcterms_language': 'languages',
+     'dcterms_publisher': 'publishers',
+     'id': 'urn',
+     'links': 'links',
+     'published': 'date',
+     'published_parsed': 'published_parsed',
+     'subtitle': 'subtitle',
+     'title': 'title',
+     'title_detail': 'title_detail',
+     'updated': 'updated',
+     'updated_parsed': 'updated_parsed',
+     'tags' : 'tags'}
+
+    # addNavigation()
+    #___________________________________________________________________________        
+    def addNavigation(self, c, f, url):
+        for link in f.feed.links:
+            nextLink  = None
+            nextTitle = None
+            prevLink  = None
+            prevTitle = None
+            if 'next' == link.rel:
+                nextLink  = urlparse.urljoin(url, link.href)
+                nextTitle = link.title
+            if 'prev' == link.rel:
+                prevLink  = urlparse.urljoin(url, link.href)
+                prevTitle = link.title
+
+            if nextLink or prevLink:
+                nav = Navigation(nextLink, nextTitle, prevLink, prevTitle)
+                c.addNavigation(nav)
+
+    # removeKeys()
+    #___________________________________________________________________________        
+    def removeKeys(self, d, keys):
+        for key in keys:
+            d.pop(key, None)
+
+    # mergeTags()
+    #   Feedparser's "tags" come from atom:category, and possibly other atom 
+    #   elements. Our Category class uses 'subjects', which correspond with the
+    #   the IA solr key name.
+    #___________________________________________________________________________        
+    def mergeTags(self, d):
+        if 'tags' in d:
+            if not 'subjects' in d:
+                d['subjects'] = []
+            
+            for tag in d['tags']:
+                d['subjects'].append(tag['term'])
+            
+            self.removeKeys(d, ('tags',))
+
+    # scalarToList()
+    #___________________________________________________________________________        
+    def scalarToList(self, d, keys):
+        for key in keys:
+            if key in d:
+                if not list == type(d[key]):
+                    val = d[key]
+                    d[key] = [val]
+
+    # getCatalog()
+    #___________________________________________________________________________    
+    def getCatalog(self):        
+        return self.c
+            
     # OpdsToCatalog()
     #___________________________________________________________________________        
     def __init__(self, content, url):
@@ -50,8 +122,31 @@ class OpdsToCatalog():
                     authorUri = f.feed.author_detail.href,
                     datestr   = f.feed.updated,                                 
                    )
-        
-        
+
+        self.addNavigation(self.c, f, url)
+
+        for entry in f.entries:
+            bookDict = dict( (OpdsToCatalog.keymap[key], val) for key, val in entry.iteritems() )
+            links = []
+            for l in entry.links:
+                link = Link(url = l['href'], type = l['type'], rel = l['rel'])
+                links.append(link)
+
+            self.mergeTags(bookDict)            
+            
+            #feedparser retuns both a content, which is a list of dicts,
+            # and a subtitle, which is a string fabricated from atom:content
+            # Remove the existing content, and replace with subtitle.
+            bookDict['content'] = bookDict['subtitle']
+            
+            self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail', 'published_parsed', 'author_detail'))
+            
+            self.scalarToList(bookDict, ('languages','publishers', 'authors'))
+            
+            e = Entry(bookDict, links=links)
+            self.c.addEntry(e)
+            
+            
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
