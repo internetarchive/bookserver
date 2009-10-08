@@ -40,20 +40,21 @@ from .. import Link
 
 class OpdsToCatalog():
 
-    keymap = {'author': 'author',
+    keymap = {'author': 'authors',
      'author_detail': 'author_detail',
      'content': 'content',
-     'dcterms_language': 'dcterms_language',
-     'dcterms_publisher': 'dcterms_publisher',
+     'dcterms_language': 'languages',
+     'dcterms_publisher': 'publishers',
      'id': 'urn',
      'links': 'links',
-     'published': 'published',
+     'published': 'date',
      'published_parsed': 'published_parsed',
      'subtitle': 'subtitle',
      'title': 'title',
      'title_detail': 'title_detail',
      'updated': 'updated',
-     'updated_parsed': 'updated_parsed'}
+     'updated_parsed': 'updated_parsed',
+     'tags' : 'tags'}
 
     # addNavigation()
     #___________________________________________________________________________        
@@ -79,6 +80,30 @@ class OpdsToCatalog():
     def removeKeys(self, d, keys):
         for key in keys:
             d.pop(key, None)
+
+    # mergeTags()
+    #   Feedparser's "tags" come from atom:category, and possibly other atom 
+    #   elements. Our Category class uses 'subjects', which correspond with the
+    #   the IA solr key name.
+    #___________________________________________________________________________        
+    def mergeTags(self, d):
+        if 'tags' in d:
+            if not 'subjects' in d:
+                d['subjects'] = []
+            
+            for tag in d['tags']:
+                d['subjects'].append(tag['term'])
+            
+            self.removeKeys(d, ('tags',))
+
+    # scalarToList()
+    #___________________________________________________________________________        
+    def scalarToList(self, d, keys):
+        for key in keys:
+            if key in d:
+                if not list == type(d[key]):
+                    val = d[key]
+                    d[key] = [val]
 
     # getCatalog()
     #___________________________________________________________________________    
@@ -106,9 +131,17 @@ class OpdsToCatalog():
             for l in entry.links:
                 link = Link(url = l['href'], type = l['type'], rel = l['rel'])
                 links.append(link)
+
+            self.mergeTags(bookDict)            
             
+            #feedparser retuns both a content, which is a list of dicts,
+            # and a subtitle, which is a string fabricated from atom:content
+            # Remove the existing content, and replace with subtitle.
             bookDict['content'] = bookDict['subtitle']
-            self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail'))
+            
+            self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail', 'published_parsed', 'author_detail'))
+            
+            self.scalarToList(bookDict, ('languages','publishers', 'authors'))
             
             e = Entry(bookDict, links=links)
             self.c.addEntry(e)
