@@ -68,7 +68,7 @@ class index:
         datestr = getDateString()
         
         c = catalog.Catalog(
-                            title     = 'Internet Archive OPDS',
+                            title     = 'Internet Archive Catalog',
                             urn       = pubInfo['urnroot'],
                             url       = pubInfo['opdsroot'],
                             datestr   = datestr,

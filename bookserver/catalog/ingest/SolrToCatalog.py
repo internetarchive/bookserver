@@ -68,7 +68,7 @@ class SolrToCatalog:
 
         numFound = int(obj['response']['numFound'])
         
-        title = pubInfo['name'] + ' OPDS'        
+        title = pubInfo['name'] + ' Catalog'        
 
         if None != start:
             title += " - %d to %d of %d " % (start*numRows, min((start+1)*numRows, numFound), numFound)
