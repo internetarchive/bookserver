@@ -280,7 +280,7 @@ class CatalogToHtml(CatalogRenderer):
         
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
-        self.processCatalog(catalog)
+        self.processCatalogToFragment(catalog) # XXX
         
     def processCatalog(self, catalog):
         html = self.createHtml(catalog)
@@ -295,6 +295,18 @@ class CatalogToHtml(CatalogRenderer):
         body.append(self.createFooter(catalog))
         
         self.html = html
+        return self
+
+    def processCatalogToFragment(self, catalog):
+        fragment = ET.Element('div', {'class':'opds-div'})
+        fragment.append(self.createHeader(catalog))
+        fragment.append(self.createNavigation(catalog._navigation))
+        fragment.append(self.createSearch(catalog._opensearch))
+        fragment.append(self.createCatalogHeader(catalog))
+        fragment.append(self.createEntryList(catalog._entries))
+        fragment.append(self.createFooter(catalog))
+        
+        self.html = fragment
         return self
         
     def createHtml(self, catalog):
