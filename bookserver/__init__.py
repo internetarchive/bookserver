@@ -35,7 +35,7 @@ This file is part of bookserver.
 >>> numFound = 2
 >>> numRows  = 1
 >>> urlBase  = '/alpha/a/'
->>> n = catalog.Navigation(start, numRows, numFound, urlBase)
+>>> n = catalog.Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
 >>> c.addNavigation(n)
 
 >>> osDescription = 'http://bookserver.archive.org/opensearch.xml'
