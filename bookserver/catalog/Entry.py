@@ -113,8 +113,6 @@ class Entry():
                 raise ValueError("invalid value in bookserver.catalog.Entry: %s=%s should have type %s, but got type %s" % (key, value, wantedType, gotType))
     
 
-    # Entry()
-    #___________________________________________________________________________        
     def __init__(self, obj, links=None):
 
         
@@ -135,8 +133,6 @@ class Entry():
         self._links = links
                 
 
-    # get()
-    #___________________________________________________________________________        
     def get(self, key):
         if key in self._entry:
             return self._entry[key]
@@ -149,11 +145,13 @@ class Entry():
             else:
                 raise KeyError("requested key %s is not valid in Entry" % key)
 
-    # set()
-    #___________________________________________________________________________        
     def set(self, key, value):
         self.validate(key, value)
         self._entry[key] = value
+
+
+    def getLinks(self):
+        return self._links
 
 
 class IAEntry(Entry):

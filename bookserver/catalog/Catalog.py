@@ -54,3 +54,5 @@ class Catalog:
     def addOpenSearch(self, opensearch):
         self._opensearch = opensearch
 
+    def getEntries(self):
+        return self._entries

@@ -1,8 +1,7 @@
 OPDS To Catalog Test
 ====================
 
-This test grabs an fetches an ODPS feed using urllib, and create a
-a Catalog instance from it.
+This test creates a Catalog instance from an OPDS Atom feed.
 
 >>> import bookserver
 >>> import bookserver.catalog.ingest.OpdsToCatalog as OpdsToCatalog

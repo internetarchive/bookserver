@@ -30,3 +30,13 @@ class Link:
         self._url  = url
         self._type = type
         self._rel  = rel
+        
+    def getUrl(self):
+        return self._url
+
+    def getType(self):
+        return self._type
+        
+    def getRel(self):
+        return self._rel
+        

@@ -26,6 +26,7 @@ This file takes a WARC file as input, and adds all Atom contents to Solr.
 import sys
 import tempfile
 import os
+import commands
 
 sys.path.insert (0, "/usr/local/warc-tools/python/")
 import warc
@@ -76,7 +77,23 @@ def indexWarc(warcFileName):
         if 'application/atom+xml' == r.getContentType():
             ingestor = bookserver.catalog.ingest.OpdsToCatalog(content, url)
             c = ingestor.getCatalog()
-            renderer = bookserver.catalog.output.CatalogToAtom(c)
+            renderer = bookserver.catalog.output.CatalogToSolr(c, 'OReilly')
+            str = renderer.toString()
+            
+            solr_import_xml = tempdir + "/solr_import.xml"
+            f = open(solr_import_xml, 'w')
+            f.write(str)
+            f.close()
+                        
+            command = """/solr/example/exampledocs/post.sh '%s'""" % (solr_import_xml)
+            
+            (ret, out) = commands.getstatusoutput(command)
+            if -1 == out.find('<int name="status">0</int>'):
+                print out
+            assert 0 == ret
+
+            os.unlink(solr_import_xml)
+            
 
         b.destroy()
         r.destroy()

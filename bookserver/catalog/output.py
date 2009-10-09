@@ -31,6 +31,10 @@ from Link  import Link
 import lxml.etree as ET
 import re
 
+import feedparser #for _parse_date()
+import datetime
+import string
+
 class CatalogRenderer:
     """Base class for catalog renderers"""
 
@@ -215,6 +219,7 @@ class CatalogToAtom(CatalogRenderer):
     # __init__()
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
+        CatalogRenderer.__init__(self)
         self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
 
         if c._opensearch:
@@ -591,8 +596,111 @@ class ArchiveCatalogToHtml(CatalogToHtml):
                 ET.SubElement(s, 'br')
                 
         return e
-        
 
+#_______________________________________________________________________________
+        
+class CatalogToSolr(CatalogRenderer):
+    '''
+    Creates xml that can be sent to a Solr POST command
+    '''
+
+    def isEbook(self, entry):
+        for link in entry.getLinks():            
+            if 'application/pdf' == link.getType():
+                return True
+            elif 'application/epub+zip' == link.getType():
+                return True
+            elif ('buynow' == link.getRel()) and ('text/html' == link.getType()):
+                #special case for O'Reilly Stanza feeds
+                return True
+
+        return False            
+
+    def addField(self, element, name, data):
+        field = ET.SubElement(element, "field")
+        field.set('name', name)
+        field.text=data        
+
+    def addList(self, element, name, data):
+        for scalar in data:
+            self.addField(element, name, scalar)
+
+    def makeSolrDate(self, datestr):
+        """
+        Solr is very particular about the date format it can handle
+        """
+        d = feedparser._parse_date(datestr)
+        date = datetime.datetime(d.tm_year, d.tm_mon, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec)
+        return date.isoformat()+'Z'
+        
+        
+    def addEntry(self, entry):
+        """
+        Add each ebook as a Solr document
+        """
+        
+        if not self.isEbook(entry):
+            return
+            
+        doc = ET.SubElement(self.solr, "doc")
+        self.addField(doc, 'urn',       entry.get('urn'))
+        self.addField(doc, 'provider',  self.provider)      
+        self.addField(doc, 'title',     entry.get('title'))
+        
+        self.addList(doc, 'creator',    entry.get('authors'))
+        self.addList(doc, 'language',   entry.get('languages'))
+        self.addList(doc, 'publisher',  entry.get('publishers'))
+        self.addList(doc, 'subject',    entry.get('subjects'))
+        
+        self.addField(doc, 'updatedate', self.makeSolrDate(entry.get('updated')))
+
+        if entry.get('date'):            
+            date = datetime.datetime(int(entry.get('date')), 1, 1)
+            self.addField(doc, 'date', date.isoformat()+'Z')
+
+        if entry.get('title'):
+            self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+            self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
+
+        #TODO: deal with description, creatorSorter, languageSorter
+
+        for link in entry.getLinks():            
+            if 'application/pdf' == link.getType():
+                self.addField(doc, 'format', 'pdf')
+                self.addField(doc, 'link',   link.getUrl())
+            elif 'application/epub+zip' == link.getType():
+                self.addField(doc, 'format', 'epub')
+                self.addField(doc, 'link',   link.getUrl())
+            elif ('buynow' == link.getRel()) and ('text/html' == link.getType()):
+                #special case for O'Reilly Stanza feeds
+                self.addField(doc, 'format', 'shoppingcart')
+                self.addField(doc, 'link',   link.getUrl())
+
+        ### old version of lxml on the cluster does not have lxml.html package
+        #if 'OReilly' == self.provider: 
+        #    content = html.fragment_fromstring(entry.get('content'))
+        #    price = content.xpath("//span[@class='price']")[0]
+        #    self.addField(doc, 'price', price.text.lstrip('$'))
+        #elif ('IA' == self.provider) or ('Feedbooks' == self.provider):
+        #    self.addField(doc, 'price', '0.00')
+
+
+    def createRoot(self):
+        return ET.Element("add")
+    
+    def __init__(self, catalog, provider):
+        CatalogRenderer.__init__(self)
+        self.provider = provider
+        
+        self.solr = self.createRoot()
+
+        for entry in catalog.getEntries():
+            self.addEntry(entry)
+
+    def toString(self):
+        return self.prettyPrintET(self.solr)
+        
+#_______________________________________________________________________________
 
 def testmod():
     import doctest
