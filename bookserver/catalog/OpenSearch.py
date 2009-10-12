@@ -23,6 +23,8 @@ This file is part of bookserver.
 
 import lxml.etree as ET
 
+from query import Query
+
 class OpenSearch:
     namespace = 'http://a9.com/-/spec/opensearch/1.1/'
     atomXmlType = 'application/atom+xml'
@@ -111,6 +113,18 @@ class OpenSearch:
             return e.get('template')
         else:
             raise ValueError('Could not find search template')
+            
+    @classmethod
+    def createQuery(cls, template):
+        """
+        >>> q = OpenSearch.createQuery("http://example.com/?q={searchTerms}&pw={startPage?}")
+        >>> q.searchTerms = 'foo bar'
+        >>> q.startPage = 1
+        >>> print q.url()
+        http://example.com/?q=foo+bar&pw=1
+        """
+        q = Query(template)
+        return q
 
 
 def testmod():
