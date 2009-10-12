@@ -115,7 +115,12 @@ class OpdsToCatalog():
 
     # specialCaseOReilly()
     #___________________________________________________________________________    
-    def specialCaseOReilly(self, content, links):
+    def specialCaseOReilly(self, entry, links):
+        if not 'content' in entry:
+            return
+        else:
+            content = entry.content[0].value
+            
         try:
             from lxml import html
             parser = html.fragment_fromstring(content)
@@ -159,7 +164,7 @@ class OpdsToCatalog():
                 links.append(link)
 
             if url.startswith('http://catalog.oreilly.com'):
-                self.specialCaseOReilly(entry.content[0].value, links)
+                self.specialCaseOReilly(entry, links)
                 
             self.mergeTags(bookDict)            
             
