@@ -23,6 +23,7 @@ This file is part of bookserver.
 
 import doctest
 import glob
+import commands
 
 import sys
 sys.path.append('..')
@@ -37,3 +38,17 @@ for test in testfiles:
     if numFail:
        print 'Rerunning test in verbose mode!'
        doctest.testfile(test, verbose=True)
+
+testmodules = glob.glob('../bookserver/catalog/*.py')
+
+for test in testmodules:
+    if test.endswith('__init__.py'):
+        continue
+        
+    (status, output) = commands.getstatusoutput('python ' + test)
+    print 'testing module %s' % (test)
+
+    if 0 != status:
+        print 'Rerunning test in verbose mode!'
+        (status, output) = commands.getstatusoutput('python ' + test + ' -v')
+        print output
