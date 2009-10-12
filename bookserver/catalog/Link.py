@@ -22,21 +22,19 @@ This file is part of bookserver.
 """
 
 class Link:
+    valid_keys = ('url', 'type', 'rel', 'price', 'currencycode')
+    required_keys = ('url', 'type')
 
-    def __init__(self, url=None, type=None, rel=None):
-        assert url
-        assert type
+    def __init__(self, **kwargs):
+        for key,val in kwargs.iteritems():
+            if key not in Link.valid_keys:
+                raise KeyError("invalid key in bookserver.catalog.Link: %s" % (key))
         
-        self._url  = url
-        self._type = type
-        self._rel  = rel
+        for req_key in Link.required_keys:
+            if not req_key in kwargs:
+                raise KeyError("required key %s not supplied for Link!" % (req_key))
         
-    def getUrl(self):
-        return self._url
+        self._data = kwargs        
 
-    def getType(self):
-        return self._type
-        
-    def getRel(self):
-        return self._rel
-        
+    def get(self, key):
+        return self._data.get(key, None)

@@ -31,6 +31,8 @@ from Link  import Link
 import lxml.etree as ET
 import re
 
+import sys
+sys.path.append("/petabox/www/bookserver")
 import feedparser #for _parse_date()
 import datetime
 import string
@@ -115,10 +117,10 @@ class CatalogToAtom(CatalogRenderer):
     #___________________________________________________________________________
     def createOpdsLink(self, entry, link):
         element = ET.SubElement(entry, 'link')
-        element.attrib['href'] = link._url
-        element.attrib['type'] = link._type
-        if link._rel:
-            element.attrib['rel']  = link._rel
+        element.attrib['href'] = link.get('url')
+        element.attrib['type'] = link.get('type')
+        if link.get('rel'):
+            element.attrib['rel']  = link.get('rel')
     
     # createOpdsEntry()
     #___________________________________________________________________________
@@ -134,7 +136,7 @@ class CatalogToAtom(CatalogRenderer):
         downloadLinks = []
         for link in links:
             self.createOpdsLink(entry, link)
-            if link._type in CatalogToAtom.ebookTypes:
+            if link.get('type') in CatalogToAtom.ebookTypes:
                 downloadLinks.append(link)
                     
         if 'date' in obj:
@@ -196,8 +198,8 @@ class CatalogToAtom(CatalogRenderer):
             if len(downloadLinks):
                 contentText += '<b>Download Ebook: </b>'
                 for link in downloadLinks:
-                    (start, sep, ext) = link._url.rpartition('.')
-                    contentText += '(<a href="%s">%s</a>) '%(link._url, ext.upper())
+                    (start, sep, ext) = link.get('url').rpartition('.')
+                    contentText += '(<a href="%s">%s</a>) '%(link.get('url'), ext.upper())
         
             element = self.createTextElement(entry, 'content',  contentText)
             element.attrib['type'] = 'html'        
@@ -508,13 +510,13 @@ class CatalogToHtml(CatalogRenderer):
         <a href="/blah.epub" class="opds-entry-link">EPUB</a>
         """
         
-        if self.entryLinkTitles.has_key(link._type):
-            title = self.entryLinkTitles[link._type]
+        if self.entryLinkTitles.has_key(link.get('type')):
+            title = self.entryLinkTitles[link.get('type')]
         else:
-            title = link._url
+            title = link.get('url')
         
         a = ET.Element('a', {'class':'opds-entry-link',
-            'href' : link._url
+            'href' : link.get('url')
         })
         a.text = title
         return a
@@ -606,11 +608,11 @@ class CatalogToSolr(CatalogRenderer):
 
     def isEbook(self, entry):
         for link in entry.getLinks():            
-            if 'application/pdf' == link.getType():
+            if 'application/pdf' == link.get('type'):
                 return True
-            elif 'application/epub+zip' == link.getType():
+            elif 'application/epub+zip' == link.get('type'):
                 return True
-            elif ('buynow' == link.getRel()) and ('text/html' == link.getType()):
+            elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 return True
 
@@ -665,16 +667,16 @@ class CatalogToSolr(CatalogRenderer):
         #TODO: deal with description, creatorSorter, languageSorter
 
         for link in entry.getLinks():            
-            if 'application/pdf' == link.getType():
+            if 'application/pdf' == link.get('type'):
                 self.addField(doc, 'format', 'pdf')
-                self.addField(doc, 'link',   link.getUrl())
-            elif 'application/epub+zip' == link.getType():
+                self.addField(doc, 'link',   link.get('url'))
+            elif 'application/epub+zip' == link.get('type'):
                 self.addField(doc, 'format', 'epub')
-                self.addField(doc, 'link',   link.getUrl())
-            elif ('buynow' == link.getRel()) and ('text/html' == link.getType()):
+                self.addField(doc, 'link',   link.get('url'))
+            elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 self.addField(doc, 'format', 'shoppingcart')
-                self.addField(doc, 'link',   link.getUrl())
+                self.addField(doc, 'link',   link.get('url'))
 
         ### old version of lxml on the cluster does not have lxml.html package
         #if 'OReilly' == self.provider: 
