@@ -54,7 +54,6 @@ class CatalogToAtom(CatalogRenderer):
     #some xml namespace constants
     #___________________________________________________________________________
     xmlns_atom    = 'http://www.w3.org/2005/Atom'
-    xmlns_dc      = 'http://purl.org/dc/elements/1.1/'
     xmlns_dcterms = 'http://purl.org/dc/terms/'
     xmlns_opds    = 'http://opds-spec.org/'
     
@@ -64,7 +63,6 @@ class CatalogToAtom(CatalogRenderer):
     
     nsmap = {
         None     : xmlns_atom,
-        'dc'     : xmlns_dc,
         'dcterms': xmlns_dcterms,
         'opds'   : xmlns_opds
     }

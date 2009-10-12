@@ -18,6 +18,8 @@ To create a link to a PDF that costs $1.00:
     ...                  price = '1.00',
     ...                  currencycode = 'USD')
 
+To create an entry for a book:
+
     >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
     ...                    'title'   : u'test item',
     ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l])
