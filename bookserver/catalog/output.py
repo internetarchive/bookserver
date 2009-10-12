@@ -56,14 +56,17 @@ class CatalogToAtom(CatalogRenderer):
     xmlns_atom    = 'http://www.w3.org/2005/Atom'
     xmlns_dc      = 'http://purl.org/dc/elements/1.1/'
     xmlns_dcterms = 'http://purl.org/dc/terms/'
+    xmlns_opds    = 'http://opds-spec.org/'
     
     atom          = "{%s}" % xmlns_atom
     dcterms       = "{%s}" % xmlns_dcterms
+    opdsNS        = "{%s}" % xmlns_opds
     
     nsmap = {
         None     : xmlns_atom,
         'dc'     : xmlns_dc,
         'dcterms': xmlns_dcterms,
+        'opds'   : xmlns_opds
     }
     
     fileExtMap = {
@@ -122,6 +125,10 @@ class CatalogToAtom(CatalogRenderer):
         if link.get('rel'):
             element.attrib['rel']  = link.get('rel')
     
+        if link.get('price'):
+            price = self.createTextElement(element, CatalogToAtom.opdsNS+'price', link.get('price'))
+            price.attrib['currencycode'] = link.get('currencycode')
+            
     # createOpdsEntry()
     #___________________________________________________________________________
     def createOpdsEntry(self, opds, obj, links, fabricateContentElement):

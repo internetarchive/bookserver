@@ -37,7 +37,11 @@ class Link:
             if not req_key in kwargs:
                 raise KeyError("required key %s not supplied for Link!" % (req_key))
         
-        self._data = kwargs        
+        if 'price' in kwargs:
+            if not 'currencycode' in kwargs:
+                kwargs['currencycode'] = 'USD'
+                
+        self._data = kwargs    
 
     def get(self, key):
         return self._data.get(key, None)

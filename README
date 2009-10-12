@@ -10,9 +10,14 @@ To create a Catalog instance from scratch, you can use this code:
     >>> from bookserver import catalog
     >>> urn = 'urn:x-internet-archive:bookserver:catalog'
     >>> c = catalog.Catalog(title='Internet Archive OPDS', urn=urn)
-    
-    >>> l = catalog.Link(url  = 'http://archive.org/details/itemid',
-    ...                  type = 'application/atom+xml')
+
+To create a link to a PDF that costs $1.00:
+
+    >>> l = catalog.Link(url   = 'http://archive.org/download/itemid/itemid.pdf',
+    ...                  type  = 'application/pdf',
+    ...                  price = '1.00',
+    ...                  currencycode = 'USD')
+
     >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
     ...                    'title'   : u'test item',
     ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l])
@@ -39,9 +44,9 @@ From our Catalog instance, we can now create an OPDS feed in Atom format:
     >>> r = catalog.output.CatalogToAtom(c)
     >>> str = r.toString()
 
-Different version of lxml will print this out differently    
+Different version of lxml will print xmlns differently (use ellipsis in doctest):
 
-    >>> print str.rstrip() #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    >>> print str.rstrip() #doctest: +ELLIPSIS
     <feed ...
       <title>Internet Archive OPDS</title>
       <id>urn:x-internet-archive:bookserver:catalog</id>
@@ -57,6 +62,8 @@ Different version of lxml will print this out differently
         <title>test item</title>
         <id>x-internet-archive:item:itemid</id>
         <updated>2009-01-01T00:00:00Z</updated>
-        <link href="http://archive.org/details/itemid" type="application/atom+xml"/>
+        <link href="http://archive.org/download/itemid/itemid.pdf" type="application/pdf">
+          <opds:price currencycode="USD">1.00</opds:price>
+        </link>
       </entry>
     </feed>
