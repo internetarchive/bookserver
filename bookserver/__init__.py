@@ -22,7 +22,7 @@ This file is part of bookserver.
 
 >>> import catalog
 >>> urn = 'urn:x-internet-archive:bookserver:catalog'
->>> c = catalog.Catalog(title='Internet Archive OPDS', urn=urn)
+>>> c = catalog.Catalog(title='Internet Archive Catalog', urn=urn)
 
 >>> l = catalog.Link(url  = 'http://archive.org/details/itemid',
 ...                  type = 'application/atom+xml')
@@ -49,7 +49,7 @@ Different version of lxml will print xmlns differently (use ellipsis in doctest)
 
 >>> print str.rstrip() #doctest: +ELLIPSIS
 <feed ...
-  <title>Internet Archive OPDS</title>
+  <title>Internet Archive Catalog</title>
   <id>urn:x-internet-archive:bookserver:catalog</id>
   <updated>1970-01-01T00:00:00Z</updated>
   <link rel="self" type="application/atom+xml" href="http://bookserver.archive.org/catalog/"/>
@@ -84,7 +84,7 @@ Different version of lxml will print xmlns differently (use ellipsis in doctest)
 >>> ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn)
 >>> c = ingestor.getCatalog()
 >>> print c._title
-Internet Archive OPDS
+Internet Archive Catalog
 
 """
 
