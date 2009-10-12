@@ -32,7 +32,7 @@ import lxml.etree as ET
 import re
 
 import sys
-sys.path.append("/petabox/www/bookserver")
+sys.path.append("/petabox/sw/lib/python")
 import feedparser #for _parse_date()
 import datetime
 import string
