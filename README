@@ -11,13 +11,11 @@ To create a Catalog instance from scratch, you can use this code:
     >>> urn = 'urn:x-internet-archive:bookserver:catalog'
     >>> c = catalog.Catalog(title='Internet Archive OPDS', urn=urn)
 
-To create a link to a PDF that costs $1.00:
+To create a link to a free PDF:
 
     >>> l = catalog.Link(url   = 'http://archive.org/download/itemid/itemid.pdf',
     ...                  type  = 'application/pdf',
-    ...                  rel   = 'http://opds-spec.org/acquisition/buying',
-    ...                  price = '1.00',
-    ...                  currencycode = 'USD')
+    ...                  rel   = 'http://opds-spec.org/acquisition')
 
 To create a link to an html shopping cart that sells drm-ed books:
 
@@ -79,9 +77,7 @@ Different version of lxml will print xmlns differently (use ellipsis in doctest)
         <title>test item</title>
         <id>x-internet-archive:item:itemid</id>
         <updated>2009-01-01T00:00:00Z</updated>
-        <link href="http://archive.org/download/itemid/itemid.pdf" type="application/pdf" rel="http://opds-spec.org/acquisition/buying">
-          <opds:price currencycode="USD">1.00</opds:price>
-        </link>
+        <link href="http://archive.org/download/itemid/itemid.pdf" type="application/pdf" rel="http://opds-spec.org/acquisition"/>
       </entry>
       <entry>
         <title>A book with DRM</title>
