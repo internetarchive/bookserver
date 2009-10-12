@@ -38,13 +38,14 @@ From our Catalog instance, we can now create an OPDS feed in Atom format:
     
     >>> r = catalog.output.CatalogToAtom(c)
     >>> str = r.toString()
-    >>> str=str.replace('<feed ', """<feed \n""")
+
+Different version of lxml will print this out differently    
+
     >>> print str.rstrip() #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    <feed
-        ...
+    <feed ...
       <title>Internet Archive OPDS</title>
       <id>urn:x-internet-archive:bookserver:catalog</id>
-      <updated/>
+      <updated>1970-01-01T00:00:00Z</updated>
       <link rel="self" type="application/atom+xml" href="http://bookserver.archive.org/catalog/"/>
       <author>
         <name>Internet Archive</name>
