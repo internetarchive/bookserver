@@ -15,14 +15,29 @@ To create a link to a PDF that costs $1.00:
 
     >>> l = catalog.Link(url   = 'http://archive.org/download/itemid/itemid.pdf',
     ...                  type  = 'application/pdf',
+    ...                  rel   = 'http://opds-spec.org/acquisition/buying',
     ...                  price = '1.00',
     ...                  currencycode = 'USD')
+
+To create a link to an html shopping cart that sells drm-ed books:
+
+    >>> l2 = catalog.Link(url   = 'http://archive.org/download/drmbook/shoppingcart',
+    ...                   type  = 'text/html',
+    ...                   rel   = 'http://opds-spec.org/acquisition/buying',
+    ...                   price = '10.00',
+    ...                   currencycode = 'USD',
+    ...                   formats = ('application/pdf;drm=acs', 'application/epub+zip;drm=acs'))
 
 To create an entry for a book:
 
     >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
     ...                    'title'   : u'test item',
     ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l])
+    >>> c.addEntry(e)
+
+    >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:drmbook',
+    ...                    'title'   : u'A book with DRM',
+    ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l2])
     >>> c.addEntry(e)
 
 The catalog.Navigation class can help with creating prev and next rel links,
@@ -64,8 +79,18 @@ Different version of lxml will print xmlns differently (use ellipsis in doctest)
         <title>test item</title>
         <id>x-internet-archive:item:itemid</id>
         <updated>2009-01-01T00:00:00Z</updated>
-        <link href="http://archive.org/download/itemid/itemid.pdf" type="application/pdf">
+        <link href="http://archive.org/download/itemid/itemid.pdf" type="application/pdf" rel="http://opds-spec.org/acquisition/buying">
           <opds:price currencycode="USD">1.00</opds:price>
+        </link>
+      </entry>
+      <entry>
+        <title>A book with DRM</title>
+        <id>x-internet-archive:item:drmbook</id>
+        <updated>2009-01-01T00:00:00Z</updated>
+        <link href="http://archive.org/download/drmbook/shoppingcart" type="text/html" rel="http://opds-spec.org/acquisition/buying">
+          <opds:price currencycode="USD">10.00</opds:price>
+          <dcterms:hasFormat>application/pdf;drm=acs</dcterms:hasFormat>
+          <dcterms:hasFormat>application/epub+zip;drm=acs</dcterms:hasFormat>
         </link>
       </entry>
     </feed>

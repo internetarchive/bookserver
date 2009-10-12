@@ -22,7 +22,7 @@ This file is part of bookserver.
 """
 
 class Link:
-    valid_keys = ('url', 'type', 'rel', 'price', 'currencycode')
+    valid_keys = ('url', 'type', 'rel', 'price', 'currencycode', 'formats')
     required_keys = ('url', 'type')
     
     def validate(self, key, value):

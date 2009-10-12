@@ -126,6 +126,10 @@ class CatalogToAtom(CatalogRenderer):
         if link.get('price'):
             price = self.createTextElement(element, CatalogToAtom.opdsNS+'price', link.get('price'))
             price.attrib['currencycode'] = link.get('currencycode')
+
+        if link.get('formats'):
+            for format in link.get('formats'):
+                self.createTextElement(element, CatalogToAtom.dcterms+'hasFormat', format)
             
     # createOpdsEntry()
     #___________________________________________________________________________
