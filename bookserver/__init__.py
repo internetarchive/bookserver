@@ -44,8 +44,11 @@ This file is part of bookserver.
 
 >>> r = catalog.output.CatalogToAtom(c)
 >>> str = r.toString()
->>> print str
-<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+
+Different version of lxml will print xmlns differently (use ellipsis in doctest):
+
+>>> print str.rstrip() #doctest: +ELLIPSIS
+<feed ...
   <title>Internet Archive OPDS</title>
   <id>urn:x-internet-archive:bookserver:catalog</id>
   <updated>1970-01-01T00:00:00Z</updated>
