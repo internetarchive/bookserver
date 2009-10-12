@@ -22,11 +22,30 @@ This file is part of bookserver.
 """
 
 class Link:
-
-    def __init__(self, url=None, type=None, rel=None):
-        assert url
-        assert type
+    valid_keys = ('url', 'type', 'rel', 'price', 'currencycode', 'formats')
+    required_keys = ('url', 'type')
+    
+    def validate(self, key, value):
+        if key not in Link.valid_keys:
+            raise KeyError("invalid key in bookserver.catalog.Link: %s" % (key))
         
-        self._url  = url
-        self._type = type
-        self._rel  = rel
+    def __init__(self, **kwargs):
+        for key,val in kwargs.iteritems():
+            self.validate(key, val)
+            
+        for req_key in Link.required_keys:
+            if not req_key in kwargs:
+                raise KeyError("required key %s not supplied for Link!" % (req_key))
+        
+        if 'price' in kwargs:
+            if not 'currencycode' in kwargs:
+                kwargs['currencycode'] = 'USD'
+                
+        self._data = kwargs    
+
+    def get(self, key):
+        return self._data.get(key, None)
+
+    def set(self, key, value):
+        self.validate(key, value)
+        self._data[key] = value

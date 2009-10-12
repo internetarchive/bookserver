@@ -26,6 +26,7 @@ This file takes a WARC file as input, and adds all Atom contents to Solr.
 import sys
 import tempfile
 import os
+import commands
 
 sys.path.insert (0, "/usr/local/warc-tools/python/")
 import warc
@@ -41,6 +42,19 @@ config = {'warc_dir':              '/crawler/data',
           'max_warc_size':         100*1024*1024,
          }
 
+providers = (
+         {'provider':'IA',        'url':'http://bookserver.archive.org'},
+         {'provider':'OReilly',   'url':'http://catalog.oreilly.com'},
+         {'provider':'Feedbooks', 'url':'http://www.feedbooks.com'},
+        )
+
+# getProvider
+#______________________________________________________________________________
+def getProvider(url):
+    for d in providers:
+        if url.startswith(d['url']):
+            return d['provider']
+    raise KeyError('no provider found for url %s' % (url))            
 
 # indexWarc()
 #   loop over the contents of a WARC file, and add them to solr
@@ -76,7 +90,24 @@ def indexWarc(warcFileName):
         if 'application/atom+xml' == r.getContentType():
             ingestor = bookserver.catalog.ingest.OpdsToCatalog(content, url)
             c = ingestor.getCatalog()
-            renderer = bookserver.catalog.output.CatalogToAtom(c)
+            provider = getProvider(url)
+            renderer = bookserver.catalog.output.CatalogToSolr(c, provider)
+            str = renderer.toString()
+            
+            solr_import_xml = tempdir + "/solr_import.xml"
+            f = open(solr_import_xml, 'w')
+            f.write(str)
+            f.close()
+                        
+            command = """/solr/example/exampledocs/post.sh '%s'""" % (solr_import_xml)
+            
+            (ret, out) = commands.getstatusoutput(command)
+            if -1 == out.find('<int name="status">0</int>'):
+                print out
+            assert 0 == ret
+
+            os.unlink(solr_import_xml)
+            
 
         b.destroy()
         r.destroy()

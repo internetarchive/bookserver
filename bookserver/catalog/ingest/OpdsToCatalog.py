@@ -112,6 +112,29 @@ class OpdsToCatalog():
     #___________________________________________________________________________    
     def getCatalog(self):        
         return self.c
+
+    # specialCaseOReilly()
+    #___________________________________________________________________________    
+    def specialCaseOReilly(self, entry, links):
+        if not 'content' in entry:
+            return
+        else:
+            content = entry.content[0].value
+            
+        try:
+            from lxml import html
+            parser = html.fragment_fromstring(content)
+            price = parser.xpath("//span[@class='price']")[0]
+            if price.text.startswith('$'):
+                priceVal = price.text.lstrip('$')
+                currencyCode = 'USD'
+                for link in links:
+                    link.set('price', priceVal)
+                    link.set('currencycode', currencyCode)
+        except ImportError:
+            pass
+            
+
             
     # OpdsToCatalog()
     #___________________________________________________________________________        
@@ -134,11 +157,15 @@ class OpdsToCatalog():
 
         for entry in f.entries:
             bookDict = dict( (OpdsToCatalog.keymap[key], val) for key, val in entry.iteritems() )
+                                
             links = []
             for l in entry.links:
                 link = Link(url = l['href'], type = l['type'], rel = l['rel'])
                 links.append(link)
 
+            if url.startswith('http://catalog.oreilly.com'):
+                self.specialCaseOReilly(entry, links)
+                
             self.mergeTags(bookDict)            
             
             #feedparser retuns both a content, which is a list of dicts,

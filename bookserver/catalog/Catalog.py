@@ -31,7 +31,7 @@ class Catalog:
                  title     = 'Internet Archive OPDS',
                  urn       = 'urn:x-internet-archive:bookserver:catalog',
                  url       = 'http://bookserver.archive.org/catalog', 
-                 datestr   = None,
+                 datestr   = '1970-01-01T00:00:00Z',
                  author    = 'Internet Archive',
                  authorUri = 'http://www.archive.org',
                 ):
@@ -54,3 +54,5 @@ class Catalog:
     def addOpenSearch(self, opensearch):
         self._opensearch = opensearch
 
+    def getEntries(self):
+        return self._entries

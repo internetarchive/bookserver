@@ -10,12 +10,32 @@ To create a Catalog instance from scratch, you can use this code:
     >>> from bookserver import catalog
     >>> urn = 'urn:x-internet-archive:bookserver:catalog'
     >>> c = catalog.Catalog(title='Internet Archive OPDS', urn=urn)
-    
-    >>> l = catalog.Link(url  = 'http://archive.org/details/itemid',
-    ...                  type = 'application/atom+xml')
+
+To create a link to a free PDF:
+
+    >>> l = catalog.Link(url   = 'http://archive.org/download/itemid/itemid.pdf',
+    ...                  type  = 'application/pdf',
+    ...                  rel   = 'http://opds-spec.org/acquisition')
+
+To create a link to an html shopping cart that sells drm-ed books:
+
+    >>> l2 = catalog.Link(url   = 'http://archive.org/download/drmbook/shoppingcart',
+    ...                   type  = 'text/html',
+    ...                   rel   = 'http://opds-spec.org/acquisition/buying',
+    ...                   price = '10.00',
+    ...                   currencycode = 'USD',
+    ...                   formats = ('application/pdf;drm=acs', 'application/epub+zip;drm=acs'))
+
+To create an entry for a book:
+
     >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:itemid',
     ...                    'title'   : u'test item',
     ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l])
+    >>> c.addEntry(e)
+
+    >>> e = catalog.Entry({'urn'     : 'x-internet-archive:item:drmbook',
+    ...                    'title'   : u'A book with DRM',
+    ...                    'updated' : '2009-01-01T00:00:00Z'}, links=[l2])
     >>> c.addEntry(e)
 
 The catalog.Navigation class can help with creating prev and next rel links,
@@ -38,11 +58,14 @@ From our Catalog instance, we can now create an OPDS feed in Atom format:
     
     >>> r = catalog.output.CatalogToAtom(c)
     >>> str = r.toString()
-    >>> print str
-    <feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+
+Different version of lxml will print xmlns differently (use ellipsis in doctest):
+
+    >>> print str.rstrip() #doctest: +ELLIPSIS
+    <feed ...
       <title>Internet Archive OPDS</title>
       <id>urn:x-internet-archive:bookserver:catalog</id>
-      <updated/>
+      <updated>1970-01-01T00:00:00Z</updated>
       <link rel="self" type="application/atom+xml" href="http://bookserver.archive.org/catalog/"/>
       <author>
         <name>Internet Archive</name>
@@ -54,6 +77,16 @@ From our Catalog instance, we can now create an OPDS feed in Atom format:
         <title>test item</title>
         <id>x-internet-archive:item:itemid</id>
         <updated>2009-01-01T00:00:00Z</updated>
-        <link href="http://archive.org/details/itemid" type="application/atom+xml"/>
+        <link href="http://archive.org/download/itemid/itemid.pdf" type="application/pdf" rel="http://opds-spec.org/acquisition"/>
+      </entry>
+      <entry>
+        <title>A book with DRM</title>
+        <id>x-internet-archive:item:drmbook</id>
+        <updated>2009-01-01T00:00:00Z</updated>
+        <link href="http://archive.org/download/drmbook/shoppingcart" type="text/html" rel="http://opds-spec.org/acquisition/buying">
+          <opds:price currencycode="USD">10.00</opds:price>
+          <dcterms:hasFormat>application/pdf;drm=acs</dcterms:hasFormat>
+          <dcterms:hasFormat>application/epub+zip;drm=acs</dcterms:hasFormat>
+        </link>
       </entry>
     </feed>

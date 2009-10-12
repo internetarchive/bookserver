@@ -31,6 +31,12 @@ from Link  import Link
 import lxml.etree as ET
 import re
 
+import sys
+sys.path.append("/petabox/www/bookserver")
+import feedparser #for _parse_date()
+import datetime
+import string
+
 class CatalogRenderer:
     """Base class for catalog renderers"""
 
@@ -48,16 +54,17 @@ class CatalogToAtom(CatalogRenderer):
     #some xml namespace constants
     #___________________________________________________________________________
     xmlns_atom    = 'http://www.w3.org/2005/Atom'
-    xmlns_dc      = 'http://purl.org/dc/elements/1.1/'
     xmlns_dcterms = 'http://purl.org/dc/terms/'
+    xmlns_opds    = 'http://opds-spec.org/'
     
     atom          = "{%s}" % xmlns_atom
     dcterms       = "{%s}" % xmlns_dcterms
+    opdsNS        = "{%s}" % xmlns_opds
     
     nsmap = {
         None     : xmlns_atom,
-        'dc'     : xmlns_dc,
         'dcterms': xmlns_dcterms,
+        'opds'   : xmlns_opds
     }
     
     fileExtMap = {
@@ -111,11 +118,19 @@ class CatalogToAtom(CatalogRenderer):
     #___________________________________________________________________________
     def createOpdsLink(self, entry, link):
         element = ET.SubElement(entry, 'link')
-        element.attrib['href'] = link._url
-        element.attrib['type'] = link._type
-        if link._rel:
-            element.attrib['rel']  = link._rel
+        element.attrib['href'] = link.get('url')
+        element.attrib['type'] = link.get('type')
+        if link.get('rel'):
+            element.attrib['rel']  = link.get('rel')
     
+        if link.get('price'):
+            price = self.createTextElement(element, CatalogToAtom.opdsNS+'price', link.get('price'))
+            price.attrib['currencycode'] = link.get('currencycode')
+
+        if link.get('formats'):
+            for format in link.get('formats'):
+                self.createTextElement(element, CatalogToAtom.dcterms+'hasFormat', format)
+            
     # createOpdsEntry()
     #___________________________________________________________________________
     def createOpdsEntry(self, opds, obj, links, fabricateContentElement):
@@ -130,7 +145,7 @@ class CatalogToAtom(CatalogRenderer):
         downloadLinks = []
         for link in links:
             self.createOpdsLink(entry, link)
-            if link._type in CatalogToAtom.ebookTypes:
+            if link.get('type') in CatalogToAtom.ebookTypes:
                 downloadLinks.append(link)
                     
         if 'date' in obj:
@@ -192,8 +207,8 @@ class CatalogToAtom(CatalogRenderer):
             if len(downloadLinks):
                 contentText += '<b>Download Ebook: </b>'
                 for link in downloadLinks:
-                    (start, sep, ext) = link._url.rpartition('.')
-                    contentText += '(<a href="%s">%s</a>) '%(link._url, ext.upper())
+                    (start, sep, ext) = link.get('url').rpartition('.')
+                    contentText += '(<a href="%s">%s</a>) '%(link.get('url'), ext.upper())
         
             element = self.createTextElement(entry, 'content',  contentText)
             element.attrib['type'] = 'html'        
@@ -215,6 +230,7 @@ class CatalogToAtom(CatalogRenderer):
     # __init__()
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
+        CatalogRenderer.__init__(self)
         self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
 
         if c._opensearch:
@@ -515,13 +531,13 @@ class CatalogToHtml(CatalogRenderer):
         <a href="/blah.epub" class="opds-entry-link">EPUB</a>
         """
         
-        if self.entryLinkTitles.has_key(link._type):
-            title = self.entryLinkTitles[link._type]
+        if self.entryLinkTitles.has_key(link.get('type')):
+            title = self.entryLinkTitles[link.get('type')]
         else:
-            title = link._url
+            title = link.get('url')
         
         a = ET.Element('a', {'class':'opds-entry-link',
-            'href' : link._url
+            'href' : link.get('url')
         })
         a.text = title
         return a
@@ -603,8 +619,127 @@ class ArchiveCatalogToHtml(CatalogToHtml):
                 ET.SubElement(s, 'br')
                 
         return e
-        
 
+#_______________________________________________________________________________
+        
+class CatalogToSolr(CatalogRenderer):
+    '''
+    Creates xml that can be sent to a Solr POST command
+    '''
+
+    def isEbook(self, entry):
+        for link in entry.getLinks():            
+            if 'application/pdf' == link.get('type'):
+                return True
+            elif 'application/epub+zip' == link.get('type'):
+                return True
+            elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
+                #special case for O'Reilly Stanza feeds
+                return True
+
+        return False            
+
+    def addField(self, element, name, data):
+        field = ET.SubElement(element, "field")
+        field.set('name', name)
+        field.text=data        
+
+    def addList(self, element, name, data):
+        for scalar in data:
+            self.addField(element, name, scalar)
+
+    def makeSolrDate(self, datestr):
+        """
+        Solr is very particular about the date format it can handle
+        """
+        d = feedparser._parse_date(datestr)
+        date = datetime.datetime(d.tm_year, d.tm_mon, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec)
+        return date.isoformat()+'Z'
+        
+        
+    def addEntry(self, entry):
+        """
+        Add each ebook as a Solr document
+        """
+        
+        if not self.isEbook(entry):
+            return
+            
+        doc = ET.SubElement(self.solr, "doc")
+        self.addField(doc, 'urn',       entry.get('urn'))
+        self.addField(doc, 'provider',  self.provider)      
+        self.addField(doc, 'title',     entry.get('title'))
+        
+        self.addList(doc, 'creator',    entry.get('authors'))
+        self.addList(doc, 'language',   entry.get('languages'))
+        self.addList(doc, 'publisher',  entry.get('publishers'))
+        self.addList(doc, 'subject',    entry.get('subjects'))
+        
+        self.addField(doc, 'updatedate', self.makeSolrDate(entry.get('updated')))
+
+        if entry.get('date'):            
+            date = datetime.datetime(int(entry.get('date')), 1, 1)
+            self.addField(doc, 'date', date.isoformat()+'Z')
+
+        if entry.get('title'):
+            self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+            self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
+
+        #TODO: deal with description, creatorSorter, languageSorter
+
+        price = None            #TODO: support multiple prices for different formats
+        currencyCode = None
+        for link in entry.getLinks():            
+            if 'application/pdf' == link.get('type'):
+                self.addField(doc, 'format', 'pdf')
+                self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
+            elif 'application/epub+zip' == link.get('type'):
+                self.addField(doc, 'format', 'epub')
+                self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
+            elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
+                #special case for O'Reilly Stanza feeds
+                self.addField(doc, 'format', 'shoppingcart')
+                self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
+
+        if price:
+            if not currencyCode:
+                currencyCode = 'USD'
+            self.addField(doc, 'price', price)
+            self.addField(doc, 'currencyCode', currencyCode)
+        ### old version of lxml on the cluster does not have lxml.html package
+        #if 'OReilly' == self.provider: 
+        #    content = html.fragment_fromstring(entry.get('content'))
+        #    price = content.xpath("//span[@class='price']")[0]
+        #    self.addField(doc, 'price', price.text.lstrip('$'))
+        #elif ('IA' == self.provider) or ('Feedbooks' == self.provider):
+        #    self.addField(doc, 'price', '0.00')
+
+
+    def createRoot(self):
+        return ET.Element("add")
+    
+    def __init__(self, catalog, provider):
+        CatalogRenderer.__init__(self)
+        self.provider = provider
+        
+        self.solr = self.createRoot()
+
+        for entry in catalog.getEntries():
+            self.addEntry(entry)
+
+    def toString(self):
+        return self.prettyPrintET(self.solr)
+        
+#_______________________________________________________________________________
 
 def testmod():
     import doctest

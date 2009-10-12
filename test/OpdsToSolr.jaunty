@@ -1,0 +1,857 @@
+OPDS To Solr POST xml
+=====================
+
+This test creates a xml file that can be sent to Solr for indexing via a POST.
+
+First, we read in an OPDS atom feed:
+
+    >>> fh = open('feeds/oreilly_A.xml')
+    >>> content = fh.read()
+    >>> fh.close()
+
+Now, we create a Catalog instance from the feed:
+
+    >>> import bookserver
+    >>> url = 'http://catalog.oreilly.com/stanza/alphabetical/A.xml'
+    >>> ingestor = bookserver.catalog.ingest.OpdsToCatalog(content, url)
+    >>> c = ingestor.getCatalog()
+
+Now, output a Solr POST xml files:
+
+    >>> r = bookserver.catalog.output.CatalogToSolr(c, 'OReilly')
+    >>> str = r.toString()
+
+    >>> print str.rstrip()
+    <add>
+      <doc>
+        <field name="urn">urn:uuid:05a6eba6-c714-3043-a244-253ea3a5b822</field>
+        <field name="provider">OReilly</field>
+        <field name="title">A+, Network+, Security+ Exams in a Nutshell</field>
+        <field name="creator">Pawan K. Bhardwaj</field>
+        <field name="updatedate">2009-09-29T17:39:29Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">a+, network+, security+ exams in a nutshell</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596102722.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">43.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:1ce0ffef-a5fe-3e7f-8f2c-3767e869fb2e</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access 2003 for Starters: The Missing Manual</field>
+        <field name="creator">Scott Palmer</field>
+        <field name="updatedate">2009-09-29T17:39:29Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access 2003 for starters: the missing manual</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596556488.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">15.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:1ef61cce-e013-34e7-9614-c9a2ff86734c</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access 2007 for Starters: The Missing Manual</field>
+        <field name="creator">Matthew MacDonald</field>
+        <field name="updatedate">2009-09-29T17:39:29Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access 2007 for starters: the missing manual</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596106119.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">15.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:5098f6cd-9c31-3abe-985a-4869ba9cb57d</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access 2007: The Missing Manual</field>
+        <field name="creator">Matthew MacDonald</field>
+        <field name="updatedate">2009-09-29T17:39:29Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access 2007: the missing manual</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596158279.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:bc3c20bf-65ee-3c6a-9e52-26276cd52083</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access Cookbook, Second Edition</field>
+        <field name="creator">Andy Baron</field>
+        <field name="updatedate">2009-09-29T17:39:29Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access cookbook, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596104412.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:352aa29e-9494-3923-aebc-075fe6161fe3</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access Data Analysis Cookbook</field>
+        <field name="creator">Wayne S. Freeze</field>
+        <field name="updatedate">2009-09-29T17:39:30Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access data analysis cookbook</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596159436.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">39.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:6166571a-5692-3cf2-80f6-7b15672aea1f</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access Database Design &amp; Programming, Third Edition</field>
+        <field name="creator">Steven Roman, PhD</field>
+        <field name="updatedate">2009-09-29T17:39:30Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access database design &amp; programming, third edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596556037.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:2de7982f-454a-312c-a494-87e545ba531a</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Access Hacks</field>
+        <field name="creator">Ken Bluttman</field>
+        <field name="updatedate">2009-09-29T17:39:30Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">access hacks</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596104986.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">19.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:cf8783f0-77bc-3fb1-beff-8a874ef5ca49</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ActionScript 3.0 Cookbook</field>
+        <field name="creator">Keith Peters</field>
+        <field name="updatedate">2009-09-29T17:39:30Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">actionscript 3.0 cookbook</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596158378.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:382871f0-7c3b-3364-a438-6d57c8552a98</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ActionScript 3.0 Design Patterns</field>
+        <field name="creator">Chandima Cumaranatunge</field>
+        <field name="updatedate">2009-09-29T17:39:30Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">actionscript 3.0 design patterns</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596158682.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">35.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:d038fb9a-2900-33a6-a02a-f3d277f0d4e8</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ActionScript 3.0 Programming: Overview, Getting Started, and Examples of New Concepts</field>
+        <field name="creator">William Sanders</field>
+        <field name="updatedate">2009-09-29T17:39:30Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">actionscript 3.0 programming: overview, getting started, and examples of new concepts</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596559267.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">9.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:560ae93b-c3bb-3b71-9d88-bce7e19073c3</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The ActionScript 3.0 Quick Reference Guide: For Developers and Designers Using Flash</field>
+        <field name="creator">David Stiller</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the actionscript 3.0 quick reference guide: for developers and designers using flash</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596156572.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:b709acd2-ddc1-309d-938c-57fc5e2a8867</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ActionScript for Flash MX Pocket Reference</field>
+        <field name="creator">Colin Moock</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">actionscript for flash mx pocket reference</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596556273.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">4.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:7c9f7e98-9e2d-360a-988b-3e02025f9309</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ActionScript for Flash MX: The Definitive Guide, Second Edition</field>
+        <field name="creator">Colin Moock</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">actionscript for flash mx: the definitive guide, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596556167.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">43.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:8c913ff6-5713-31b6-b63c-b4540b11c922</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Active Directory Cookbook, Second Edition</field>
+        <field name="creator">Laura E. Hunter</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">active directory cookbook, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596106010.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">39.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:1df9ab77-923f-35b5-b195-7ce1cfcded80</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Active Directory Cookbook, Third Edition</field>
+        <field name="creator">Robbie Allen</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">active directory cookbook, third edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596157814.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">43.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:9c10cc92-1c2e-368f-a568-4f0816ef327a</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Active Directory, Fourth Edition</field>
+        <field name="creator">Alistair G. Lowe-Norris</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">active directory, fourth edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596156909.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">43.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:782c1cbe-8ce2-3db3-8243-2b80740918ff</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Active Directory, Third Edition</field>
+        <field name="creator">Alistair G. Lowe-Norris</field>
+        <field name="updatedate">2009-09-29T17:39:31Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">active directory, third edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105952.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">39.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:2f6b9b67-c119-312d-8f02-1abade03ede0</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Adding Ajax</field>
+        <field name="creator">Shelley Powers</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">adding ajax</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596102661.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:07183960-5df8-362a-be6e-d2f18dc24bce</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ADO.NET 3.5 Cookbook, Second Edition</field>
+        <field name="creator">Bill Hamilton</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ado.net 3.5 cookbook, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596159580.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">43.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:e8cacea5-bcef-3d28-92a4-f09879b8653e</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Adobe AIR 1.5 Cookbook</field>
+        <field name="creator">Marco Casario</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">adobe air 1.5 cookbook</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596156480.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:b7f45606-edf6-3098-b5f6-537cdf546d37</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Adobe Integrated Runtime (AIR) for JavaScript Developers Pocket Guide</field>
+        <field name="creator">Kevin  Hoyt</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">adobe integrated runtime (air) for javascript developers pocket guide</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596558062.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">11.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:e313e68b-05f4-3301-aae9-7c7d42f04597</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Advanced Perl Programming, Second Edition</field>
+        <field name="creator">Simon Cozens</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">advanced perl programming, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596104016.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:194b5f22-5e22-3e86-8046-ae9e96290650</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Advanced Rails</field>
+        <field name="creator">Brad Ediger</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">advanced rails</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596159122.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:7af0af41-13fc-3170-8945-04da3e367676</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Agile Enterprise Application Development with Flex</field>
+        <field name="creator">Tony Hillerson</field>
+        <field name="updatedate">2009-09-29T17:39:32Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">agile enterprise application development with flex</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596557867.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">19.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:92eaa7a0-78d1-31dd-bbb5-234d27c4fca3</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax and Web Services</field>
+        <field name="creator">Mark Pruett</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax and web services</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596559205.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">9.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:b66de87e-4544-3d86-9a9b-33e8157514bc</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax Design Patterns</field>
+        <field name="creator">Michael Mahemoff</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax design patterns</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105969.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">35.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:9b3dd81c-7d05-3517-9f9f-32c0d9b2ae02</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax Hacks</field>
+        <field name="creator">Bruce W. Perry</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax hacks</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105945.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:89c4eaae-f55e-3978-90ab-2dc799dfe7dd</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax on Java</field>
+        <field name="creator">Steve Oualline</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax on java</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105990.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:7091059e-4e54-328c-97e3-fa0fd5e49dea</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax on Rails</field>
+        <field name="creator">Scott Raymond</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax on rails</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596158385.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:8bbd4e8b-9cf0-3c9f-93fc-4476cb881115</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax with PHP 5</field>
+        <field name="creator">Andrew G. Curioso</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax with php 5</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596557768.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">9.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:3cb6b4b8-fc5a-3024-8eb9-309632986425</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ajax: The Definitive Guide</field>
+        <field name="creator">Anthony T. Holdener III</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ajax: the definitive guide</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596158927.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">39.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:aa2be977-26be-314b-8afc-477aaa24d292</field>
+        <field name="provider">OReilly</field>
+        <field name="title">All About Your iPod Photo</field>
+        <field name="creator">Wei-Meng Lee</field>
+        <field name="updatedate">2009-09-29T17:39:33Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">all about your ipod photo</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596556945.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">5.95</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:84665f82-92da-337f-a2a5-af6af28ad681</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ambient Findability</field>
+        <field name="creator">Peter Morville</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ambient findability</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105044.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:d79d2fcf-55f1-312d-a058-3ca9a866a8d5</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Analyzing Business Data with Excel</field>
+        <field name="creator">Gerald Knight</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">analyzing business data with excel</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105792.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:baebaa1e-1c35-3d13-84b1-779660885056</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Android Application Development</field>
+        <field name="creator">Blake Meike</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">android application development</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596802547.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:2ec2fe25-b14e-31c0-a0d5-357e773e0b4d</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Ant: The Definitive Guide, Second Edition</field>
+        <field name="creator">Steve Holzner</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">ant: the definitive guide, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596104443.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:42c6d9c8-3448-32c1-b4d9-fe94fc3886a7</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apache 2 Pocket Reference</field>
+        <field name="creator">Andrew Ford</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apache 2 pocket reference</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596558383.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">11.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:e86f958b-f7f8-388e-9348-ff4f58ecb30b</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apache Cookbook</field>
+        <field name="creator">Rich Bowen</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apache cookbook</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596103224.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:efae7f17-a12f-3b9f-9f00-71d506430979</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apache Cookbook, Second Edition</field>
+        <field name="creator">Ken Coar</field>
+        <field name="updatedate">2009-09-29T17:39:34Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apache cookbook, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596102777.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:a3ef4eb3-09a6-3c48-bc6a-ae6bf87fdd46</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apache Pocket Ref</field>
+        <field name="creator">Andrew Ford</field>
+        <field name="updatedate">2009-09-29T17:39:35Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apache pocket ref</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596559786.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">4.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:fd822b27-9c53-33f8-817a-560093aae14e</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apache Security</field>
+        <field name="creator">Ivan Ristic</field>
+        <field name="updatedate">2009-09-29T17:39:35Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apache security</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596104924.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:2fb2f25e-820b-3b36-8dee-03238ed540d6</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apache: The Definitive Guide, Third Edition</field>
+        <field name="creator">c/o Rosemary Scoular</field>
+        <field name="updatedate">2009-09-29T17:39:35Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apache: the definitive guide, third edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596555993.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:a844f8ec-aaf4-395a-8b7b-d555d2a494db</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Apollo for Adobe Flex Developers Pocket Guide</field>
+        <field name="creator">Jeff Swartz</field>
+        <field name="updatedate">2009-09-29T17:39:35Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">apollo for adobe flex developers pocket guide</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596102852.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">11.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:fb33ca2a-0ad9-308d-a460-8ccd9edf3586</field>
+        <field name="provider">OReilly</field>
+        <field name="title">AppleScript: The Definitive Guide, Second Edition</field>
+        <field name="creator">Matt Neuburg</field>
+        <field name="updatedate">2009-09-29T17:39:35Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">applescript: the definitive guide, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596159733.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:26321022-9618-3d6c-9338-022040176c5f</field>
+        <field name="provider">OReilly</field>
+        <field name="title">AppleScript: The Missing Manual</field>
+        <field name="creator">Adam Goldstein</field>
+        <field name="updatedate">2009-09-29T17:39:35Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">applescript: the missing manual</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105204.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">19.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:7f0bd4ba-627c-3627-911c-85b1c580ba18</field>
+        <field name="provider">OReilly</field>
+        <field name="title">AppleWorks 6: the Missing Manual</field>
+        <field name="creator">David Reynolds</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">appleworks 6: the missing manual</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596559816.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">15.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:a77eda56-5da0-3de9-b013-8d31edd1ae79</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Applied Software Project Management</field>
+        <field name="creator">Jennifer Greene</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">applied software project management</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596152932.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:48772915-e099-3a1b-9646-a5a30507d624</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of Agile Development</field>
+        <field name="creator">Chromatic</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of agile development</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596152901.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:81e10068-cf04-3e7f-b120-2adcbf87f4dc</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of Application Performance Testing</field>
+        <field name="creator">Ian Molyneaux</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of application performance testing</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596800949.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">27.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:b6d9491b-b91e-3b05-a8c4-cbbc4693a225</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of Capacity Planning</field>
+        <field name="creator">John Allspaw</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of capacity planning</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596103118.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">35.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:b72c10aa-780f-3b66-b729-e1f8a913e0e0</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of Community</field>
+        <field name="creator">Jono Bacon</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of community</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596805753.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:325c31cb-f6be-3fb3-96ac-3ef8e403d040</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of Concurrency</field>
+        <field name="creator">Clay Breshears</field>
+        <field name="updatedate">2009-09-29T17:39:36Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of concurrency</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596803513.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">35.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:be757f42-f3fb-323b-b507-bf39c262ab7d</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of Lean Software Development</field>
+        <field name="creator">Curt Hibbs</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of lean software development</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596157807.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:77b9f9bb-3663-343a-bafd-73792a8e2dfb</field>
+        <field name="provider">OReilly</field>
+        <field name="title">The Art of SQL</field>
+        <field name="creator">Peter Robson</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">T</field>
+        <field name="titleSorter">the art of sql</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596159719.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">35.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:81343eb6-3301-351a-9e2c-b541c0772fa5</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ASP in a Nutshell, Second Edition</field>
+        <field name="creator">Keyton Weissinger</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">asp in a nutshell, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596103231.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:4932f919-3898-32c6-9ea3-6354e589eaa8</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ASP.NET 2.0 Cookbook, Second Edition</field>
+        <field name="creator">Geoffrey T. LeBlond</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">asp.net 2.0 cookbook, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596105709.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">43.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:26ed366a-776d-30ea-a4a2-1f01db9547d2</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ASP.NET 2.0: A Developer's Notebook</field>
+        <field name="creator">Wei-Meng Lee</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">asp.net 2.0: a developer's notebook</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596104580.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">23.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:24307e81-ed7c-3978-bb5e-32eea3a3ce1d</field>
+        <field name="provider">OReilly</field>
+        <field name="title">ASP.NET AJAX UpdatePanel Control</field>
+        <field name="creator">Matt Gibbs</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">asp.net ajax updatepanel control</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596558673.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">9.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:4308c262-d548-3650-bc55-70511489f84c</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Assembling Panoramic Photos: A Designer's Notebook</field>
+        <field name="updatedate">2009-09-29T17:39:37Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">assembling panoramic photos: a designer's notebook</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596556914.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">15.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:aac46510-32e1-3eef-8a77-784ebf9812e8</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Asterisk: The Future of Telephony, Second Edition</field>
+        <field name="creator">Leif Madsen</field>
+        <field name="updatedate">2009-09-29T17:39:38Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">asterisk: the future of telephony, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596102838.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">35.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:ee338d73-f420-357c-bef9-ba931babe508</field>
+        <field name="provider">OReilly</field>
+        <field name="title">AutoIt v3: Your Quick Guide</field>
+        <field name="creator">Andy Flesner</field>
+        <field name="updatedate">2009-09-29T17:39:38Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">autoit v3: your quick guide</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596558017.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">7.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:79e0762f-1ddc-367e-93e6-4c30b59f3f78</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Automating InDesign with Regular Expressions</field>
+        <field name="creator">Peter Kahrel</field>
+        <field name="updatedate">2009-09-29T17:39:38Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">automating indesign with regular expressions</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596559328.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">9.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+      <doc>
+        <field name="urn">urn:uuid:c1510259-8ef8-3676-a6bb-0f2e49483272</field>
+        <field name="provider">OReilly</field>
+        <field name="title">Automating System Administration with Perl, Second Edition</field>
+        <field name="creator">David N. Blank-Edelman</field>
+        <field name="updatedate">2009-09-29T17:39:38Z</field>
+        <field name="firstTitle">A</field>
+        <field name="titleSorter">automating system administration with perl, second edition</field>
+        <field name="format">shoppingcart</field>
+        <field name="link">https://epoch.oreilly.com/shop/cart.orm?prod=9780596802516.EBOOK&amp;p=STANZACAT</field>
+        <field name="price">31.99</field>
+        <field name="currencyCode">USD</field>
+      </doc>
+    </add>

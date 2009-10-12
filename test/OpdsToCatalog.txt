@@ -1,8 +1,7 @@
 OPDS To Catalog Test
 ====================
 
-This test grabs an fetches an ODPS feed using urllib, and create a
-a Catalog instance from it.
+This test creates a Catalog instance from an OPDS Atom feed.
 
 >>> import bookserver
 >>> import bookserver.catalog.ingest.OpdsToCatalog as OpdsToCatalog
@@ -18,8 +17,10 @@ a Catalog instance from it.
 
 >>> r = bookserver.catalog.output.CatalogToAtom(c)
 >>> str = r.toString()
->>> print str
-<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+>>> str=str.replace('<feed ', """<feed \n""")
+>>> print str.rstrip() #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+<feed 
+    ...
   <title>Internet Archive OPDS</title>
   <id>urn:x-internet-archive:bookserver:catalog</id>
   <updated>2009-10-08T00:00:00Z</updated>
@@ -63,8 +64,10 @@ a Catalog instance from it.
 
 >>> r = bookserver.catalog.output.CatalogToAtom(c)
 >>> str = r.toString()
->>> print str
-<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+>>> str=str.replace('<feed ', """<feed \n""")
+>>> print str.rstrip() #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+<feed 
+    ...
   <title>Internet Archive OPDS - Most Downloaded Books in the last Month</title>
   <id>urn:x-internet-archive:bookserver:catalog:downloads</id>
   <updated>2009-10-08T00:00:00Z</updated>

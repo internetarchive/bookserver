@@ -48,7 +48,7 @@ This file is part of bookserver.
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <title>Internet Archive OPDS</title>
   <id>urn:x-internet-archive:bookserver:catalog</id>
-  <updated/>
+  <updated>1970-01-01T00:00:00Z</updated>
   <link rel="self" type="application/atom+xml" href="http://bookserver.archive.org/catalog/"/>
   <author>
     <name>Internet Archive</name>

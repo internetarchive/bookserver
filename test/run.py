@@ -23,12 +23,20 @@ This file is part of bookserver.
 
 import doctest
 import glob
+import commands
 
 import sys
 sys.path.append('..')
 
 testfiles = glob.glob('*.txt')
 testfiles.insert(0, '../README')
+
+f = open('/etc/issue')
+issue = f.read()
+f.close()
+if issue.startswith('Ubuntu 9.04'):
+    #tests that depend on having the right version of lxml
+    testfiles += glob.glob('*.jaunty')
 
 for test in testfiles:
     (numFail, numTests) = doctest.testfile(test)
@@ -37,3 +45,17 @@ for test in testfiles:
     if numFail:
        print 'Rerunning test in verbose mode!'
        doctest.testfile(test, verbose=True)
+
+testmodules = glob.glob('../bookserver/catalog/*.py')
+
+for test in testmodules:
+    if test.endswith('__init__.py'):
+        continue
+        
+    (status, output) = commands.getstatusoutput('python ' + test)
+    print 'testing module %s' % (test)
+
+    if 0 != status:
+        print 'Rerunning test in verbose mode!'
+        (status, output) = commands.getstatusoutput('python ' + test + ' -v')
+        print output
