@@ -666,18 +666,34 @@ class CatalogToSolr(CatalogRenderer):
 
         #TODO: deal with description, creatorSorter, languageSorter
 
+        price = None            #TODO: support multiple prices for different formats
+        currencyCode = None
         for link in entry.getLinks():            
             if 'application/pdf' == link.get('type'):
                 self.addField(doc, 'format', 'pdf')
                 self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
             elif 'application/epub+zip' == link.get('type'):
                 self.addField(doc, 'format', 'epub')
                 self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
             elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 self.addField(doc, 'format', 'shoppingcart')
                 self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
 
+        if price:
+            if not currencyCode:
+                currencyCode = 'USD'
+            self.addField(doc, 'price', price)
+            self.addField(doc, 'currencyCode', currencyCode)
         ### old version of lxml on the cluster does not have lxml.html package
         #if 'OReilly' == self.provider: 
         #    content = html.fragment_fromstring(entry.get('content'))

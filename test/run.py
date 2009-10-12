@@ -31,6 +31,13 @@ sys.path.append('..')
 testfiles = glob.glob('*.txt')
 testfiles.insert(0, '../README')
 
+f = open('/etc/issue')
+issue = f.read()
+f.close()
+if issue.startswith('Ubuntu 9.04'):
+    #tests that depend on having the right version of lxml
+    testfiles += glob.glob('*.jaunty')
+
 for test in testfiles:
     (numFail, numTests) = doctest.testfile(test)
     print '%s: %d out of %d passed' % (test, (numTests - numFail), numTests)
