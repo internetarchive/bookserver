@@ -27,7 +27,7 @@ See usage example in /test/OpdsToCatalog.txt
 """
 
 import sys
-sys.path.append("/petabox/www/bookserver")
+sys.path.append("/petabox/sw/lib/python")
 import feedparser
 
 import urlparse

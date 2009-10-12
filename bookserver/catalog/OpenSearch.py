@@ -23,7 +23,10 @@ This file is part of bookserver.
 
 import lxml.etree as ET
 
-from query import Query
+import sys
+sys.path.append("/petabox/sw/lib/python")
+
+from opensearch.query import Query
 
 class OpenSearch:
     namespace = 'http://a9.com/-/spec/opensearch/1.1/'

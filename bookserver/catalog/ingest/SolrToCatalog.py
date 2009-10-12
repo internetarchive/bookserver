@@ -25,7 +25,7 @@ import urllib
 import time
 
 import sys
-sys.path.append("/petabox/www/bookserver")
+sys.path.append("/petabox/sw/lib/python")
 import simplejson as json
 
 from .. import Catalog
