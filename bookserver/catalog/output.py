@@ -621,6 +621,8 @@ class CatalogToSolr(CatalogRenderer):
                 return True
             elif 'application/epub+zip' == link.get('type'):
                 return True
+            elif 'application/x-mobipocket-ebook' == link.get('type'):
+                return True
             elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 return True
@@ -692,6 +694,12 @@ class CatalogToSolr(CatalogRenderer):
                     currencyCode = link.get('currencycode')
             elif 'application/epub+zip' == link.get('type'):
                 self.addField(doc, 'format', 'epub')
+                self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
+            elif 'application/x-mobipocket-ebook' == link.get('type'):
+                self.addField(doc, 'format', 'mobi')
                 self.addField(doc, 'link',   link.get('url'))
                 if link.get('price'):
                     price = link.get('price')
