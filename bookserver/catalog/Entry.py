@@ -83,6 +83,9 @@ class Entry():
         'updated'             : unicode, # The last time information about this entry (not the book content) was updated
         'identifier'          : unicode, # Archive item ID
         'date'                : unicode, # Publication date
+        'rights'              : unicode, # atom:rights
+        'summary'             : unicode, # atom:summary
+        'dcterms_source'      : unicode, # dcterms:source
         
         'publishers'          : list, # Publishers of the book, (usually just one listed, or none)
         'contributors'        : list, # IA-specific, includes libraries who contributed book

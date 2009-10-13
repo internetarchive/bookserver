@@ -296,7 +296,7 @@ class CatalogToHtml(CatalogRenderer):
         
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
-        self.processCatalogToFragment(catalog) # XXX
+        self.processCatalog(catalog)
         
     def processCatalog(self, catalog):
         html = self.createHtml(catalog)
@@ -311,18 +311,6 @@ class CatalogToHtml(CatalogRenderer):
         body.append(self.createFooter(catalog))
         
         self.html = html
-        return self
-
-    def processCatalogToFragment(self, catalog):
-        fragment = ET.Element('div', {'class':'opds-div'})
-        fragment.append(self.createHeader(catalog))
-        fragment.append(self.createNavigation(catalog._navigation))
-        fragment.append(self.createSearch(catalog._opensearch))
-        fragment.append(self.createCatalogHeader(catalog))
-        fragment.append(self.createEntryList(catalog._entries))
-        fragment.append(self.createFooter(catalog))
-        
-        self.html = fragment
         return self
         
     def createHtml(self, catalog):
@@ -677,15 +665,21 @@ class CatalogToSolr(CatalogRenderer):
         
         self.addField(doc, 'updatedate', self.makeSolrDate(entry.get('updated')))
 
-        if entry.get('date'):            
-            date = datetime.datetime(int(entry.get('date')), 1, 1)
-            self.addField(doc, 'date', date.isoformat()+'Z')
+        if entry.get('summary'):
+            self.addField(doc, 'description',     entry.get('summary'))
+        
+        if entry.get('date'):
+            try:
+                date = datetime.datetime(int(entry.get('date')), 1, 1)
+                self.addField(doc, 'date', date.isoformat()+'Z')
+            except ValueError:
+                print """Can't make datetime from """ + entry.get('date')
 
         if entry.get('title'):
             self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
             self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
 
-        #TODO: deal with description, creatorSorter, languageSorter
+        #TODO: deal with creatorSorter, languageSorter
 
         price = None            #TODO: support multiple prices for different formats
         currencyCode = None
@@ -713,8 +707,12 @@ class CatalogToSolr(CatalogRenderer):
         if price:
             if not currencyCode:
                 currencyCode = 'USD'
-            self.addField(doc, 'price', price)
-            self.addField(doc, 'currencyCode', currencyCode)
+        else:
+            price = '0.00'
+            currencyCode = 'USD'
+        
+        self.addField(doc, 'price', price)
+        self.addField(doc, 'currencyCode', currencyCode)
         ### old version of lxml on the cluster does not have lxml.html package
         #if 'OReilly' == self.provider: 
         #    content = html.fragment_fromstring(entry.get('content'))

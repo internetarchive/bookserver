@@ -69,6 +69,8 @@ cmd('installing eventlet', 'easy_install eventlet')
 
 cmd('installing python-xml', 'DEBIAN_FRONTEND=noninteractive apt-get --force-yes -qq install python-xml')
 
+cmd('installing opensearch.py', 'easy_install opensearch')
+
 if not os.path.exists(warc_dir):
     print 'making warc_dir ' + warc_dir
     os.makedirs(warc_dir)
