@@ -125,6 +125,9 @@ class Entry():
         for key, val in obj.iteritems():
             self.validate(key, val)
 
+        if 'title' not in obj:
+            obj['title'] = '(no title)' #special case for IA test items
+
         for req_key in Entry.required_keys:
             if not req_key in obj:
                 raise KeyError("required key %s not supplied!" % (req_key))

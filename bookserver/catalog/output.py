@@ -95,23 +95,25 @@ class CatalogToAtom(CatalogRenderer):
         
     # createOpdsRoot()
     #___________________________________________________________________________
-    def createOpdsRoot(self, title, urn, urlroot, relurl, datestr, authorName, authorUri):
+    def createOpdsRoot(self, c):
         ### TODO: add updated element and uuid element
         opds = ET.Element(CatalogToAtom.atom + "feed", nsmap=CatalogToAtom.nsmap)                    
         
-        self.createTextElement(opds, 'title',    title)
+        self.createTextElement(opds, 'title',    c._title)
 
-        self.createTextElement(opds, 'id',       urn)
+        self.createTextElement(opds, 'id',       c._urn)
     
-        self.createTextElement(opds, 'updated',  datestr)
+        self.createTextElement(opds, 'updated',  c._datestr)
         
-        self.createRelLink(opds, 'self', urlroot, relurl)
+        self.createRelLink(opds, 'self', c._url, '/')
         
         author = ET.SubElement(opds, 'author')
-        self.createTextElement(author, 'name',  authorName)
-        self.createTextElement(author, 'uri',   authorUri)
-    
-        #self.createRelLink(opds, 'search', '/opensearch.xml', 'Search ') # + author)
+        self.createTextElement(author, 'name',  c._author)
+        self.createTextElement(author, 'uri',   c._authorUri)
+        
+        if c._crawlableUrl:
+            self.createRelLink(opds, 'crawlable', c._crawlableUrl, '', 'Crawlable feed')
+            
         return opds
 
     # createOpdsLink()
@@ -231,7 +233,7 @@ class CatalogToAtom(CatalogRenderer):
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
         CatalogRenderer.__init__(self)
-        self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
+        self.opds = self.createOpdsRoot(c)
 
         if c._opensearch:
             self.createOpenSearchDescription(self.opds, c._opensearch)
