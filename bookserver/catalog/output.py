@@ -680,7 +680,10 @@ class CatalogToSolr(CatalogRenderer):
                 print """Can't make datetime from """ + entry.get('date')
 
         if entry.get('title'):
-            self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+            try:
+                self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+            except IndexError:
+                print """Can't make firstTitle from """ + entry.get('title')
             self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
 
         #TODO: deal with creatorSorter, languageSorter
