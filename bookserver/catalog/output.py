@@ -36,6 +36,7 @@ sys.path.append("/petabox/sw/lib/python")
 import feedparser #for _parse_date()
 import datetime
 import string
+import opensearch
 
 class CatalogRenderer:
     """Base class for catalog renderers"""
@@ -430,9 +431,23 @@ class CatalogToHtml(CatalogRenderer):
             a.text = title
         return a
         
-    def createSearch(self, opensearch):
+    def createSearch(self, opensearchObj):
         div = ET.Element( 'div', {'class':'opds-search'} )
-        div.text = 'Search div' # XXX
+        
+        # load opensearch
+        osUrl = opensearchObj.osddUrl
+        desc = opensearch.Description(osUrl)
+        template = desc.get_url_by_type('application/atom+xml').template # $$$ error handling!
+        
+        form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'method':'post' } )
+        ET.SubElement(form, 'br')
+        ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'desc', 'value': template } )
+        terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'terms' } )
+        submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
+        form.text = desc.shortname
+        
+        # XXX finish implementation
+        
         return div
         
     def createCatalogHeader(self, catalog):
