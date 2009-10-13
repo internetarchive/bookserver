@@ -112,7 +112,7 @@ class CatalogToAtom(CatalogRenderer):
         self.createTextElement(author, 'uri',   c._authorUri)
         
         if c._crawlableUrl:
-            self.createRelLink(opds, 'crawlable', c._crawlableUrl, '', 'Crawlable feed')
+            self.createRelLink(opds, 'http://opds-spec.org/crawlable', c._crawlableUrl, '', 'Crawlable feed')
             
         return opds
 
