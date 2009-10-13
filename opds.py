@@ -37,7 +37,8 @@ urls = (
     '/downloads.(xml|html)',        'downloads',
     '/new(?:/(.*))?(|.html)',       'newest',
     '/opensearch.xml',              'openSearchDescription',
-    '/opensearch(.*)',              'search',
+    '/opensearch(.*)',              'opensearch',
+    '/search(.*)',                  'htmlsearch',
     '/(|index.html)',               'index',
     '/(.*)',                        'indexRedirect',        
     )
@@ -281,9 +282,9 @@ class newest:
             return r.toString()
 
 
-# /search
+# /opensearch
 #______________________________________________________________________________        
-class search:
+class opensearch:
     def GET(self, query):
         params = cgi.parse_qs(web.ctx.query)
 
@@ -309,6 +310,40 @@ class search:
         r = output.CatalogToAtom(c, fabricateContentElement=True)
         return r.toString()
         
+# /search
+#______________________________________________________________________________        
+class htmlsearch:
+    def GET(self, query):
+        qs = web.ctx.query
+        if qs.startswith('?'):
+            qs = qs[1:]
+        
+        params = cgi.parse_qs(qs)
+
+        if not 'start' in params:
+            start = 0
+        else:
+            start = params['start'][0] # XXX hack for .html ending -- remove once fixed
+            if start.endswith('.html'):
+                start = start[:-5]
+            start = int(start)
+
+        q  = params['q'][0]
+        qq = urllib.quote(q)
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        titleFragment = 'search results for ' + q
+        urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
+
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+                                                start=start, numRows=numRows,
+                                                urlBase='/search?q=%s&start=' % (qq), # XXX adding .html to end...
+                                                titleFragment = titleFragment)
+
+        c = ingestor.getCatalog()
+
+        web.header('Content-Type', 'text/html')
+        r = output.ArchiveCatalogToHtml(c)
+        return r.toString()
 
 # /opensearch.xml - Open Search Description
 #______________________________________________________________________________        
