@@ -39,9 +39,9 @@ config = {'warc_dir':              '/crawler/data',
 #sorted_by_date is to enable early-exit of the crawl.
 
 feeds = (
-         {'domain':'IA', 'url':'http://bookserver.archive.org/new', 'sorted_by_date':True},
-         {'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/alphabetical.xml', 'sorted_by_date':False},
-         {'domain':'Feedbooks', 'url':'http://www.feedbooks.com/discover/authors.atom', 'sorted_by_date':False},
+         {'domain':'IA', 'url':'http://bookserver.archive.org/catalog/crawlable', 'sorted_by_date':False},
+         #{'domain':'OReilly', 'url':'http://catalog.oreilly.com/stanza/alphabetical.xml', 'sorted_by_date':False},
+         #{'domain':'Feedbooks', 'url':'http://www.feedbooks.com/discover/authors.atom', 'sorted_by_date':False},
         )
         
 

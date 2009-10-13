@@ -154,7 +154,7 @@ class alpha:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/alpha/%s/' % (letter),
+                                                urlBase='/catalog/alpha/%s/' % (letter),
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
@@ -270,7 +270,7 @@ class newest:
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/new/',
+                                                urlBase='/catalog/new/',
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
@@ -304,10 +304,10 @@ class crawlable:
         #TODO: add Image PDFs to this query
         solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)+'&wt=json'
         titleFragment = '- crawlable feed'
-        urn           = pubInfo['urnroot'] + ':new:%d' % (start)
+        urn           = pubInfo['urnroot'] + ':crawl:%d' % (start)
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=crawlNumRows,
-                                                urlBase='/crawlable/',
+                                                urlBase='/catalog/crawlable/',
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
