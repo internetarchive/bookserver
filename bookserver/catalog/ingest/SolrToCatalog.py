@@ -109,8 +109,13 @@ class SolrToCatalog:
             epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
                            type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
                                        
-            e = IAEntry(bookDict, links=(pdfLink, epubLink))
-            self.c.addEntry(e)
+            try:
+                e = IAEntry(bookDict, links=(pdfLink, epubLink))
+                self.c.addEntry(e)
+            except (KeyError, ValueError):
+                # invalid entry, don't add it
+                pass
+                
             #print bookDict
         
     # getCatalog()
