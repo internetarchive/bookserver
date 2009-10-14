@@ -39,6 +39,7 @@ urls = (
     '/opensearch.xml',              'openSearchDescription',
     '/opensearch(.*)',              'opensearch',
     '/search(.*)',                  'htmlsearch',
+    '/crawlable(?:/(.*))?(|.html)', 'crawlable',
     '/(|index.html)',               'index',
     '/(.*)',                        'indexRedirect',        
     )
@@ -75,6 +76,7 @@ class index:
                             datestr   = datestr,
                             author    = 'Internet Archive',
                             authorUri = 'http://www.archive.org',
+                            crawlableUrl = pubInfo['opdsroot'] + '/crawlable',
                            )
 
         if 'html' == mode:
@@ -153,7 +155,7 @@ class alpha:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/alpha/%s/' % (letter),
+                                                urlBase='/catalog/alpha/%s/' % (letter),
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
@@ -189,6 +191,7 @@ class alphaList:
                             datestr   = datestr,
                             author    = 'Internet Archive',
                             authorUri = 'http://www.archive.org',
+                            crawlableUrl = pubInfo['opdsroot'] + '/crawlable',
                            )
 
         for letter in string.ascii_uppercase:
@@ -268,7 +271,44 @@ class newest:
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/new/',
+                                                urlBase='/catalog/new/',
+                                                titleFragment = titleFragment)
+        c = ingestor.getCatalog()
+    
+        if 'html' == extension:
+            web.header('Content-Type', 'text/html')
+            r = output.ArchiveCatalogToHtml(c)
+            return r.toString()
+        else:
+            web.header('Content-Type', pubInfo['mimetype'])
+            r = output.CatalogToAtom(c, fabricateContentElement=True)
+            return r.toString()
+
+# /crawlable/0
+#______________________________________________________________________________
+class crawlable:
+    def GET(self, start, extension):
+        if extension == '.html':
+            extension = 'html'
+        else:
+            extension = 'xml'
+        
+        if not start:
+            start = 0
+        else:
+            if start.endswith('.html'):
+                extension = 'html'
+                start = start[:-5]
+            start = int(start)
+        
+        crawlNumRows = 1000;
+        #TODO: add Image PDFs to this query
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)+'&wt=json'
+        titleFragment = '- crawlable feed'
+        urn           = pubInfo['urnroot'] + ':crawl:%d' % (start)
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+                                                start=start, numRows=crawlNumRows,
+                                                urlBase='/catalog/crawlable/',
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     

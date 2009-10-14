@@ -83,6 +83,9 @@ class Entry():
         'updated'             : unicode, # The last time information about this entry (not the book content) was updated
         'identifier'          : unicode, # Archive item ID
         'date'                : unicode, # Publication date
+        'rights'              : unicode, # atom:rights
+        'summary'             : unicode, # atom:summary
+        'dcterms_source'      : unicode, # dcterms:source
         
         'publishers'          : list, # Publishers of the book, (usually just one listed, or none)
         'contributors'        : list, # IA-specific, includes libraries who contributed book
@@ -121,6 +124,9 @@ class Entry():
         
         for key, val in obj.iteritems():
             self.validate(key, val)
+
+        if 'title' not in obj:
+            obj['title'] = '(no title)' #special case for IA test items
 
         for req_key in Entry.required_keys:
             if not req_key in obj:

@@ -96,23 +96,25 @@ class CatalogToAtom(CatalogRenderer):
         
     # createOpdsRoot()
     #___________________________________________________________________________
-    def createOpdsRoot(self, title, urn, urlroot, relurl, datestr, authorName, authorUri):
+    def createOpdsRoot(self, c):
         ### TODO: add updated element and uuid element
         opds = ET.Element(CatalogToAtom.atom + "feed", nsmap=CatalogToAtom.nsmap)                    
         
-        self.createTextElement(opds, 'title',    title)
+        self.createTextElement(opds, 'title',    c._title)
 
-        self.createTextElement(opds, 'id',       urn)
+        self.createTextElement(opds, 'id',       c._urn)
     
-        self.createTextElement(opds, 'updated',  datestr)
+        self.createTextElement(opds, 'updated',  c._datestr)
         
-        self.createRelLink(opds, 'self', urlroot, relurl)
+        self.createRelLink(opds, 'self', c._url, '/')
         
         author = ET.SubElement(opds, 'author')
-        self.createTextElement(author, 'name',  authorName)
-        self.createTextElement(author, 'uri',   authorUri)
-    
-        #self.createRelLink(opds, 'search', '/opensearch.xml', 'Search ') # + author)
+        self.createTextElement(author, 'name',  c._author)
+        self.createTextElement(author, 'uri',   c._authorUri)
+        
+        if c._crawlableUrl:
+            self.createRelLink(opds, 'http://opds-spec.org/crawlable', c._crawlableUrl, '', 'Crawlable feed')
+            
         return opds
 
     # createOpdsLink()
@@ -232,7 +234,7 @@ class CatalogToAtom(CatalogRenderer):
     #___________________________________________________________________________    
     def __init__(self, c, fabricateContentElement=False):
         CatalogRenderer.__init__(self)
-        self.opds = self.createOpdsRoot(c._title, c._urn, c._url, '/', c._datestr, c._author, c._authorUri)
+        self.opds = self.createOpdsRoot(c)
 
         if c._opensearch:
             self.createOpenSearchDescription(self.opds, c._opensearch)
@@ -297,7 +299,7 @@ class CatalogToHtml(CatalogRenderer):
         
     def __init__(self, catalog):
         CatalogRenderer.__init__(self)
-        self.processCatalogToFragment(catalog) # XXX
+        self.processCatalog(catalog)
         
     def processCatalog(self, catalog):
         html = self.createHtml(catalog)
@@ -312,18 +314,6 @@ class CatalogToHtml(CatalogRenderer):
         body.append(self.createFooter(catalog))
         
         self.html = html
-        return self
-
-    def processCatalogToFragment(self, catalog):
-        fragment = ET.Element('div', {'class':'opds-div'})
-        fragment.append(self.createHeader(catalog))
-        fragment.append(self.createNavigation(catalog._navigation))
-        fragment.append(self.createSearch(catalog._opensearch))
-        fragment.append(self.createCatalogHeader(catalog))
-        fragment.append(self.createEntryList(catalog._entries))
-        fragment.append(self.createFooter(catalog))
-        
-        self.html = fragment
         return self
         
     def createHtml(self, catalog):
@@ -648,6 +638,8 @@ class CatalogToSolr(CatalogRenderer):
                 return True
             elif 'application/epub+zip' == link.get('type'):
                 return True
+            elif 'application/x-mobipocket-ebook' == link.get('type'):
+                return True
             elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 return True
@@ -692,15 +684,24 @@ class CatalogToSolr(CatalogRenderer):
         
         self.addField(doc, 'updatedate', self.makeSolrDate(entry.get('updated')))
 
-        if entry.get('date'):            
-            date = datetime.datetime(int(entry.get('date')), 1, 1)
-            self.addField(doc, 'date', date.isoformat()+'Z')
+        if entry.get('summary'):
+            self.addField(doc, 'description',     entry.get('summary'))
+        
+        if entry.get('date'):
+            try:
+                date = datetime.datetime(int(entry.get('date')), 1, 1)
+                self.addField(doc, 'date', date.isoformat()+'Z')
+            except ValueError:
+                print """Can't make datetime from """ + entry.get('date')
 
         if entry.get('title'):
-            self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+            try:
+                self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+            except IndexError:
+                print """Can't make firstTitle from """ + entry.get('title')
             self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
 
-        #TODO: deal with description, creatorSorter, languageSorter
+        #TODO: deal with creatorSorter, languageSorter
 
         price = None            #TODO: support multiple prices for different formats
         currencyCode = None
@@ -717,6 +718,12 @@ class CatalogToSolr(CatalogRenderer):
                 if link.get('price'):
                     price = link.get('price')
                     currencyCode = link.get('currencycode')
+            elif 'application/x-mobipocket-ebook' == link.get('type'):
+                self.addField(doc, 'format', 'mobi')
+                self.addField(doc, 'link',   link.get('url'))
+                if link.get('price'):
+                    price = link.get('price')
+                    currencyCode = link.get('currencycode')
             elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 self.addField(doc, 'format', 'shoppingcart')
@@ -728,8 +735,12 @@ class CatalogToSolr(CatalogRenderer):
         if price:
             if not currencyCode:
                 currencyCode = 'USD'
-            self.addField(doc, 'price', price)
-            self.addField(doc, 'currencyCode', currencyCode)
+        else:
+            price = '0.00'
+            currencyCode = 'USD'
+        
+        self.addField(doc, 'price', price)
+        self.addField(doc, 'currencyCode', currencyCode)
         ### old version of lxml on the cluster does not have lxml.html package
         #if 'OReilly' == self.provider: 
         #    content = html.fragment_fromstring(entry.get('content'))

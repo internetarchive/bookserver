@@ -46,10 +46,11 @@ for test in testfiles:
        print 'Rerunning test in verbose mode!'
        doctest.testfile(test, verbose=True)
 
-testmodules = glob.glob('../bookserver/catalog/*.py')
+testmodules =  glob.glob('../bookserver/*.py')
+testmodules += glob.glob('../bookserver/catalog/*.py')
 
 for test in testmodules:
-    if test.endswith('__init__.py'):
+    if test.endswith('catalog/__init__.py'):
         continue
         
     (status, output) = commands.getstatusoutput('python ' + test)

@@ -34,6 +34,7 @@ class Catalog:
                  datestr   = '1970-01-01T00:00:00Z',
                  author    = 'Internet Archive',
                  authorUri = 'http://www.archive.org',
+                 crawlableUrl = None
                 ):
         self._entries    = []
         self._opensearch = None
@@ -44,6 +45,7 @@ class Catalog:
         self._datestr    = datestr
         self._author     = author
         self._authorUri  = authorUri
+        self._crawlableUrl = crawlableUrl
     
     def addEntry(self, entry):
         self._entries.append(entry)

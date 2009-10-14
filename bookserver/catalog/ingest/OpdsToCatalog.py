@@ -54,7 +54,14 @@ class OpdsToCatalog():
      'title_detail': 'title_detail',
      'updated': 'updated',
      'updated_parsed': 'updated_parsed',
-     'tags' : 'tags'}
+     'tags' : 'tags',
+     'rights': 'rights',
+     'summary_detail': 'summary_detail',
+     'rights_detail': 'rights_detail',
+     'summary':'summary',
+     'dcterms_source':'dcterms_source',
+     'href':'href',
+     'link':'link',}
 
     # addNavigation()
     #___________________________________________________________________________        
@@ -174,7 +181,7 @@ class OpdsToCatalog():
             if 'subtitle' in bookDict:
                 bookDict['content'] = bookDict['subtitle']
             
-            self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail', 'published_parsed', 'author_detail'))
+            self.removeKeys(bookDict, ('subtitle', 'updated_parsed', 'links', 'title_detail', 'published_parsed', 'author_detail', 'summary_detail', 'rights_detail', 'href', 'link'))
             
             self.scalarToList(bookDict, ('languages','publishers', 'authors'))
             
