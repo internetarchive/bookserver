@@ -125,7 +125,7 @@ class index:
         if url and url.endswith('.html'):
             r = output.ArchiveCatalogToHtml(c)
             web.header('Content-Type', 'text/html')
-            return r.toString()
+            return r.toString()  + web.ctx.environ['HTTP_USER_AGENT'] + ' ' + web.ctx.environ['HTTP_ACCEPT'] # XXX
         else:        
             r = output.CatalogToAtom(c)
             web.header('Content-Type', pubInfo['mimetype'])
