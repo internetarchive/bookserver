@@ -432,7 +432,7 @@ class CatalogToHtml(CatalogRenderer):
         
         form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
         ET.SubElement(form, 'br')
-        ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
+        # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
         terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
         submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
         form.text = desc.shortname
