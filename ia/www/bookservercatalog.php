@@ -30,9 +30,8 @@ function render()
     $content = get_data($bookserver . '/index.html', $_SERVER["HTTP_USER_AGENT"], $_SERVER["HTTP_ACCEPT"]);
     echo $content;
     
-    # XXX
-    echo "<br/>Your accept header is: " . $_SERVER["HTTP_ACCEPT"];
-    echo "<br/>Your user agent is: " . $_SERVER["HTTP_USER_AGENT"];
+    # echo "<br/>Your accept header is: " . $_SERVER["HTTP_ACCEPT"];
+    # echo "<br/>Your user agent is: " . $_SERVER["HTTP_USER_AGENT"];
     
     footer();
 }
