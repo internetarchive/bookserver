@@ -66,6 +66,14 @@ def getEnv(key, default = None):
     else:
         return default
         
+def getDevice():
+    userAgent = getEnv('HTTP_USER_AGENT')
+    if userAgent is not None:
+        device = bookserver.device.Device.createFromUserAgent(userAgent)
+    else:
+        device = None
+    return device
+
 # /
 #______________________________________________________________________________
 class index:
@@ -130,7 +138,7 @@ class index:
         c.addOpenSearch(o)
         
         if url and url.endswith('.html'):
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             web.header('Content-Type', 'text/html')
             return r.toString()
         else:        
@@ -168,7 +176,7 @@ class alpha:
     
         if 'html' == mode:
             web.header('Content-Type', 'text/html')
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             return r.toString()
         else:
             web.header('Content-Type', pubInfo['mimetype'])
@@ -229,7 +237,7 @@ class alphaList:
             return r.toString()
         else:
             web.header('Content-Type', 'text/html')
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             return r.toString()
 
 # /downloads.xml
@@ -250,7 +258,7 @@ class downloads:
             return r.toString()
         elif ('html' == extension):
             web.header('Content-Type', 'text/html')
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             return r.toString()
         else:
             web.seeother('/')
@@ -284,7 +292,7 @@ class newest:
     
         if 'html' == extension:
             web.header('Content-Type', 'text/html')
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             return r.toString()
         else:
             web.header('Content-Type', pubInfo['mimetype'])
@@ -321,7 +329,7 @@ class crawlable:
     
         if 'html' == extension:
             web.header('Content-Type', 'text/html')
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             return r.toString()
         else:
             web.header('Content-Type', pubInfo['mimetype'])
@@ -388,14 +396,8 @@ class htmlsearch:
 
         c = ingestor.getCatalog()
         
-        userAgent = getEnv('HTTP_USER_AGENT')
-        if userAgent is not None:
-            device = bookserver.device.Device.createFromUserAgent(userAgent)
-        else:
-            device = None
-
         web.header('Content-Type', 'text/html')
-        r = output.ArchiveCatalogToHtml(c, device = device)
+        r = output.ArchiveCatalogToHtml(c, device = getDevice())
         return r.toString()
 
 # /opensearch.xml - Open Search Description
