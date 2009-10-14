@@ -617,6 +617,21 @@ class ArchiveCatalogToHtml(CatalogToHtml):
                 
         return e
 
+    def createFooter(self, catalog):
+        html = """
+       <div id="bottom">
+        <div id="legal">
+        <p>Open Library is an initiative of the <a href="http://www.archive.org/">Internet Archive</a>, a 501(c)(3) non-profit, building a digital library of Internet sites and other cultural artifacts in digital form.<br/>
+
+        Other projects include the <a href="http://web.archive.org/collections/web.html">Wayback Machine</a>, <a href="http://www.archive.org/">archive.org</a>, <a href="http://www.nasaimages.org/">nasaimages.org</a>, <a href="http://www.archive-it.org">archive-it.org</a>.</p>
+        <p>Your use of the Open Library is subject to the Internet Archive's <a href="http://www.archive.org/about/terms.php">Terms of Use</a>.</p>
+        </div>
+       </div>
+"""
+        div = ET.fromstring(html)
+        return div
+
+
     def canReadOnline(self, entry):
         """
         Returns true if this item can be read in the online bookreader.
