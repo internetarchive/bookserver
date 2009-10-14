@@ -126,7 +126,7 @@ def main():
         help="Copy files from git working dir to SVN working dir",
         action="store_true",
         default=False)
-    parser.add_option('', '--gitroot', help="Git root dir (default %default)", default="~/src/bookserver")
+    parser.add_option('', '--gitroot', help="Git root dir (default %default)", default="~/bookserver")
     parser.add_option('', '--svnroot', help="SVN www dir (default %default)", default="~/petabox")
     parser.add_option('-f', '--force',
         help="Overide modification checks. (Ready, fire, aim!)",
