@@ -69,7 +69,7 @@ def getEnv(key, default = None):
 def getDevice():
     userAgent = getEnv('HTTP_USER_AGENT')
     if userAgent is not None:
-        device = bookserver.device.Device.createFromUserAgent(userAgent)
+        device = bookserver.device.Detect.createFromUserAgent(userAgent)
     else:
         device = None
     return device
