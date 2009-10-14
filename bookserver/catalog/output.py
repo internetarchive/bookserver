@@ -352,7 +352,7 @@ class CatalogToHtml(CatalogRenderer):
         
     def createHeader(self, catalog):
         div = ET.Element( 'div', {'class':'opds-header'} )
-        div.text = 'OPDS Header' # XXX
+        div.text = 'Catalog Header' # XXX
         return div
         
     def createNavigation(self, navigation):
@@ -588,24 +588,16 @@ class ArchiveCatalogToHtml(CatalogToHtml):
 
     scandataRegex = re.compile('Scandata')
 
-    def canReadOnline(self, entry):
-        """
-        Returns true if this item can be read in the online bookreader.
-        """
+    def createHead(self, catalog):
+        head = CatalogToHtml.createHead(self, catalog)
+        # head.append(self.createStyleSheet('/static/ol.css'))
+        return head
         
-        if not entry.get('identifier'):
-            return False
-        
-        # Check for a readable format
-        for format in entry.get('formats'):
-            if self.scandataRegex.search(format):
-                return True
-            
-        return False
+    def createHeader(self, catalog):
+        div = ET.Element( 'div', {'class':'opds-header'} )
+        ET.SubElement(div, 'img', {'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
+        return div
     
-    def readOnlineUrl(self, entry):
-        return 'http://www.archive.org/stream/%s' % entry.get('identifier')
-        
     
     def createEntry(self, entry):
         e = CatalogToHtml.createEntry(self, entry)
@@ -624,6 +616,25 @@ class ArchiveCatalogToHtml(CatalogToHtml):
                 ET.SubElement(s, 'br')
                 
         return e
+
+    def canReadOnline(self, entry):
+        """
+        Returns true if this item can be read in the online bookreader.
+        """
+        
+        if not entry.get('identifier'):
+            return False
+        
+        # Check for a readable format
+        for format in entry.get('formats'):
+            if self.scandataRegex.search(format):
+                return True
+            
+        return False
+    
+    def readOnlineUrl(self, entry):
+        return 'http://www.archive.org/stream/%s' % entry.get('identifier')
+        
 
 #_______________________________________________________________________________
         
