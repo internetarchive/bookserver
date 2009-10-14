@@ -297,8 +297,9 @@ class CatalogToHtml(CatalogRenderer):
         'text/html': 'Online',
     }
         
-    def __init__(self, catalog):
+    def __init__(self, catalog, device = None):
         CatalogRenderer.__init__(self)
+        self.device = device
         self.processCatalog(catalog)
         
     def processCatalog(self, catalog):
@@ -535,6 +536,9 @@ class CatalogToHtml(CatalogRenderer):
         >>> print ET.tostring(e)
         <a href="/blah.epub" class="opds-entry-link">EPUB</a>
         """
+        
+        if self.device:
+            link = self.device.formatLink(link)
         
         if self.entryLinkTitles.has_key(link.get('type')):
             title = self.entryLinkTitles[link.get('type')]

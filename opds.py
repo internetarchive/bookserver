@@ -17,6 +17,7 @@ import urllib
 
 import bookserver.catalog as catalog
 import bookserver.catalog.output as output
+import bookserver.device
 
 numRows = 50
 
@@ -57,8 +58,14 @@ def getDateString():
     datestr = time.strftime('%Y-%m-%dT%H:%M:%SZ', 
                 (t.tm_year, t.tm_mon, t.tm_mday, 0, 0, 0, 0, 0, 0))
     return datestr
-
-
+    
+def getEnv(key, default = None):
+    env = web.ctx['environ']
+    if env.has_key(key):
+        return env[key]
+    else:
+        return default
+        
 # /
 #______________________________________________________________________________
 class index:
@@ -380,9 +387,15 @@ class htmlsearch:
                                                 titleFragment = titleFragment)
 
         c = ingestor.getCatalog()
+        
+        userAgent = getEnv('HTTP_USER_AGENT')
+        if userAgent is not None:
+            device = bookserver.device.Device.createFromUserAgent(userAgent)
+        else:
+            device = None
 
         web.header('Content-Type', 'text/html')
-        r = output.ArchiveCatalogToHtml(c)
+        r = output.ArchiveCatalogToHtml(c, device = device)
         return r.toString()
 
 # /opensearch.xml - Open Search Description
