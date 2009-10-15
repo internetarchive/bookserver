@@ -1,9 +1,19 @@
 <? require_once '/petabox/setup.inc';
 
+function relativeUrl()
+{
+    $url = $_SERVER['PATH_INFO'];
+    if (preg_match('/\?(.*)/', $_SERVER['REQUEST_URI'], $matches))
+    {
+        $url .= $matches[0];
+    }
+    return $url;
+}
+
 function render()
 {
 
-    $bookserver = 'http://bookserver.archive.org';
+    $bookserver = 'http://bookserver.archive.org/catalog';
     
     # Check if running on dev host
     if (preg_match("/^www-(\w+)/", $_SERVER["SERVER_NAME"], $match)) {
@@ -14,6 +24,7 @@ function render()
         }
     }
     
+    /*
     Nav::bar(
          'BookServer Catalog', # title
          'texts',      # type
@@ -26,14 +37,20 @@ function render()
     
     # We'd flush here so the nav can show before the rest of the page
     flush();
-        
-    $content = get_data($bookserver . '/index.html', $_SERVER["HTTP_USER_AGENT"], $_SERVER["HTTP_ACCEPT"]);
+    */
+    
+    $url = $bookserver . relativeUrl();
+    
+    $content = get_data($url, $_SERVER["HTTP_USER_AGENT"], $_SERVER["HTTP_ACCEPT"]);
     echo $content;
     
     # echo "<br/>Your accept header is: " . $_SERVER["HTTP_ACCEPT"];
     # echo "<br/>Your user agent is: " . $_SERVER["HTTP_USER_AGENT"];
+    # echo '<br>Url is: ' . $url;
     
+    /*
     footer();
+    */
 }
 
 /* gets the data from a URL */

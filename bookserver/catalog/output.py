@@ -429,8 +429,9 @@ class CatalogToHtml(CatalogRenderer):
         osUrl = opensearchObj.osddUrl
         desc = opensearch.Description(osUrl)
         template = desc.get_url_by_type('application/atom+xml').template # $$$ error handling!
-        
-        form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
+
+        form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } ) # XXX should be relative
+        # form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
         ET.SubElement(form, 'br')
         # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
         terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
