@@ -663,6 +663,9 @@ class CatalogToSolr(CatalogRenderer):
         
         if not self.isEbook(entry):
             return
+
+        if '' == entry.get('title').lstrip(string.punctuation+string.whitespace):
+            return
             
         doc = ET.SubElement(self.solr, "doc")
         self.addField(doc, 'urn',       entry.get('urn'))
@@ -688,10 +691,10 @@ class CatalogToSolr(CatalogRenderer):
 
         if entry.get('title'):
             try:
-                self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+                self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation+string.whitespace)[0].upper())
             except IndexError:
                 print """Can't make firstTitle from """ + entry.get('title')
-            self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
+            self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation+string.whitespace).lower())
 
         #TODO: deal with creatorSorter, languageSorter
 
