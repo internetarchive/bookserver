@@ -81,7 +81,7 @@ Different version of lxml will print xmlns differently (use ellipsis in doctest)
 ...    'urnroot'  : 'urn:x-internet-archive:bookserver:catalog',
 ... }
 >>> solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month&sort=month+desc&rows=50&wt=json'
->>> ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn)
+>>> ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn)
 >>> c = ingestor.getCatalog()
 >>> print c._title
 Internet Archive Catalog

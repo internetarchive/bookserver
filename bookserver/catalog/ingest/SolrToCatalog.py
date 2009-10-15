@@ -67,6 +67,62 @@ class SolrToCatalog:
         for key in keys:
             d.pop(key, None)
 
+
+    # entryFromSolrResult()
+    #___________________________________________________________________________        
+    def entryFromSolrResult(self, item, pubInfo):
+        #use generator expression to map dictionary key names
+        bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
+
+        links = []
+        if 'price' in bookDict:
+            if 0.0 == bookDict['price']:
+                rel = 'http://opds-spec.org/acquisition'
+                price = '0.00'
+            else:
+                price = str(bookDict['price'])
+                rel = 'http://opds-spec.org/acquisition/buying'
+        else:
+            price = '0.00'
+            rel = 'http://opds-spec.org/acquisition'
+
+        currencycode = 'USD' #TODO: make this a stored solr field
+        
+        if not 'updated' in bookDict:
+            #TODO: THIS IS VERY BAD. NEED TO ADD THIS TO SOLR!
+            bookDict['updated'] = self.getDateString()
+        
+        for link in bookDict['links']:
+            if link.endswith('.pdf'):
+                l = Link(url  = link, type = 'application/pdf', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+            elif link.endswith('.epub'):
+                l = Link(url  = link, type = 'application/epub+zip', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+            elif link.endswith('.mobi'):
+                l = Link(url  = link, type = 'application/x-mobipocket-ebook', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+            else:    
+                l = Link(url  = link, type = 'text/html', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+
+        self.removeKeys(bookDict, ('links','price')) 
+        e = Entry(bookDict, links=links)
+
+        return e
+
     # SolrToCatalog()
     #___________________________________________________________________________    
     def __init__(self, pubInfo, url, urn, start=None, numRows=None, urlBase=None, titleFragment=None):
@@ -106,67 +162,8 @@ class SolrToCatalog:
         self.c.addOpenSearch(o)
 
         for item in obj['response']['docs']:
-            #use generator expression to map dictionary key names
-            bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
-
-            if 'oai_updatedate' in item:
-                bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
-
-                    
-            if 'identifier' in item:
-                #special case: this is a result from the IA solr.
-                #TODO: refactor this into a subclass IASolrToCatalog
-                bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
-    
-                pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
-                               type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
-    
-                epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
-                               type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
-                                           
-                e = IAEntry(bookDict, links=(pdfLink, epubLink))
-                self.c.addEntry(e)
-            else:
-                links = []
-                if 'price' in bookDict:
-                    price = str(bookDict['price'])
-                else:
-                    price = '0.00'
-                currencycode = 'USD' #TODO: make this a stored solr field
-                
-                if not 'updated' in bookDict:
-                    #TODO: THIS IS VERY BAD. NEED TO ADD THIS TO SOLR!
-                    bookDict['updated'] = self.getDateString()
-                
-                for link in bookDict['links']:
-                    if link.endswith('.pdf'):
-                        l = Link(url  = link, type = 'application/pdf', 
-                                       rel = 'http://opds-spec.org/acquisition',
-                                       price = price,
-                                       currencycode = currencycode)
-                        links.append(l)
-                    elif link.endswith('.epub'):
-                        l = Link(url  = link, type = 'application/epub+zip', 
-                                       rel = 'http://opds-spec.org/acquisition',
-                                       price = price,
-                                       currencycode = currencycode)
-                        links.append(l)
-                    elif link.endswith('.mobi'):
-                        l = Link(url  = link, type = 'application/x-mobipocket-ebook', 
-                                       rel = 'http://opds-spec.org/acquisition',
-                                       price = price,
-                                       currencycode = currencycode)
-                        links.append(l)
-                    else:    
-                        l = Link(url  = link, type = 'text/html', 
-                                       rel = 'http://opds-spec.org/acquisition',
-                                       price = price,
-                                       currencycode = currencycode)
-                        links.append(l)
-
-                self.removeKeys(bookDict, ('links','price')) 
-                entry = Entry(bookDict, links=links)
-                self.c.addEntry(entry)
+            entry = self.entryFromSolrResult(item, pubInfo)
+            self.c.addEntry(entry)
 
         
     # getCatalog()
@@ -189,5 +186,34 @@ class SolrToCatalog:
 
     def prevPage(self):        
         raise NotImplementedError
+
+
+# IASolrToCatalog()
+#_______________________________________________________________________________
+# The solr used for archive.org has a slightly different schema than the one
+# recommended for a bookserver installation.
+
+class IASolrToCatalog(SolrToCatalog):
+    def entryFromSolrResult(self, item, pubInfo):
+        #use generator expression to map dictionary key names
+        bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
+
+        if 'oai_updatedate' in item:
+            bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
+        else:
+            bookDict['updated'] = self.getDateString()
+            
+        #special case: this is a result from the IA solr.
+        #TODO: refactor this into a subclass IASolrToCatalog
+        bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
+
+        pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
+                       type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
+
+        epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
+                       type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
+                                   
+        e = IAEntry(bookDict, links=(pdfLink, epubLink))
         
-        
+
+        return e

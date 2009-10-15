@@ -152,7 +152,7 @@ class alpha:
         titleFragment = 'books starting with "%s"' % (letter.upper())
         urn           = pubInfo['urnroot'] + ':%s:%d'%(letter, start)
 
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
                                                 urlBase='/catalog/alpha/%s/' % (letter),
                                                 titleFragment = titleFragment)
@@ -233,7 +233,7 @@ class downloads:
 
         titleFragment = 'Most Downloaded Books in the last Month'
         urn           = pubInfo['urnroot'] + ':downloads'
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn, titleFragment=titleFragment)
+        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn, titleFragment=titleFragment)
         c = ingestor.getCatalog()
         
         if ('xml' == extension):
@@ -268,7 +268,7 @@ class newest:
         solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
         titleFragment = 'books sorted by update date'
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
                                                 urlBase='/catalog/new/',
                                                 titleFragment = titleFragment)
@@ -305,7 +305,7 @@ class crawlable:
         solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)+'&wt=json'
         titleFragment = '- crawlable feed'
         urn           = pubInfo['urnroot'] + ':crawl:%d' % (start)
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=crawlNumRows,
                                                 urlBase='/catalog/crawlable/',
                                                 titleFragment = titleFragment)
@@ -338,7 +338,7 @@ class search:
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
-        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
                                                 urlBase='/opensearch?q=%s&start=' % (qq),
                                                 titleFragment = titleFragment)
