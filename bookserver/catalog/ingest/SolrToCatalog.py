@@ -33,6 +33,7 @@ from ..Entry import IAEntry, Entry
 from .. import Navigation
 from .. import OpenSearch
 from .. import Link
+import bookserver.util.language
 
 class SolrToCatalog:
 
@@ -202,7 +203,13 @@ class IASolrToCatalog(SolrToCatalog):
             bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
         else:
             bookDict['updated'] = self.getDateString()
-            
+
+        #IA scribe books use MARC language codes        
+        if 'language' in item:
+            bookDict['languages'] = []
+            for lang in item['language']:
+                bookDict['languages'].append(bookserver.util.language.iso_639_23_to_iso_639_1(lang))
+
         #special case: this is a result from the IA solr.
         #TODO: refactor this into a subclass IASolrToCatalog
         bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
