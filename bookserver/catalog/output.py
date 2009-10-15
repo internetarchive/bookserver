@@ -108,7 +108,7 @@ class CatalogToAtom(CatalogRenderer):
     
         self.createTextElement(opds, 'updated',  c._datestr)
         
-        self.createRelLink(opds, 'self', c._url, '/')
+        self.createRelLink(opds, 'self', c._url, '')
         
         author = ET.SubElement(opds, 'author')
         self.createTextElement(author, 'name',  c._author)

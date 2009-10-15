@@ -30,7 +30,7 @@ class Catalog:
     def __init__(self, 
                  title     = 'Internet Archive OPDS',
                  urn       = 'urn:x-internet-archive:bookserver:catalog',
-                 url       = 'http://bookserver.archive.org/catalog', 
+                 url       = 'http://bookserver.archive.org/catalog/', 
                  datestr   = '1970-01-01T00:00:00Z',
                  author    = 'Internet Archive',
                  authorUri = 'http://www.archive.org',

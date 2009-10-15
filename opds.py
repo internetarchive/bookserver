@@ -71,7 +71,7 @@ class index:
         c = catalog.Catalog(
                             title     = 'Internet Archive Catalog',
                             urn       = pubInfo['urnroot'],
-                            url       = pubInfo['opdsroot'],
+                            url       = pubInfo['opdsroot'] + '/',
                             datestr   = datestr,
                             author    = 'Internet Archive',
                             authorUri = 'http://www.archive.org',

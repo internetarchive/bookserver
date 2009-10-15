@@ -41,7 +41,7 @@ class OpenSearch:
         """
         Creates element tree from OpenSearch description xml
         >>> e = OpenSearch.createTree(testXml)
-        >>> print ET.tostring(e, pretty_print=True)
+        >>> print ET.tostring(e, pretty_print=True).rstrip()
         <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
            <ShortName>Web Search</ShortName>
            <Description>Use Example.com to search the Web.</Description>
