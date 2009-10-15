@@ -70,6 +70,7 @@ providers = {
     'Feedbooks' : "Feedbooks",
 }
 
+application = web.application(urls, globals()).wsgifunc()
 
 # /
 #______________________________________________________________________________
