@@ -664,7 +664,10 @@ class CatalogToSolr(CatalogRenderer):
         if not self.isEbook(entry):
             return
 
-        if '' == entry.get('title').lstrip(string.punctuation+string.whitespace):
+        p = re.compile('\w', re.UNICODE)
+        m = p.search(entry.get('title'))
+        if not m:
+            print "not indexing book with non-alphanum title: " + entry.get('title')
             return
             
         doc = ET.SubElement(self.solr, "doc")
