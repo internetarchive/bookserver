@@ -3,6 +3,20 @@
 function relativeUrl()
 {
     $url = $_SERVER['PATH_INFO'];
+
+    # Hacky fixup for calling script directly without trailing '/...'
+    $redirect = false;
+    if (!$url) {
+        $redirect = $_SERVER['REQUEST_URI'] . '/index.html';
+    } else if ($url == '/') {
+        $redirect = $_SERVER['REQUEST_URI'] . 'index.html';
+    }
+    if ($redirect) {
+        Header( "HTTP/1.1 301 Moved Permanently" ); 
+        Header( "Location: " . $redirect ); 
+        $url = '/index.html';
+    }
+    
     if (preg_match('/\?(.*)/', $_SERVER['REQUEST_URI'], $matches))
     {
         $url .= $matches[0];
