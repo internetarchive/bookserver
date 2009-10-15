@@ -30,3 +30,17 @@ from Link       import Link
 
 import ingest
 import output
+
+import time
+
+def getCurrentDate():
+    #If you are calling this function, you are probably fabricating an
+    #atom:updated date because you don't know the actual atom:updated.        
+    #A more legitimate use of this function is because your catalog is
+    #continulously being updated (IA adds 2500 books/day). This function
+    #changes the updated date every midnight, which might be more reasonable
+    #than changing it continuously.
+    t       = time.gmtime()
+    datestr = time.strftime('%Y-%m-%dT%H:%M:%SZ', 
+                (t.tm_year, t.tm_mon, t.tm_mday, 0, 0, 0, 0, 0, 0))
+    return datestr

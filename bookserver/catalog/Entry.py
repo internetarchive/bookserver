@@ -86,6 +86,7 @@ class Entry():
         'rights'              : unicode, # atom:rights
         'summary'             : unicode, # atom:summary
         'dcterms_source'      : unicode, # dcterms:source
+        'provider'            : unicode,
         
         'publishers'          : list, # Publishers of the book, (usually just one listed, or none)
         'contributors'        : list, # IA-specific, includes libraries who contributed book
@@ -94,6 +95,7 @@ class Entry():
         'subjects'            : list, # For IA, typically come from MARC records
         'oai_updatedates'     : list, # From Solr, list of dates when item was modified
         'authors'             : list, # List of authors        
+        'formats'             : list,
     }
         
     required_keys = ('urn', 'title')

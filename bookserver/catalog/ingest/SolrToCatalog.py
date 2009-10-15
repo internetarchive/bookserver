@@ -29,7 +29,7 @@ sys.path.append("/petabox/sw/lib/python")
 import simplejson as json
 
 from .. import Catalog
-from ..Entry import IAEntry
+from ..Entry import IAEntry, Entry
 from .. import Navigation
 from .. import OpenSearch
 from .. import Link
@@ -43,6 +43,10 @@ class SolrToCatalog:
               'title'          : 'title',
               'date'           : 'date',
               'month'          : 'downloadsPerMonth',
+              'price'          : 'price',
+              'provider'       : 'provider',
+              'urn'            : 'urn',
+              'description'    : 'summary',
               
               #these are lists, not strings
               'creator'        : 'authors',
@@ -50,11 +54,18 @@ class SolrToCatalog:
               'publisher'      : 'publishers',
               'language'       : 'languages',
               'contributor'    : 'contributors',
+              'link'           : 'links',
               
               'oai_updatedate' : 'oai_updatedates',
               'format'         : 'formats',
 
              }
+
+    # removeKeys()
+    #___________________________________________________________________________        
+    def removeKeys(self, d, keys):
+        for key in keys:
+            d.pop(key, None)
 
     # SolrToCatalog()
     #___________________________________________________________________________    
@@ -101,17 +112,62 @@ class SolrToCatalog:
             if 'oai_updatedate' in item:
                 bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
 
-            bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
+                    
+            if 'identifier' in item:
+                #special case: this is a result from the IA solr.
+                #TODO: refactor this into a subclass IASolrToCatalog
+                bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
+    
+                pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
+                               type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
+    
+                epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
+                               type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
+                                           
+                e = IAEntry(bookDict, links=(pdfLink, epubLink))
+                self.c.addEntry(e)
+            else:
+                links = []
+                if 'price' in bookDict:
+                    price = str(bookDict['price'])
+                else:
+                    price = '0.00'
+                currencycode = 'USD' #TODO: make this a stored solr field
+                
+                if not 'updated' in bookDict:
+                    #TODO: THIS IS VERY BAD. NEED TO ADD THIS TO SOLR!
+                    bookDict['updated'] = self.getDateString()
+                
+                for link in bookDict['links']:
+                    if link.endswith('.pdf'):
+                        l = Link(url  = link, type = 'application/pdf', 
+                                       rel = 'http://opds-spec.org/acquisition',
+                                       price = price,
+                                       currencycode = currencycode)
+                        links.append(l)
+                    elif link.endswith('.epub'):
+                        l = Link(url  = link, type = 'application/epub+zip', 
+                                       rel = 'http://opds-spec.org/acquisition',
+                                       price = price,
+                                       currencycode = currencycode)
+                        links.append(l)
+                    elif link.endswith('.mobi'):
+                        l = Link(url  = link, type = 'application/x-mobipocket-ebook', 
+                                       rel = 'http://opds-spec.org/acquisition',
+                                       price = price,
+                                       currencycode = currencycode)
+                        links.append(l)
+                    else:    
+                        l = Link(url  = link, type = 'text/html', 
+                                       rel = 'http://opds-spec.org/acquisition',
+                                       price = price,
+                                       currencycode = currencycode)
+                        links.append(l)
 
-            pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
-                           type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
+                self.removeKeys(bookDict, ('links','price')) 
+                entry = Entry(bookDict, links=links)
+                self.c.addEntry(entry)
 
-            epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
-                           type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
-                                       
-            e = IAEntry(bookDict, links=(pdfLink, epubLink))
-            self.c.addEntry(e)
-            #print bookDict
         
     # getCatalog()
     #___________________________________________________________________________    
