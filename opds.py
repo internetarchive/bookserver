@@ -28,6 +28,7 @@ pubInfo = {
     'mimetype' : 'application/atom+xml;profile=opds',
     'url_base' : '/catalog',
     'urnroot'  : 'urn:x-internet-archive:bookserver:catalog',
+    'solr_base': 'http://se.us.archive.org:8983/solr/select?fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format,month&wt=json',
 }
 
 urls = (
@@ -144,11 +145,8 @@ class alpha:
                 start = start[:-5]
                 mode = 'html'
             start = int(start)
-           
-            
-        
-        #TODO: add Image PDFs to this query
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=firstTitle%3A'+letter+'*+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+                               
+        solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)+AND+firstTitle%3A'+letter.upper()+'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'books starting with "%s"' % (letter.upper())
         urn           = pubInfo['urnroot'] + ':%s:%d'%(letter, start)
 
@@ -228,8 +226,7 @@ class alphaList:
 #______________________________________________________________________________
 class downloads:
     def GET(self, extension):
-        #TODO: add Image PDFs to this query
-        solrUrl = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,month,format&sort=month+desc&rows='+str(numRows)+'&wt=json'
+        solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&sort=month+desc&rows='+str(numRows)
 
         titleFragment = 'Most Downloaded Books in the last Month'
         urn           = pubInfo['urnroot'] + ':downloads'
@@ -264,8 +261,8 @@ class newest:
                 start = start[:-5]
             start = int(start)
         
-        #TODO: add Image PDFs to this query
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'
+                               
+        solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'books sorted by update date'
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
@@ -301,8 +298,7 @@ class crawlable:
             start = int(start)
         
         crawlNumRows = 1000;
-        #TODO: add Image PDFs to this query
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)+'&wt=json'
+        solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)
         titleFragment = '- crawlable feed'
         urn           = pubInfo['urnroot'] + ':crawl:%d' % (start)
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
@@ -333,8 +329,8 @@ class search:
             start = int(params['start'][0])
 
         q  = params['?q'][0]
-        qq = urllib.quote(q)
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        qq = urllib.quote(q)     
+        solrUrl       = pubInfo['solr_base'] + '&q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&sort=month+desc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
