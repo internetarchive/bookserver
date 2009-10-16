@@ -27,14 +27,14 @@ function relativeUrl()
 function render()
 {
 
-    $bookserver = 'http://bookserver.archive.org/catalog';
+    $bookserver = 'http://bookserver.archive.org/aggregator';
     
     # Check if running on dev host
     if (preg_match("/^www-(\w+)/", $_SERVER["SERVER_NAME"], $match)) {
         if ('mang' == $match[1]) {
-            $bookserver = 'http://home.us.archive.org:12600';
+            $bookserver = 'http://home.us.archive.org:12800';
         } else if ('testflip' == $match[1]) {
-            $bookserver = 'http://home.us.archive.org:12601';
+            $bookserver = 'http://home.us.archive.org:12801';
         }
     }
     
