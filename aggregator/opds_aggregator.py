@@ -66,7 +66,7 @@ types = {
 
 providers = {
     'OReilly'   : "O'Reilly",
-    'IA'        : "Interent Archive",
+    'IA'        : "Internet Archive",
     'Feedbooks' : "Feedbooks",
 }
 
