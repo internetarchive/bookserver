@@ -826,7 +826,7 @@ def testmod():
     testNavigation = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
     testCatalog.addNavigation(testNavigation)
     
-    osDescription = 'http://bookserver.archive.org/opensearch.xml'
+    osDescription = 'http://bookserver.archive.org/catalog/opensearch.xml'
     testSearch = OpenSearch(osDescription)
     testCatalog.addOpenSearch(testSearch)
     
