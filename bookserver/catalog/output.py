@@ -439,7 +439,6 @@ class CatalogToHtml(CatalogRenderer):
         
         # load opensearch
         osUrl = opensearchObj.osddUrl
-        print osUrl
         desc = opensearch.Description(osUrl)
         url = desc.get_url_by_type('application/atom+xml')
         if url is None:
@@ -471,8 +470,14 @@ class CatalogToHtml(CatalogRenderer):
     def createEntry(self, entry):
         """
         >>> e = testToHtml.createEntry(testEntry)
-        >>> print ET.tostring(e)
-        <p class="opds-entry"><h2 class="opds-entry-title">test item</h2><span class="opds-entry-item"><em class="opds-entry-key">Published:</em> <span class="opds-entry-value">1977</span><br/></span><span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://archive.org/details/itemid" class="opds-entry-link">http://archive.org/details/itemid</a></span></p>
+        >>> print ET.tostring(e, pretty_print=True)
+        <p class="opds-entry">
+          <h2 class="opds-entry-title">test item</h2>
+          <span class="opds-entry-item"><em class="opds-entry-key">Published:</em> <span class="opds-entry-value">1977</span><br/></span>
+          <div class="opds-entry-links">
+            <span class="opds-entry-item"><em class="opds-entry-key">Buy:</em> <a href="http://archive.org/download/itemid.pdf" class="opds-entry-link">PDF</a></span>
+          </div>
+        </p>
         """
         
         e = ET.Element('p', { 'class':'opds-entry'} )
@@ -524,12 +529,14 @@ class CatalogToHtml(CatalogRenderer):
 
     def createEntryLinks(self, links):
         """
-        >>> pdf = Link(url = 'http://a.o/item.pdf', type='application/pdf')
-        >>> epub = Link(url = 'http://a.o/item.epub', type='application/epub+zip')
+        >>> pdf = Link(url = 'http://a.o/item.pdf', type='application/pdf', rel='http://opds-spec.org/acquisition')
+        >>> epub = Link(url = 'http://a.o/item.epub', type='application/epub+zip', rel='http://opds-spec.org/acquisition')
         >>> links = [pdf, epub]
         >>> e = testToHtml.createEntryLinks(links)
-        >>> print ET.tostring(e)
-        <span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">EPUB</a></span>
+        >>> print ET.tostring(e, pretty_print=True)
+        <div class="opds-entry-links">
+          <span class="opds-entry-item"><em class="opds-entry-key">Free:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">EPUB</a></span>
+        </div>
         """
         
         free = []
@@ -885,8 +892,8 @@ def testmod():
     
     urn = 'urn:x-internet-archive:bookserver:catalog'
     testCatalog = Catalog(title='Internet Archive OPDS', urn=urn)
-    testLink    = Link(url  = 'http://archive.org/details/itemid',
-                       type = 'application/atom+xml', rel='alternate')
+    testLink    = Link(url  = 'http://archive.org/download/itemid.pdf',
+                       type = 'application/pdf', rel='http://opds-spec.org/acquisition/buying')
     testEntry = Entry({'urn'  : 'x-internet-archive:item:itemid',
                         'title'   : u'test item',
                         'updated' : '2009-01-01T00:00:00Z',
