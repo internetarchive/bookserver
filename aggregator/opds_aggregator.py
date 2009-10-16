@@ -335,11 +335,12 @@ class opensearch:
         q  = params['?q'][0]
         qq = urllib.quote(q)     
         solrUrl = pubInfo['solr_base'] + '&q=' + qq +'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
+        
         # solrUrl       = pubInfo['solr_base'] + '&q='+qq+'+AND+mediatype%3Atexts+AND+(format%3A(LuraTech+PDF)+OR+scanner:google)&sort=month+desc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
-        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
                                                 urlBase='/opensearch?q=%s&start=' % (qq),
                                                 titleFragment = titleFragment)
