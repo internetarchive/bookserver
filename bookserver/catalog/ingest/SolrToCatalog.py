@@ -126,15 +126,15 @@ class SolrToCatalog:
                 links.append(l)
 
         if 'rights' in bookDict:
-            str = ''
+            rightsStr = ''
             for right in bookDict['rights']:
                 #special case for Feedbooks
                 if not '' == right:
-                    str += right + ' '            
-            if '' == str:
+                    rightsStr += right + ' '            
+            if '' == rightsStr:
                 self.removeKeys(bookDict, ('rights',))
             else:
-                bookDict['rights'] = str               
+                bookDict['rights'] = rightsStr
             
         self.removeKeys(bookDict, ('links','price', 'currencyCode')) 
         e = Entry(bookDict, links=links)
