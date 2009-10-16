@@ -680,7 +680,7 @@ class CatalogToSolr(CatalogRenderer):
         self.addList(doc, 'publisher',  entry.get('publishers'))
         self.addList(doc, 'subject',    entry.get('subjects'))
         
-        self.addField(doc, 'updatedate', self.makeSolrDate(entry.get('updated')))
+        self.addField(doc, 'updated', self.makeSolrDate(entry.get('updated')))
 
         if entry.get('summary'):
             self.addField(doc, 'description',     entry.get('summary'))
