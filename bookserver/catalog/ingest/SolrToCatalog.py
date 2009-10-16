@@ -165,8 +165,7 @@ class SolrToCatalog:
         for item in obj['response']['docs']:
             entry = self.entryFromSolrResult(item, pubInfo)
             self.c.addEntry(entry)
-
-        
+  
     # getCatalog()
     #___________________________________________________________________________    
     def getCatalog(self):        

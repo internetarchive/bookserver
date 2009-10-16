@@ -38,7 +38,7 @@ This file is part of bookserver.
 >>> n = catalog.Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
 >>> c.addNavigation(n)
 
->>> osDescription = 'http://bookserver.archive.org/opensearch.xml'
+>>> osDescription = 'http://bookserver.archive.org/catalog/opensearch.xml'
 >>> o = catalog.OpenSearch(osDescription)
 >>> c.addOpenSearch(o)
 
@@ -57,7 +57,7 @@ Different version of lxml will print xmlns differently (use ellipsis in doctest)
     <name>Internet Archive</name>
     <uri>http://www.archive.org</uri>
   </author>
-  <link rel="search" type="application/atom+xml" href="http://bookserver.archive.org/opensearch.xml"/>
+  <link rel="search" type="application/atom+xml" href="http://bookserver.archive.org/catalog/opensearch.xml"/>
   <link rel="next" type="application/atom+xml" href="/alpha/a/1" title="Next results"/>
   <entry>
     <title>test item</title>

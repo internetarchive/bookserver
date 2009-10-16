@@ -36,6 +36,7 @@ sys.path.append("/petabox/sw/lib/python")
 import feedparser #for _parse_date()
 import datetime
 import string
+import opensearch
 
 class CatalogRenderer:
     """Base class for catalog renderers"""
@@ -303,8 +304,9 @@ class CatalogToHtml(CatalogRenderer):
         'text/html': 'Online',
     }
         
-    def __init__(self, catalog):
+    def __init__(self, catalog, device = None):
         CatalogRenderer.__init__(self)
+        self.device = device
         self.processCatalog(catalog)
         
     def processCatalog(self, catalog):
@@ -358,7 +360,7 @@ class CatalogToHtml(CatalogRenderer):
         
     def createHeader(self, catalog):
         div = ET.Element( 'div', {'class':'opds-header'} )
-        div.text = 'OPDS Header' # XXX
+        div.text = 'Catalog Header' # XXX
         return div
         
     def createNavigation(self, navigation):
@@ -427,9 +429,24 @@ class CatalogToHtml(CatalogRenderer):
             a.text = title
         return a
         
-    def createSearch(self, opensearch):
+    def createSearch(self, opensearchObj):
         div = ET.Element( 'div', {'class':'opds-search'} )
-        div.text = 'Search div' # XXX
+        
+        # load opensearch
+        osUrl = opensearchObj.osddUrl
+        desc = opensearch.Description(osUrl)
+        template = desc.get_url_by_type('application/atom+xml').template # $$$ error handling!
+
+        form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } ) # XXX should be relative
+        # form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
+        ET.SubElement(form, 'br')
+        # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
+        terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
+        submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
+        form.text = desc.shortname
+        
+        # XXX finish implementation
+        
         return div
         
     def createCatalogHeader(self, catalog):
@@ -528,6 +545,9 @@ class CatalogToHtml(CatalogRenderer):
         <a href="/blah.epub" class="opds-entry-link">EPUB</a>
         """
         
+        if self.device:
+            link = self.device.formatLink(link)
+        
         if self.entryLinkTitles.has_key(link.get('type')):
             title = self.entryLinkTitles[link.get('type')]
         else:
@@ -580,24 +600,16 @@ class ArchiveCatalogToHtml(CatalogToHtml):
 
     scandataRegex = re.compile('Scandata')
 
-    def canReadOnline(self, entry):
-        """
-        Returns true if this item can be read in the online bookreader.
-        """
+    def createHead(self, catalog):
+        head = CatalogToHtml.createHead(self, catalog)
+        # head.append(self.createStyleSheet('/static/ol.css'))
+        return head
         
-        if not entry.get('identifier'):
-            return False
-        
-        # Check for a readable format
-        for format in entry.get('formats'):
-            if self.scandataRegex.search(format):
-                return True
-            
-        return False
+    def createHeader(self, catalog):
+        div = ET.Element( 'div', {'class':'opds-header'} )
+        ET.SubElement(div, 'img', {'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
+        return div
     
-    def readOnlineUrl(self, entry):
-        return 'http://www.archive.org/stream/%s' % entry.get('identifier')
-        
     
     def createEntry(self, entry):
         e = CatalogToHtml.createEntry(self, entry)
@@ -616,6 +628,40 @@ class ArchiveCatalogToHtml(CatalogToHtml):
                 ET.SubElement(s, 'br')
                 
         return e
+
+    def createFooter(self, catalog):
+        html = """
+       <div id="bottom">
+        <div id="legal">
+        <p>Open Library is an initiative of the <a href="http://www.archive.org/">Internet Archive</a>, a 501(c)(3) non-profit, building a digital library of Internet sites and other cultural artifacts in digital form.<br/>
+
+        Other projects include the <a href="http://web.archive.org/collections/web.html">Wayback Machine</a>, <a href="http://www.archive.org/">archive.org</a>, <a href="http://www.nasaimages.org/">nasaimages.org</a>, <a href="http://www.archive-it.org">archive-it.org</a>.</p>
+        <p>Your use of the Open Library is subject to the Internet Archive's <a href="http://www.archive.org/about/terms.php">Terms of Use</a>.</p>
+        </div>
+       </div>
+"""
+        div = ET.fromstring(html)
+        return div
+
+
+    def canReadOnline(self, entry):
+        """
+        Returns true if this item can be read in the online bookreader.
+        """
+        
+        if not entry.get('identifier'):
+            return False
+        
+        # Check for a readable format
+        for format in entry.get('formats'):
+            if self.scandataRegex.search(format):
+                return True
+            
+        return False
+    
+    def readOnlineUrl(self, entry):
+        return 'http://www.archive.org/stream/%s' % entry.get('identifier')
+        
 
 #_______________________________________________________________________________
         
@@ -786,7 +832,7 @@ def testmod():
     testNavigation = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
     testCatalog.addNavigation(testNavigation)
     
-    osDescription = 'http://bookserver.archive.org/opensearch.xml'
+    osDescription = 'http://bookserver.archive.org/catalog/opensearch.xml'
     testSearch = OpenSearch(osDescription)
     testCatalog.addOpenSearch(testSearch)
     
