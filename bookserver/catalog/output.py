@@ -305,6 +305,7 @@ class CatalogToHtml(CatalogRenderer):
         'application/pdf': 'PDF',
         'application/epub': 'EPUB',
         'application/epub+zip': 'EPUB',
+        'application/x-mobipocket-ebook': 'Mobi',
         'text/html': 'Website',
     }
         
@@ -564,8 +565,9 @@ class CatalogToHtml(CatalogRenderer):
                 opds.append(link)
             elif type == Link.html:
                 html.append(link)
+            # XXX output uncaught links
                 
-        linkTuples = [(free, 'Free'), (buy, 'Buy'), (subscribe, 'Subscribe'), (sample, 'Sample'), (opds, 'Catalog'), (html, 'HTML')]
+        linkTuples = [(free, 'Free:'), (buy, 'Buy:'), (subscribe, 'Subscribe:'), (sample, 'Sample:'), (opds, 'Catalog:'), (html, 'HTML:')]
 
         for (linkList, listTitle) in linkTuples:
             if len(linkList) > 0:
@@ -581,10 +583,7 @@ class CatalogToHtml(CatalogRenderer):
                         linkElem.tail = ', '
                         
                 d.append(s)
-                
-        # XXX
-        d.text = str([link.get('type') for link in links])
-        
+                        
         return d
         
     def createEntryLink(self, link):
