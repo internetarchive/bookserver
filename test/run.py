@@ -42,9 +42,9 @@ for test in testfiles:
     (numFail, numTests) = doctest.testfile(test)
     print '%s: %d out of %d passed' % (test, (numTests - numFail), numTests)
 
-    if numFail:
-       print 'Rerunning test in verbose mode!'
-       doctest.testfile(test, verbose=True)
+    # if numFail:
+    #   print 'Rerunning test in verbose mode!'
+    #   doctest.testfile(test, verbose=True)
 
 testmodules =  glob.glob('../bookserver/*.py')
 testmodules += glob.glob('../bookserver/catalog/*.py')
@@ -58,7 +58,7 @@ for test in testmodules:
     if '' != output:
         print output
 
-    if (0 != status) or ('' != output):
-        print 'Rerunning test in verbose mode!'
-        (status, output) = commands.getstatusoutput('python ' + test + ' -v')
-        print output
+    # if (0 != status) or ('' != output):
+    #    print 'Rerunning test in verbose mode!'
+    #    (status, output) = commands.getstatusoutput('python ' + test + ' -v')
+    #    print output
