@@ -45,9 +45,11 @@ class SolrToCatalog:
               'date'           : 'date',
               'month'          : 'downloadsPerMonth',
               'price'          : 'price',
+              'currencyCode'   : 'currencyCode',
               'provider'       : 'provider',
               'urn'            : 'urn',
-              'description'    : 'summary',
+              'summary'        : 'summary',
+              'updated'        : 'updated',              
               
               #these are lists, not strings
               'creator'        : 'authors',
@@ -56,6 +58,7 @@ class SolrToCatalog:
               'language'       : 'languages',
               'contributor'    : 'contributors',
               'link'           : 'links',
+              'rights'         : 'rights',
               
               'oai_updatedate' : 'oai_updatedates',
               'format'         : 'formats',
@@ -87,10 +90,13 @@ class SolrToCatalog:
             price = '0.00'
             rel = 'http://opds-spec.org/acquisition'
 
-        currencycode = 'USD' #TODO: make this a stored solr field
+        if 'currencyCode' in bookDict:
+            currencycode = bookDict['currencyCode']
+        else:
+            currencycode = 'USD'
         
         if not 'updated' in bookDict:
-            #TODO: THIS IS VERY BAD. NEED TO ADD THIS TO SOLR!
+            #how did this happen?
             bookDict['updated'] = self.getDateString()
         
         for link in bookDict['links']:
@@ -119,7 +125,18 @@ class SolrToCatalog:
                                currencycode = currencycode)
                 links.append(l)
 
-        self.removeKeys(bookDict, ('links','price')) 
+        if 'rights' in bookDict:
+            str = ''
+            for right in bookDict['rights']:
+                #special case for Feedbooks
+                if not '' == right:
+                    str += right + ' '            
+            if '' == str:
+                self.removeKeys(bookDict, ('rights',))
+            else:
+                bookDict['rights'] = str               
+            
+        self.removeKeys(bookDict, ('links','price', 'currencyCode')) 
         e = Entry(bookDict, links=links)
 
         return e
