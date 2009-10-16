@@ -88,11 +88,11 @@ class CatalogToAtom(CatalogRenderer):
     
     # createRelLink()
     #___________________________________________________________________________
-    def createRelLink(self, parent, rel, urlroot, relurl, title=None):
+    def createRelLink(self, parent, rel, urlroot, relurl, title=None, type='application/atom+xml'):
         absurl = urlroot + relurl
         element = ET.SubElement(parent, 'link')
         element.attrib['rel']  = rel
-        element.attrib['type'] = 'application/atom+xml'
+        element.attrib['type'] = type
         element.attrib['href'] = absurl;
         if title:
             element.attrib['title'] = title;
@@ -226,7 +226,7 @@ class CatalogToAtom(CatalogRenderer):
     # createOpenSearchDescription()
     #___________________________________________________________________________
     def createOpenSearchDescription(self, opds, opensearch):
-        self.createRelLink(opds, 'search', opensearch.osddUrl, '', None)
+        self.createRelLink(opds, 'search', opensearch.osddUrl, '', None, type='application/opensearchdescription+xml')
 
     # createNavLinks()
     #___________________________________________________________________________
