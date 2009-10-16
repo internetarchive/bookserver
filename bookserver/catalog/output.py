@@ -320,10 +320,11 @@ class CatalogToHtml(CatalogRenderer):
         body = self.createBody(catalog)
         html.append(body)
         body.append(self.createHeader(catalog))
-        body.append(self.createNavigation(catalog._navigation))
         body.append(self.createSearch(catalog._opensearch))
         body.append(self.createCatalogHeader(catalog))
+        body.append(self.createNavigation(catalog._navigation))
         body.append(self.createEntryList(catalog._entries))
+        body.append(self.createNavigation(catalog._navigation))
         body.append(self.createFooter(catalog))
         
         self.html = html
