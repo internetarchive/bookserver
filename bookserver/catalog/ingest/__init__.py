@@ -25,5 +25,6 @@ This file is part of bookserver.
 #import pkgutil
 #__path__ = pkgutil.extend_path(__path__, '..')
 
-from SolrToCatalog import SolrToCatalog
 from OpdsToCatalog import OpdsToCatalog
+from SolrToCatalog import SolrToCatalog
+from SolrToCatalog import IASolrToCatalog

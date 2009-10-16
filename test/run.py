@@ -55,8 +55,10 @@ for test in testmodules:
         
     (status, output) = commands.getstatusoutput('python ' + test)
     print 'testing module %s' % (test)
+    if '' != output:
+        print output
 
-    if 0 != status:
+    if (0 != status) or ('' != output):
         print 'Rerunning test in verbose mode!'
         (status, output) = commands.getstatusoutput('python ' + test + ' -v')
         print output

@@ -70,11 +70,14 @@ class CatalogToAtom(CatalogRenderer):
     
     fileExtMap = {
         'pdf'  : 'application/pdf',
-        'epub' : 'application/epub+zip'
+        'epub' : 'application/epub+zip',
+        'mobi' : 'application/x-mobipocket-ebook'
     }
     
     ebookTypes = ('application/pdf',
-                  'application/epub+zip')
+                  'application/epub+zip',
+                  'application/x-mobipocket-ebook'
+    )
     
     # createTextElement()
     #___________________________________________________________________________
@@ -106,7 +109,7 @@ class CatalogToAtom(CatalogRenderer):
     
         self.createTextElement(opds, 'updated',  c._datestr)
         
-        self.createRelLink(opds, 'self', c._url, '/')
+        self.createRelLink(opds, 'self', c._url, '')
         
         author = ET.SubElement(opds, 'author')
         self.createTextElement(author, 'name',  c._author)
@@ -207,11 +210,15 @@ class CatalogToAtom(CatalogRenderer):
             if 'downloadsPerMonth' in obj:
                 contentText += str(obj['downloadsPerMonth']) + ' downloads in the last month' + '<br/>'
 
+            if 'provider' in obj:
+                contentText += '<b>Provider: </b>' + obj['provider'] + '<br/>'
+
             if len(downloadLinks):
                 contentText += '<b>Download Ebook: </b>'
                 for link in downloadLinks:
                     (start, sep, ext) = link.get('url').rpartition('.')
                     contentText += '(<a href="%s">%s</a>) '%(link.get('url'), ext.upper())
+
         
             element = self.createTextElement(entry, 'content',  contentText)
             element.attrib['type'] = 'html'        

@@ -29,10 +29,11 @@ sys.path.append("/petabox/sw/lib/python")
 import simplejson as json
 
 from .. import Catalog
-from ..Entry import IAEntry
+from ..Entry import IAEntry, Entry
 from .. import Navigation
 from .. import OpenSearch
 from .. import Link
+import bookserver.util.language
 
 class SolrToCatalog:
 
@@ -43,6 +44,10 @@ class SolrToCatalog:
               'title'          : 'title',
               'date'           : 'date',
               'month'          : 'downloadsPerMonth',
+              'price'          : 'price',
+              'provider'       : 'provider',
+              'urn'            : 'urn',
+              'description'    : 'summary',
               
               #these are lists, not strings
               'creator'        : 'authors',
@@ -50,11 +55,74 @@ class SolrToCatalog:
               'publisher'      : 'publishers',
               'language'       : 'languages',
               'contributor'    : 'contributors',
+              'link'           : 'links',
               
               'oai_updatedate' : 'oai_updatedates',
               'format'         : 'formats',
 
              }
+
+    # removeKeys()
+    #___________________________________________________________________________        
+    def removeKeys(self, d, keys):
+        for key in keys:
+            d.pop(key, None)
+
+
+    # entryFromSolrResult()
+    #___________________________________________________________________________        
+    def entryFromSolrResult(self, item, pubInfo):
+        #use generator expression to map dictionary key names
+        bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
+
+        links = []
+        if 'price' in bookDict:
+            if 0.0 == bookDict['price']:
+                rel = 'http://opds-spec.org/acquisition'
+                price = '0.00'
+            else:
+                price = str(bookDict['price'])
+                rel = 'http://opds-spec.org/acquisition/buying'
+        else:
+            price = '0.00'
+            rel = 'http://opds-spec.org/acquisition'
+
+        currencycode = 'USD' #TODO: make this a stored solr field
+        
+        if not 'updated' in bookDict:
+            #TODO: THIS IS VERY BAD. NEED TO ADD THIS TO SOLR!
+            bookDict['updated'] = self.getDateString()
+        
+        for link in bookDict['links']:
+            if link.endswith('.pdf'):
+                l = Link(url  = link, type = 'application/pdf', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+            elif link.endswith('.epub'):
+                l = Link(url  = link, type = 'application/epub+zip', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+            elif link.endswith('.mobi'):
+                l = Link(url  = link, type = 'application/x-mobipocket-ebook', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+            else:    
+                l = Link(url  = link, type = 'text/html', 
+                               rel = rel,
+                               price = price,
+                               currencycode = currencycode)
+                links.append(l)
+
+        self.removeKeys(bookDict, ('links','price')) 
+        e = Entry(bookDict, links=links)
+
+        return e
 
     # SolrToCatalog()
     #___________________________________________________________________________    
@@ -95,29 +163,9 @@ class SolrToCatalog:
         self.c.addOpenSearch(o)
 
         for item in obj['response']['docs']:
-            #use generator expression to map dictionary key names
-            bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
-
-            if 'oai_updatedate' in item:
-                bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
-
-            bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
-
-            pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
-                           type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
-
-            epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
-                           type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
-                                       
-            try:
-                e = IAEntry(bookDict, links=(pdfLink, epubLink))
-                self.c.addEntry(e)
-            except (KeyError, ValueError):
-                # invalid entry, don't add it
-                pass
-                
-            #print bookDict
-        
+            entry = self.entryFromSolrResult(item, pubInfo)
+            self.c.addEntry(entry)
+  
     # getCatalog()
     #___________________________________________________________________________    
     def getCatalog(self):        
@@ -138,5 +186,40 @@ class SolrToCatalog:
 
     def prevPage(self):        
         raise NotImplementedError
+
+
+# IASolrToCatalog()
+#_______________________________________________________________________________
+# The solr used for archive.org has a slightly different schema than the one
+# recommended for a bookserver installation.
+
+class IASolrToCatalog(SolrToCatalog):
+    def entryFromSolrResult(self, item, pubInfo):
+        #use generator expression to map dictionary key names
+        bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
+
+        if 'oai_updatedate' in item:
+            bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
+        else:
+            bookDict['updated'] = self.getDateString()
+
+        #IA scribe books use MARC language codes        
+        if 'language' in item:
+            bookDict['languages'] = []
+            for lang in item['language']:
+                bookDict['languages'].append(bookserver.util.language.iso_639_23_to_iso_639_1(lang))
+
+        #special case: this is a result from the IA solr.
+        #TODO: refactor this into a subclass IASolrToCatalog
+        bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
+
+        pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
+                       type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
+
+        epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
+                       type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
+                                   
+        e = IAEntry(bookDict, links=(pdfLink, epubLink))
         
-        
+
+        return e
