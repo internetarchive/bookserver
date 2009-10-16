@@ -31,6 +31,9 @@ class Link:
     subscription = 'http://opds-spec.org/acquisition/subscription'
     sample = 'http://opds-spec.org/acquisition/sample'
     
+    opds = 'application/atom+xml;profile=opds'
+    html = 'text/html'
+    
     acquisition_types = (acquisition, buying, lending, subscription, sample)
     
     def validate(self, key, value):

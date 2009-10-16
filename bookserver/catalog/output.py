@@ -442,12 +442,15 @@ class CatalogToHtml(CatalogRenderer):
         desc = opensearch.Description(osUrl)
         url = desc.get_url_by_type('application/atom+xml')
         if url is None:
-            div.text = "<!-- Could not load OpenSearch description from %s -->" % osUrl
+            c = ET.Comment()
+            c.text = " Could not load OpenSearch description from %s " % osUrl
+            div.append(c)
         else:
-            template = url.template # $$$ error handling!
+            template = url.template
     
-            form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } ) # XXX should be relative
-            # form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
+            # XXX URL is currently hardcoded
+            form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } )
+            
             ET.SubElement(form, 'br')
             # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
             terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
@@ -533,12 +536,15 @@ class CatalogToHtml(CatalogRenderer):
         lend = []
         subscribe = []
         sample = []
+        opds = [] # XXX munge link for HTML proxy - make entry title the link
+        html = []
         
         d = ET.Element('div', {'class':'opds-entry-links'} )
         
         for link in links:
             try:
                 rel = link.get('rel')
+                type = link.get('type')
             except KeyError:
                 # no relation
                 continue
@@ -554,23 +560,30 @@ class CatalogToHtml(CatalogRenderer):
                 subscribe.append(link)
             elif rel == Link.sample:
                 sample.append(link)
+            elif type == Link.opds:
+                opds.append(link)
+            elif type == Link.html:
+                html.append(link)
+                
+        linkTuples = [(free, 'Free'), (buy, 'Buy'), (subscribe, 'Subscribe'), (sample, 'Sample'), (opds, 'Catalog'), (html, 'HTML')]
 
-        links = [(free, 'Free'), (buy, 'Buy'), (subscribe, 'Subscribe'), (sample, 'Sample')]
-
-        for (linkList, listTitle) in links:
+        for (linkList, listTitle) in linkTuples:
             if len(linkList) > 0:
                 s = ET.Element('span', { 'class':'opds-entry-item' } )
                 title = ET.SubElement(s, 'em', {'class':'opds-entry-key'} )
                 title.text = listTitle
                 title.tail = ' '
                 
-                linkElems = [self.createEntryLink(link) for link in linkList]
+                linkElems = [self.createEntryLink(aLink) for aLink in linkList]
                 for linkElem in linkElems:
                     s.append(linkElem)
                     if linkElem != linkElems[-1]:
                         linkElem.tail = ', '
                         
                 d.append(s)
+                
+        # XXX
+        d.text = str([link.get('type') for link in links])
         
         return d
         
