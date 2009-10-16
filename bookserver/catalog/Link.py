@@ -25,6 +25,14 @@ class Link:
     valid_keys = ('url', 'type', 'rel', 'price', 'currencycode', 'formats')
     required_keys = ('url', 'type')
     
+    acquisition ='http://opds-spec.org/acquisition'                 # Free acquisition
+    buying = 'http://opds-spec.org/acquisition/buying'
+    lending = 'http://opds-spec.org/acquisition/lending'
+    subscription = 'http://opds-spec.org/acquisition/subscription'
+    sample = 'http://opds-spec.org/acquisition/sample'
+    
+    acquisition_types = (acquisition, buying, lending, subscription, sample)
+    
     def validate(self, key, value):
         if key not in Link.valid_keys:
             raise KeyError("invalid key in bookserver.catalog.Link: %s" % (key))

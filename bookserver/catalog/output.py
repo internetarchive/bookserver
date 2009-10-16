@@ -282,6 +282,8 @@ class CatalogToHtml(CatalogRenderer):
         'authors',
         'date',
         'publishers',
+        'provider',
+        'formats',
         'contributors',
         'languages',
         'downloadsPerMonth'
@@ -289,11 +291,13 @@ class CatalogToHtml(CatalogRenderer):
 
     entryDisplayTitles = {
         'authors': ('Author', 'Authors'),
-        'date': ('Published', 'Published'),
-        'publishers': ( 'Publisher', 'Publishers'),
         'contributors': ('Contributor', 'Contributors'),
-        'languages': ('Language', 'Languages'),
+        'date': ('Published', 'Published'),
         'downloadsPerMonth': ('Recent downloads', 'Recent downloads'),
+        'formats': ('Format', 'Formats'),
+        'languages': ('Language', 'Languages'),
+        'provider': ('Provider', 'Provider'),
+        'publishers': ( 'Publisher', 'Publishers'),
         'title': ('Title', 'Title')
     }
         
@@ -301,7 +305,7 @@ class CatalogToHtml(CatalogRenderer):
         'application/pdf': 'PDF',
         'application/epub': 'EPUB',
         'application/epub+zip': 'EPUB',
-        'text/html': 'Online',
+        'text/html': 'Website',
     }
         
     def __init__(self, catalog, device = None):
@@ -434,16 +438,21 @@ class CatalogToHtml(CatalogRenderer):
         
         # load opensearch
         osUrl = opensearchObj.osddUrl
+        print osUrl
         desc = opensearch.Description(osUrl)
-        template = desc.get_url_by_type('application/atom+xml').template # $$$ error handling!
-
-        form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } ) # XXX should be relative
-        # form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
-        ET.SubElement(form, 'br')
-        # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
-        terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
-        submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
-        form.text = desc.shortname
+        url = desc.get_url_by_type('application/atom+xml')
+        if url is None:
+            div.text = "<!-- Could not load OpenSearch description from %s -->" % osUrl
+        else:
+            template = url.template # $$$ error handling!
+    
+            form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } ) # XXX should be relative
+            # form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/search', 'method':'get' } ) # XXX should be relative
+            ET.SubElement(form, 'br')
+            # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
+            terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
+            submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
+            form.text = desc.shortname
         
         # XXX finish implementation
         
@@ -518,19 +527,52 @@ class CatalogToHtml(CatalogRenderer):
         >>> print ET.tostring(e)
         <span class="opds-entry-item"><em class="opds-entry-key">Download:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">EPUB</a></span>
         """
-        s = ET.Element('span', { 'class':'opds-entry-item' } )
-        title = ET.SubElement(s, 'em', {'class':'opds-entry-key'} )
-        # $$$ TODO different formatting for different link types
-        title.text = 'Download:'
-        title.tail = ' '
         
-        linkElems = [self.createEntryLink(link) for link in links]
-        for linkElem in linkElems:
-            s.append(linkElem)
-            if linkElem != linkElems[-1]:
-                linkElem.tail = ', '
+        free = []
+        buy = []
+        lend = []
+        subscribe = []
+        sample = []
         
-        return s
+        d = ET.Element('div', {'class':'opds-entry-links'} )
+        
+        for link in links:
+            try:
+                rel = link.get('rel')
+            except KeyError:
+                # no relation
+                continue
+
+            
+            if rel == Link.acquisition:
+                free.append(link)
+            elif rel == Link.buying:
+                buy.append(link)
+            elif rel == Link.lending:
+                lend.append(link)
+            elif rel == Link.subscription:
+                subscribe.append(link)
+            elif rel == Link.sample:
+                sample.append(link)
+
+        links = [(free, 'Free'), (buy, 'Buy'), (subscribe, 'Subscribe'), (sample, 'Sample')]
+
+        for (linkList, listTitle) in links:
+            if len(linkList) > 0:
+                s = ET.Element('span', { 'class':'opds-entry-item' } )
+                title = ET.SubElement(s, 'em', {'class':'opds-entry-key'} )
+                title.text = listTitle
+                title.tail = ' '
+                
+                linkElems = [self.createEntryLink(link) for link in linkList]
+                for linkElem in linkElems:
+                    s.append(linkElem)
+                    if linkElem != linkElems[-1]:
+                        linkElem.tail = ', '
+                        
+                d.append(s)
+        
+        return d
         
     def createEntryLink(self, link):
         """
