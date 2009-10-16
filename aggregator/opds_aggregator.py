@@ -29,11 +29,14 @@ It works by translating data from solr queries in to OPDS-style atom feeds.
 import sys
 sys.path.append("/petabox/sw/lib/python")
 
+import cgi
+import urllib
 import web
 import string
 
 import bookserver.catalog as catalog
 import bookserver.catalog.output as output
+import bookserver.device
 
 numRows = 50
 
@@ -54,6 +57,12 @@ urls = (
     '/alpha/(.)(?:/(.*))?',         'alpha',
     '/provider/(\w+)(?:/(.*))?',    'provider',    
     '/providers.(xml|html)',        'providerList',
+    
+    # Searching
+    '/opensearch.xml',              'openSearchDescription',
+    '/opensearch(.*)',              'opensearch',
+    '/search(.*)',                  'htmlsearch',
+
     '/'                 ,           'index',
     '/index\.(xml|html)',           'index',
     '/(.*)',                        'indexRedirect',         
@@ -71,6 +80,23 @@ providers = {
 }
 
 application = web.application(urls, globals()).wsgifunc()
+
+
+def getEnv(key, default = None):
+    env = web.ctx['environ']
+    if env.has_key(key):
+        return env[key]
+    else:
+        return default
+        
+def getDevice():
+    userAgent = getEnv('HTTP_USER_AGENT')
+    if userAgent is not None:
+        device = bookserver.device.Detect.createFromUserAgent(userAgent)
+    else:
+        device = None
+    return device
+
 
 # /
 #______________________________________________________________________________
@@ -113,7 +139,7 @@ class index:
         #                 }, links=(l,))        
         #c.addEntry(e)
         
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        osDescriptionDoc = 'http://bookserver.archive.org/aggregator/opensearch.xml'
         o = catalog.OpenSearch(osDescriptionDoc)
         c.addOpenSearch(o)
         
@@ -205,7 +231,7 @@ class alphaList:
                              }, links=(l,))
             c.addEntry(e)
 
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        osDescriptionDoc = 'http://bookserver.archive.org/aggregator/opensearch.xml'
         o = catalog.OpenSearch(osDescriptionDoc)
         c.addOpenSearch(o)
         
@@ -282,6 +308,10 @@ class providerList:
                                'content' : 'All Titles for provider ' + provider
                              }, links=(l,))
             c.addEntry(e)
+
+        osDescriptionDoc = 'http://bookserver.archive.org/aggregator/opensearch.xml'
+        o = catalog.OpenSearch(osDescriptionDoc)
+        c.addOpenSearch(o)
             
         web.header('Content-Type', types[mode])
         if ('xml' == mode):
@@ -290,6 +320,86 @@ class providerList:
             r = output.ArchiveCatalogToHtml(c)
 
         return r.toString()
+        
+# /opensearch
+#______________________________________________________________________________        
+class opensearch:
+    def GET(self, query):
+        params = cgi.parse_qs(web.ctx.query)
+
+        if not 'start' in params:
+            start = 0
+        else:
+            start = int(params['start'][0])
+
+        q  = params['?q'][0]
+        qq = urllib.quote(q)     
+        solrUrl = pubInfo['solr_base'] + '&q=' + qq +'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
+        # solrUrl       = pubInfo['solr_base'] + '&q='+qq+'+AND+mediatype%3Atexts+AND+(format%3A(LuraTech+PDF)+OR+scanner:google)&sort=month+desc&rows='+str(numRows)+'&start='+str(start*numRows)
+        titleFragment = 'search results for ' + q
+        urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
+
+        ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
+                                                start=start, numRows=numRows,
+                                                urlBase='/opensearch?q=%s&start=' % (qq),
+                                                titleFragment = titleFragment)
+
+        c = ingestor.getCatalog()
+
+        web.header('Content-Type', pubInfo['mimetype'])
+        r = output.CatalogToAtom(c, fabricateContentElement=True)
+        return r.toString()
+        
+# /search
+#______________________________________________________________________________        
+class htmlsearch:
+    def GET(self, query):
+        qs = web.ctx.query
+        if qs.startswith('?'):
+            qs = qs[1:]
+        
+        params = cgi.parse_qs(qs)
+
+        if not 'start' in params:
+            start = 0
+        else:
+            start = params['start'][0] # XXX hack for .html ending -- remove once fixed
+            if start.endswith('.html'):
+                start = start[:-5]
+            start = int(start)
+
+        q  = params['q'][0]
+        qq = urllib.quote(q)
+        
+        solrUrl = pubInfo['solr_base'] + '&q=' + qq +'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
+        #solrUrl       = pubInfo['solr_base'] + '?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        titleFragment = 'search results for ' + q
+        urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
+
+        ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
+                                                start=start, numRows=numRows,
+                                                urlBase='/search?q=%s&start=' % (qq), # XXX HTML output is adding .html to end...
+                                                titleFragment = titleFragment)
+
+        c = ingestor.getCatalog()
+        
+        web.header('Content-Type', 'text/html')
+        r = output.ArchiveCatalogToHtml(c, device = getDevice())
+        return r.toString()
+
+# /opensearch.xml - Open Search Description
+#______________________________________________________________________________        
+class openSearchDescription:
+    def GET(self):
+        web.header('Content-Type', 'application/atom+xml')
+        return """<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>Internet Archive Search</ShortName>
+    <Description>Search archive.org's OPDS Catalog.</Description>
+    <Url type="application/atom+xml" 
+        template="%s/opensearch?q={searchTerms}&amp;start={startPage?}"/>
+</OpenSearchDescription>""" % (pubInfo['opdsroot'])
+        
 
 # redirect to remove trailing slash
 #______________________________________________________________________________        
