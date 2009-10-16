@@ -302,7 +302,7 @@
 
    <!-- singleton dates - they are thus sortable (some returned in SE results, some not) -->
    <field name="date"        type="date"     indexed="true" stored="true"/>
-   <field name="updatedate"  type="date"     indexed="true" stored="false" multiValued="true"/>
+   <field name="updated"     type="date"     indexed="true" stored="true"/>
 
    <!-- can have 2+ instances in XML *AND* should be returned in SE results -->
    <field name="creator"     type="textIA"   indexed="true" stored="true" multiValued="true"/>
@@ -315,16 +315,17 @@
 
     <!-- bookserver additions -->
    <field name="link"        type="string"   indexed="true" stored="true" multiValued="true"/>
+   <field name="summary"     type="textIA"   indexed="true" stored="true"/>
    
    <!-- price info is stored normalized to USD -->
    <field name="price"       type="float"    indexed="true" stored="true"/>   
-
+   <field name="currencyCode" type="string"   indexed="true" stored="true"/>   
+   
    <!-- provider is the bookstore or library supplying the book -->
    <field name="provider"    type="string"   indexed="true" stored="true"/>
 
    
-   <!-- catchall field, containing all other searchable text fields (implemented
-        via copyField further on in this schema  -->
+   <!-- catchall field, containing all other searchable text fields  -->
    <field name="text" type="text" indexed="true" stored="false" multiValued="true"/>
 
 

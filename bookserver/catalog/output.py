@@ -739,14 +739,20 @@ class CatalogToSolr(CatalogRenderer):
 
         return False            
 
-    def addField(self, element, name, data):
+    def addField(self, element, name, data, catchAll=False):
         field = ET.SubElement(element, "field")
         field.set('name', name)
         field.text=data        
 
-    def addList(self, element, name, data):
+        if catchAll:
+            #copy this field into the solr catchAll field "text"
+            field = ET.SubElement(element, "field")
+            field.set('name', 'text')
+            field.text=data        
+
+    def addList(self, element, name, data, catchAll=False):
         for scalar in data:
-            self.addField(element, name, scalar)
+            self.addField(element, name, scalar, catchAll)
 
     def makeSolrDate(self, datestr):
         """
@@ -764,21 +770,35 @@ class CatalogToSolr(CatalogRenderer):
         
         if not self.isEbook(entry):
             return
+
+        p = re.compile('\w', re.UNICODE)
+        m = p.search(entry.get('title'))
+        if not m:
+            print "not indexing book with non-alphanum title: " + entry.get('title')
+            return
+
+        if entry.get('rights'):
+            #Special case for Feedbooks
+            if "This work is available for countries where copyright is Life+70." == entry.get('rights'):
+                print "not indexing Life+70 book: " + entry.get('title')
+                return
             
         doc = ET.SubElement(self.solr, "doc")
         self.addField(doc, 'urn',       entry.get('urn'))
         self.addField(doc, 'provider',  self.provider)      
-        self.addField(doc, 'title',     entry.get('title'))
+        self.addField(doc, 'title',     entry.get('title'), True)
+        self.addField(doc, 'rights',    entry.get('rights'), True)
         
-        self.addList(doc, 'creator',    entry.get('authors'))
+        self.addList(doc, 'creator',    entry.get('authors'), True)
         self.addList(doc, 'language',   entry.get('languages'))
-        self.addList(doc, 'publisher',  entry.get('publishers'))
-        self.addList(doc, 'subject',    entry.get('subjects'))
+        self.addList(doc, 'publisher',  entry.get('publishers'), True)
+        self.addList(doc, 'subject',    entry.get('subjects'), True)
         
-        self.addField(doc, 'updatedate', self.makeSolrDate(entry.get('updated')))
+        self.addField(doc, 'updated', self.makeSolrDate(entry.get('updated')))
 
         if entry.get('summary'):
-            self.addField(doc, 'description',     entry.get('summary'))
+            if not 'No description available.' == entry.get('summary'): #Special case for Feedbooks
+                self.addField(doc, 'summary',     entry.get('summary'), True)
         
         if entry.get('date'):
             try:
@@ -789,10 +809,10 @@ class CatalogToSolr(CatalogRenderer):
 
         if entry.get('title'):
             try:
-                self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation)[0].upper())
+                self.addField(doc, 'firstTitle',  entry.get('title').lstrip(string.punctuation+string.whitespace)[0].upper())
             except IndexError:
                 print """Can't make firstTitle from """ + entry.get('title')
-            self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation).lower())
+            self.addField(doc, 'titleSorter', entry.get('title').lstrip(string.punctuation+string.whitespace).lower())
 
         #TODO: deal with creatorSorter, languageSorter
 
