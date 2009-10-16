@@ -31,9 +31,9 @@ It stores the fetched data in warc files, and addes new books to a solr search e
 # Configuration
 #_______________________________________________________________________________
 
-config = {'warc_dir':              '/crawler/data',
+config = {'warc_dir':              '/2/crawler/data',
           'default_sleep_seconds': 5,  #TODO: set this per domain from robots.txt
-          'max_warc_size':         100*1024*1024,
+          'max_warc_size':         1000*1024*1024,
          }
 
 #sorted_by_date is to enable early-exit of the crawl.

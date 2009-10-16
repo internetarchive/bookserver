@@ -37,9 +37,9 @@ from   wbloc   import WBloc
 sys.path.append('..')
 import bookserver
 
-config = {'warc_dir':              '/crawler/data',
+config = {'warc_dir':              '/2/crawler/data',
           'default_sleep_seconds': 5,  #TODO: set this per domain from robots.txt
-          'max_warc_size':         100*1024*1024,
+          'max_warc_size':         1000*1024*1024,
          }
 
 providers = (
