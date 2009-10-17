@@ -144,7 +144,7 @@ class index:
         c.addOpenSearch(o)
         
         if 'html' == mode:
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             web.header('Content-Type', 'text/html')
             return r.toString()
         else:        
@@ -181,7 +181,7 @@ class alpha:
     
         if 'html' == mode:
             web.header('Content-Type', 'text/html')
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
             return r.toString()
         else:
             web.header('Content-Type', pubInfo['mimetype'])
@@ -240,7 +240,7 @@ class alphaList:
         if ('xml' == extension):
             r = output.CatalogToAtom(c)
         else:
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
 
         return r.toString()
 
@@ -273,7 +273,7 @@ class provider:
         if ('xml' == mode):
             r = output.CatalogToAtom(c, fabricateContentElement=True)
         else:
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
 
         return r.toString()
 
@@ -317,7 +317,7 @@ class providerList:
         if ('xml' == mode):
             r = output.CatalogToAtom(c)
         else:
-            r = output.ArchiveCatalogToHtml(c)
+            r = output.ArchiveCatalogToHtml(c, device = getDevice())
 
         return r.toString()
         
