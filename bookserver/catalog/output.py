@@ -666,10 +666,16 @@ class ArchiveCatalogToHtml(CatalogToHtml):
     """
 
     scandataRegex = re.compile('Scandata')
+    viewPortWidth = 600
 
     def createHead(self, catalog):
         head = CatalogToHtml.createHead(self, catalog)
         head.append(self.createStyleSheet('/bookserver/catalog/static/catalog.css'))
+        
+        # Set viewport width for iPhone
+        meta = ET.Element('meta', {'name':'viewport', 'content':'width = %s' % self.viewPortWidth} )
+        head.append(meta)
+        
         return head
         
     def createHeader(self, catalog):
