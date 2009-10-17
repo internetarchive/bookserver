@@ -334,9 +334,8 @@ class CatalogToHtml(CatalogRenderer):
         return ET.Element('html')
         
     def createHead(self, catalog):
-        # XXX flesh out
-        # updated
-        # atom link
+        # $$$ updated
+        # $$$ atom link
         
         head = ET.Element('head')
         titleElement = ET.SubElement(head, 'title')
@@ -664,11 +663,12 @@ class ArchiveCatalogToHtml(CatalogToHtml):
 
     def createHead(self, catalog):
         head = CatalogToHtml.createHead(self, catalog)
-        # head.append(self.createStyleSheet('/static/ol.css'))
+        head.append(self.createStyleSheet('/bookserver/catalog/static/catalog.css'))
         return head
         
     def createHeader(self, catalog):
         div = ET.Element( 'div', {'class':'opds-header'} )
+        # $$$ make local copy of image
         ET.SubElement(div, 'img', {'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
         return div
     
