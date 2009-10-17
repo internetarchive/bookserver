@@ -613,10 +613,16 @@ class CatalogToHtml(CatalogRenderer):
             title = self.entryLinkTitles[link.get('type')]
         else:
             title = link.get('url')
-        
-        a = ET.Element('a', {'class':'opds-entry-link',
+            
+        attribs = {'class':'opds-entry-link',
             'href' : link.get('url')
-        })
+        }
+        try:
+            attribs['type'] = link.get('type')
+        except:
+            pass
+        
+        a = ET.Element('a', attribs)
         a.text = title
         return a
         
