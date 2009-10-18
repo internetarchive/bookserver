@@ -681,7 +681,10 @@ class ArchiveCatalogToHtml(CatalogToHtml):
     def createHeader(self, catalog):
         div = ET.Element( 'div', {'class':'opds-header'} )
         # $$$ make local copy of image
-        ET.SubElement(div, 'img', {'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
+        a = ET.SubElement( div, 'a', {'class':'opds-logo-link',
+            'href':'http://www.archive.org/bookserver/catalog',
+            'title': 'Open Library BookServer Catalog'} )
+        ET.SubElement(a, 'img', { 'class':'opds-logo', 'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
         return div
     
     
@@ -707,7 +710,7 @@ class ArchiveCatalogToHtml(CatalogToHtml):
         html = """
        <div id="bottom">
         <div id="legal">
-        <p>Open Library is an initiative of the <a href="http://www.archive.org/">Internet Archive</a>, a 501(c)(3) non-profit, building a digital library of Internet sites and other cultural artifacts in digital form.<br/>
+        <p><a href="http://www.openlibrary.org" alt="Open Library">Open Library</a> is an initiative of the <a href="http://www.archive.org/">Internet Archive</a>, a 501(c)(3) non-profit, building a digital library of Internet sites and other cultural artifacts in digital form.<br/>
 
         Other projects include the <a href="http://web.archive.org/collections/web.html">Wayback Machine</a>, <a href="http://www.archive.org/">archive.org</a>, <a href="http://www.nasaimages.org/">nasaimages.org</a>, <a href="http://www.archive-it.org">archive-it.org</a>.</p>
         <p>Your use of the Open Library is subject to the Internet Archive's <a href="http://www.archive.org/about/terms.php">Terms of Use</a>.</p>
