@@ -115,20 +115,20 @@ class index:
                            )
 
             
-        l = catalog.Link(url = 'alpha.'+mode, type = types[mode])
+        l = catalog.Link(url = 'alpha.'+mode, type = bookserver.catalog.Link.opds)
         e = catalog.Entry({'title'   : 'Alphabetical By Title',
                            'urn'     : pubInfo['urnroot'] + ':titles:all',
                            'updated' : datestr,
                            'content' : 'Alphabetical list of all titles.'
-                         }, links=(l,))
+                         }, links=[l])
         c.addEntry(e)
 
-        l = catalog.Link(url = 'providers.'+mode, type = types[mode])
+        l = catalog.Link(url = 'providers.'+mode, type = bookserver.catalog.Link.opds)
         e = catalog.Entry({'title'   : 'By Provider',
                            'urn'     : pubInfo['urnroot'] + ':providers:all',
                            'updated' : datestr,
                            'content' : 'Listing of all publishers and sellers.'
-                         }, links=(l,))
+                         }, links=[l])
         c.addEntry(e)
 
         #l = catalog.Link(url = 'devices.'+mode, type = types[mode])
@@ -136,7 +136,7 @@ class index:
         #                   'urn'     : pubInfo['urnroot'] + ':devices',
         #                   'updated' : datestr,
         #                   'content' : 'Filter by books compatible with your e-book reading device.'
-        #                 }, links=(l,))        
+        #                 }, links=[l])        
         #c.addEntry(e)
         
         osDescriptionDoc = 'http://bookserver.archive.org/aggregator/opensearch.xml'
@@ -215,20 +215,13 @@ class alphaList:
 
         for letter in string.ascii_uppercase:
             lower = letter.lower()
-
-            if 'html' == extension:
-                linkType = 'text/html'
-            elif 'xml' == extension:
-                linkType = 'application/atom+xml'
-            else:
-                raise ValueError('Unsupported extension %s' % extension)
                 
-            l = catalog.Link(url = self.alphaURL(extension, lower, 0), type = linkType)        
+            l = catalog.Link(url = self.alphaURL(extension, lower, 0), type = bookserver.catalog.Link.opds)        
             e = catalog.Entry({'title'   : 'Titles: ' + letter,
                                'urn'     : pubInfo['urnroot'] + ':titles:'+lower,
                                'updated' : datestr,
                                'content' : 'Titles starting with ' + letter
-                             }, links=(l,))
+                             }, links=[l])
             c.addEntry(e)
 
         osDescriptionDoc = 'http://bookserver.archive.org/aggregator/opensearch.xml'
@@ -297,16 +290,16 @@ class providerList:
     
         for provider in providers:
             if 'html' == mode:
-                ext = '.html'
+                ext = '.html' # $$$ should do URL mapping in output side?
             else:
                 ext = ''
                 
-            l = catalog.Link(url = 'provider/'+provider+'/0'+ext, type = types[mode])
+            l = catalog.Link(url = 'provider/'+provider+'/0'+ext, type = bookserver.catalog.Link.opds)
             e = catalog.Entry({'title'   : providers[provider],
                                'urn'     : pubInfo['urnroot'] + ':providers:'+provider, 
                                'updated' : datestr,
                                'content' : 'All Titles for provider ' + provider
-                             }, links=(l,))
+                             }, links=[l])
             c.addEntry(e)
 
         osDescriptionDoc = 'http://bookserver.archive.org/aggregator/opensearch.xml'

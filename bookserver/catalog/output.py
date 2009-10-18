@@ -448,7 +448,7 @@ class CatalogToHtml(CatalogRenderer):
         else:
             template = url.template
     
-            # XXX URL is currently hardcoded
+            # XXX URL is currently hardcoded - update it
             form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } )
             
             ET.SubElement(form, 'br')
@@ -481,7 +481,16 @@ class CatalogToHtml(CatalogRenderer):
         """
         
         e = ET.Element('p', { 'class':'opds-entry'} )
-        title = ET.SubElement(e, 'h2', {'class':'opds-entry-title'} )
+        
+        elem = e        
+        # Look for link to catalog, and if so, make the title of this entry a link
+        catalogLink = self.findCatalogLink(entry._links)
+        if catalogLink:
+            entry._links.remove(catalogLink)
+            a = ET.SubElement(e, 'a', { 'class':'opds-entry-title', 'href':catalogLink.get('url') } )
+            elem = a
+        
+        title = ET.SubElement(elem, 'h2', {'class':'opds-entry-title'} )
         title.text = entry.get('title')
         
         for key in self.entryDisplayKeys:
@@ -617,10 +626,11 @@ class CatalogToHtml(CatalogRenderer):
         attribs = {'class':'opds-entry-link',
             'href' : link.get('url')
         }
-        try:
-            attribs['type'] = link.get('type')
-        except:
-            pass
+        
+        #try:
+        #    attribs['type'] = link.get('type')
+        #except:
+        #    pass
         
         a = ET.Element('a', attribs)
         a.text = title
@@ -655,6 +665,27 @@ class CatalogToHtml(CatalogRenderer):
         div = ET.Element('div', {'class':'opds-footer'} )
         div.text = 'Page Footer Div' # XXX
         return div
+    
+    @classmethod
+    def findCatalogLink(cls, links):
+        # $$$ should be moved elsewhere -- refactor
+        """
+        >>> links = [Link( **{ 'type': Link.acquisition, 'url':'buynow' }), Link( **{'type': Link.opds, 'url':'/providers'}) ]
+        >>> catalogLink = ArchiveCatalogToHtml.findCatalogLink(links)
+        >>> print catalogLink.get('url')
+        /providers
+        """
+       
+        if links:
+            for link in links:
+                try:
+                    linkType = link.get('type')
+                except KeyError:
+                    continue
+                
+                if Link.opds == linkType:
+                    return link
+        return None
         
     def toString(self):
         return self.prettyPrintET(self.html)
@@ -910,6 +941,7 @@ def testmod():
     testCatalog = Catalog(title='Internet Archive OPDS', urn=urn)
     testLink    = Link(url  = 'http://archive.org/download/itemid.pdf',
                        type = 'application/pdf', rel='http://opds-spec.org/acquisition/buying')
+    catalogLink = Link(url = '/providers/IA', type = Link.opds)
     testEntry = Entry({'urn'  : 'x-internet-archive:item:itemid',
                         'title'   : u'test item',
                         'updated' : '2009-01-01T00:00:00Z',
