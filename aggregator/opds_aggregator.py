@@ -42,7 +42,7 @@ numRows = 50
 
 # You can customize pubInfo:
 pubInfo = {
-    'name'     : 'Internet Archive',
+    'name'     : 'Open Library',
     'uri'      : 'http://www.archive.org',
     'opdsroot' : 'http://bookserver.archive.org/aggregator',
     'mimetype' : 'application/atom+xml;profile=opds',
@@ -390,8 +390,8 @@ class openSearchDescription:
         web.header('Content-Type', 'application/atom+xml')
         return """<?xml version="1.0" encoding="UTF-8"?>
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
-    <ShortName>Internet Archive Search</ShortName>
-    <Description>Search archive.org's OPDS Catalog.</Description>
+    <ShortName>Open Library Catalog Search</ShortName>
+    <Description>Search Open Library's BookServer Catalog</Description>
     <Url type="application/atom+xml" 
         template="%s/opensearch?q={searchTerms}&amp;start={startPage?}"/>
 </OpenSearchDescription>""" % (pubInfo['opdsroot'])
