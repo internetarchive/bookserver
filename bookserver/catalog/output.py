@@ -311,9 +311,10 @@ class CatalogToHtml(CatalogRenderer):
         'text/html': 'Website',
     }
         
-    def __init__(self, catalog, device = None):
+    def __init__(self, catalog, device = None, query = None):
         CatalogRenderer.__init__(self)
         self.device = device
+        self.query = query
         self.processCatalog(catalog)
         
     def processCatalog(self, catalog):
@@ -322,7 +323,7 @@ class CatalogToHtml(CatalogRenderer):
         body = self.createBody(catalog)
         html.append(body)
         body.append(self.createHeader(catalog))
-        body.append(self.createSearch(catalog._opensearch))
+        body.append(self.createSearch(catalog._opensearch, query = self.query))
         body.append(self.createCatalogHeader(catalog))
         body.append(self.createNavigation(catalog._navigation))
         body.append(self.createEntryList(catalog._entries))
@@ -436,7 +437,7 @@ class CatalogToHtml(CatalogRenderer):
             a.text = title
         return a
         
-    def createSearch(self, opensearchObj):
+    def createSearch(self, opensearchObj, query = None):
         div = ET.Element( 'div', {'class':'opds-search'} )
         
         # load opensearch
@@ -455,7 +456,12 @@ class CatalogToHtml(CatalogRenderer):
             
             ET.SubElement(form, 'br')
             # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
-            terms = ET.SubElement(form, 'input', {'class':'opds-search-terms', 'type':'text', 'name':'q' } )
+            
+            searchAttribs = {'class':'opds-search-terms', 'type':'text', 'name':'q' }
+            if query:
+                searchAttribs['value'] = query
+            
+            terms = ET.SubElement(form, 'input', searchAttribs )
             submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
             form.text = desc.shortname
         
@@ -674,7 +680,7 @@ class CatalogToHtml(CatalogRenderer):
         # $$$ should be moved elsewhere -- refactor
         """
         >>> links = [Link( **{ 'type': Link.acquisition, 'url':'buynow' }), Link( **{'type': Link.opds, 'url':'/providers'}) ]
-        >>> catalogLink = ArchiveCatalogToHtml.findCatalogLink(links)
+        >>> catalogLink = CatalogToHtml.findCatalogLink(links)
         >>> print catalogLink.get('url')
         /providers
         """
@@ -704,7 +710,8 @@ class ArchiveCatalogToHtml(CatalogToHtml):
     
     bookserverBase = '/aggregator'
     catalogBase = '/bookserver/catalog'
-
+    
+    
     def createHead(self, catalog):
         head = CatalogToHtml.createHead(self, catalog)
         head.append(self.createStyleSheet('/stylesheets/catalog.css'))

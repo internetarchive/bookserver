@@ -380,7 +380,7 @@ class htmlsearch:
         c = ingestor.getCatalog()
         
         web.header('Content-Type', 'text/html')
-        r = output.ArchiveCatalogToHtml(c, device = getDevice())
+        r = output.ArchiveCatalogToHtml(c, device = getDevice(), query = q)
         return r.toString()
 
 # /opensearch.xml - Open Search Description
