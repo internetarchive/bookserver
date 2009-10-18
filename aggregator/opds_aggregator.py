@@ -175,7 +175,7 @@ class alpha:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/catalog/alpha/%s/' % (letter),
+                                                urlBase='%s/alpha/%s/' % (pubInfo['url_base'], letter),
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
@@ -264,7 +264,7 @@ class provider:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/aggregator/provider/%s/' % (domain),
+                                                urlBase='%s/provider/%s/' % (pubInfo['url_base'], domain),
                                                 titleFragment = titleFragment)
         c = ingestor.getCatalog()
     
@@ -342,7 +342,7 @@ class opensearch:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/opensearch?q=%s&start=' % (qq),
+                                                urlBase='%s/opensearch?q=%s&start=' % (pubInfo['url_base'], qq),
                                                 titleFragment = titleFragment)
 
         c = ingestor.getCatalog()
@@ -379,7 +379,9 @@ class htmlsearch:
 
         ingestor = catalog.ingest.SolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/search?q=%s&start=' % (qq), # XXX HTML output is adding .html to end...
+                                                # XXX assuming calling from archive.org/bookserver/catalog
+                                                # XXX HTML output is adding .html to end...
+                                                urlBase='/bookserver/catalog/search?q=%s&start=' % (qq),
                                                 titleFragment = titleFragment)
 
         c = ingestor.getCatalog()
