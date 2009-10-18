@@ -450,8 +450,8 @@ class CatalogToHtml(CatalogRenderer):
         else:
             template = url.template
     
-            # XXX URL is currently hardcoded - update it
-            form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookservercatalog.php/search', 'method':'get' } )
+            # XXX URL is currently hardcoded
+            form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookserver/catalog/search', 'method':'get' } )
             
             ET.SubElement(form, 'br')
             # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
@@ -707,7 +707,7 @@ class ArchiveCatalogToHtml(CatalogToHtml):
 
     def createHead(self, catalog):
         head = CatalogToHtml.createHead(self, catalog)
-        head.append(self.createStyleSheet(self.catalogBase + '/static/catalog.css'))
+        head.append(self.createStyleSheet('/stylesheets/catalog.css'))
         
         # Set viewport width for iPhone
         meta = ET.Element('meta', {'name':'viewport', 'content':'width = %s' % self.viewPortWidth} )
