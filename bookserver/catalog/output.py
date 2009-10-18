@@ -286,7 +286,8 @@ class CatalogToHtml(CatalogRenderer):
         'formats',
         'contributors',
         'languages',
-        'downloadsPerMonth'
+        'downloadsPerMonth',
+        'summary',
     ]
 
     entryDisplayTitles = {
@@ -298,6 +299,7 @@ class CatalogToHtml(CatalogRenderer):
         'languages': ('Language', 'Languages'),
         'provider': ('Provider', 'Provider'),
         'publishers': ( 'Publisher', 'Publishers'),
+        'summary': ('Summary', 'Summary'),
         'title': ('Title', 'Title')
     }
         
@@ -474,6 +476,7 @@ class CatalogToHtml(CatalogRenderer):
         <p class="opds-entry">
           <h2 class="opds-entry-title">test item</h2>
           <span class="opds-entry-item"><em class="opds-entry-key">Published:</em> <span class="opds-entry-value">1977</span><br/></span>
+          <span class="opds-entry-item"><em class="opds-entry-key">Summary:</em> <span class="opds-entry-value">&lt;p&gt;Fantastic book.&lt;/p&gt;</span><br/></span>
           <div class="opds-entry-links">
             <span class="opds-entry-item"><em class="opds-entry-key">Buy:</em> <a href="http://archive.org/download/itemid.pdf" class="opds-entry-link">PDF</a></span>
           </div>
@@ -716,7 +719,7 @@ class ArchiveCatalogToHtml(CatalogToHtml):
         div = ET.Element( 'div', {'class':'opds-header'} )
         # $$$ make local copy of image
         a = ET.SubElement( div, 'a', {'class':'opds-logo-link',
-            'href':'http://www.archive.org/bookserver/catalog',
+            'href':'/bookserver/catalog',
             'title': 'Open Library BookServer Catalog'} )
         ET.SubElement(a, 'img', { 'class':'opds-logo', 'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
         return div
@@ -988,7 +991,9 @@ def testmod():
     testEntry = Entry({'urn'  : 'x-internet-archive:item:itemid',
                         'title'   : u'test item',
                         'updated' : '2009-01-01T00:00:00Z',
-                        'date': '1977-06-17T00:00:55Z'},
+                        'date': '1977-06-17T00:00:55Z',
+                        'summary': '<p>Fantastic book.</p>',
+                        },
                         links=[testLink])
                         
     start    = 0
