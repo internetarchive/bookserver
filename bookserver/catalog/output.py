@@ -698,10 +698,13 @@ class ArchiveCatalogToHtml(CatalogToHtml):
 
     scandataRegex = re.compile('Scandata')
     viewPortWidth = 600
+    
+    bookserverBase = '/aggregator'
+    catalogBase = '/bookserver/catalog'
 
     def createHead(self, catalog):
         head = CatalogToHtml.createHead(self, catalog)
-        head.append(self.createStyleSheet('/bookserver/catalog/static/catalog.css'))
+        head.append(self.createStyleSheet(self.catalogBase + '/static/catalog.css'))
         
         # Set viewport width for iPhone
         meta = ET.Element('meta', {'name':'viewport', 'content':'width = %s' % self.viewPortWidth} )
@@ -718,6 +721,26 @@ class ArchiveCatalogToHtml(CatalogToHtml):
         ET.SubElement(a, 'img', { 'class':'opds-logo', 'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
         return div
     
+    def createNavigation(self, navigation):
+        """
+        >>> start    = 5
+        >>> numFound = 100
+        >>> numRows  = 10
+        >>> urlBase  = '/aggregator/alpha/a/'
+        >>> nav = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
+        >>> div = testArchiveToHtml.createNavigation(nav)
+        >>> print ET.tostring(div)
+        <div class="opds-navigation"><a href="/bookserver/catalog/alpha/a/4.html" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/bookserver/catalog/alpha/a/6.html" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
+        """
+        
+        div = CatalogToHtml.createNavigation(self, navigation)
+
+        links = div.findall('a')
+        for link in links:
+            self.rewriteLink(link, self.bookserverBase, self.catalogBase)
+        
+        return div    
+   
     
     def createEntry(self, entry):
         e = CatalogToHtml.createEntry(self, entry)
@@ -770,6 +793,26 @@ class ArchiveCatalogToHtml(CatalogToHtml):
     def readOnlineUrl(self, entry):
         return 'http://www.archive.org/stream/%s' % entry.get('identifier')
         
+    @classmethod
+    def rewriteLink(cls, link, oldBase, newBase):
+        """
+        Rewrites link if it is absolute
+        >>> old = '/old'
+        >>> new = '/new'
+        >>> relative = ET.Element('a', {'href':'relative'} )
+        >>> print ArchiveCatalogToHtml.rewriteLink(relative, old, new).get('href')
+        relative
+        >>> absolute = ET.Element('a', {'href':'/old/goats'} )
+        >>> print ArchiveCatalogToHtml.rewriteLink(absolute, old, new).get('href')
+        /new/goats
+        """
+        
+        href = link.get('href')
+        if href.startswith(oldBase):
+            href = newBase + href[len(oldBase):]
+            link.set('href', href)
+        
+        return link
 
 #_______________________________________________________________________________
         
@@ -935,7 +978,7 @@ class CatalogToSolr(CatalogRenderer):
 
 def testmod():
     import doctest
-    global testEntry, testCatalog, testToHtml
+    global testEntry, testCatalog, testToHtml, testArchiveToHtml
     
     urn = 'urn:x-internet-archive:bookserver:catalog'
     testCatalog = Catalog(title='Internet Archive OPDS', urn=urn)
@@ -961,6 +1004,8 @@ def testmod():
     
     testCatalog.addEntry(testEntry)
     testToHtml = CatalogToHtml(testCatalog)
+    
+    testArchiveToHtml = ArchiveCatalogToHtml(testCatalog)
     
     doctest.testmod()
         
