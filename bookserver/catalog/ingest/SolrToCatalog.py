@@ -156,7 +156,7 @@ class SolrToCatalog:
         title = pubInfo['name'] + ' Catalog'        
 
         if None != start:
-            title += " - %d to %d of %d " % (start*numRows, min((start+1)*numRows, numFound), numFound)
+            title += " - %d to %d of %d " % (start*numRows + 1, min((start+1)*numRows, numFound), numFound)
         elif None != titleFragment:
             title += " - "
             
