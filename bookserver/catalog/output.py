@@ -787,7 +787,7 @@ class ArchiveCatalogToHtml(CatalogToHtml):
 
     def createFooter(self, catalog):
         html = """
-       <div id="bottom">
+       <div class="opds-footer">
         <div id="legal">
         <p><a href="http://www.openlibrary.org" alt="Open Library">Open Library</a> is an initiative of the <a href="http://www.archive.org/">Internet Archive</a>, a 501(c)(3) non-profit, building a digital library of Internet sites and other cultural artifacts in digital form.  Your use of the Open Library is subject to the Internet Archive's <a href="http://www.archive.org/about/terms.php">Terms of Use</a>.</p>
         </div>
