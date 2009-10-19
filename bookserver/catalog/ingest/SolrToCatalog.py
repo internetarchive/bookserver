@@ -181,7 +181,7 @@ class SolrToCatalog:
         nav = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
         self.c.addNavigation(nav)
 
-        osDescriptionDoc = 'http://bookserver.archive.org/catalog/opensearch.xml'
+        osDescriptionDoc = pubInfo['opdsroot'] + '/opensearch.xml'
         o = OpenSearch(osDescriptionDoc)
         self.c.addOpenSearch(o)
 
