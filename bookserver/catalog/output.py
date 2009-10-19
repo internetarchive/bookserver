@@ -311,10 +311,11 @@ class CatalogToHtml(CatalogRenderer):
         'text/html': 'Website',
     }
         
-    def __init__(self, catalog, device = None, query = None):
+    def __init__(self, catalog, device = None, query = None, provider = None):
         CatalogRenderer.__init__(self)
         self.device = device
         self.query = query
+        self.provider = provider
         self.processCatalog(catalog)
         
     def processCatalog(self, catalog):
@@ -470,6 +471,9 @@ class CatalogToHtml(CatalogRenderer):
             # $$$ expand to other devices
             if self.device and self.device.name == 'Kindle':
                 deviceSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'device', 'type':'submit', 'value':'Search for Kindle' } )
+            if self.provider:
+                providerHidden = ET.SubElement(form, 'input', {'type':'hidden', 'name':'provider', 'value': self.provider })
+                providerSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search %s' % self.provider} ) # $$$ use pretty name
         
         # XXX finish implementation
         

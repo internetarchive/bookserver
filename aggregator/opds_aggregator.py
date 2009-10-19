@@ -267,7 +267,7 @@ class provider:
         if ('xml' == mode):
             r = output.CatalogToAtom(c, fabricateContentElement=True)
         else:
-            r = output.ArchiveCatalogToHtml(c, device = getDevice())
+            r = output.ArchiveCatalogToHtml(c, device = getDevice(), provider = domain)
 
         return r.toString()
 
@@ -364,9 +364,17 @@ class htmlsearch:
             start = int(start)
 
         q  = params['q'][0]
+        
+        # Provider-specific search              
+        if 'provider' in params:
+            provider = params['provider'][0]
+            if not re.search('provider:', q):
+                q += ' AND provider:%s' % provider
+        else:
+            provider = None
 
         # Device-specific search
-        # $$$ extend to other devices
+        # $$$ extend to other devices 
         if 'device' in params:
             deviceStr = params['device'][0]
             if re.search('Kindle', deviceStr):
@@ -391,7 +399,7 @@ class htmlsearch:
         c = ingestor.getCatalog()
         
         web.header('Content-Type', 'text/html')
-        r = output.ArchiveCatalogToHtml(c, device = getDevice(), query = q)
+        r = output.ArchiveCatalogToHtml(c, device = getDevice(), query = q, provider = provider)
         return r.toString()
 
 # /opensearch.xml - Open Search Description
