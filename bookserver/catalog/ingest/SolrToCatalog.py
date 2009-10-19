@@ -149,7 +149,14 @@ class SolrToCatalog:
         f = urllib.urlopen(self.url)
         contents = f.read()
         f.close()
-        obj = json.loads(contents)
+        try:
+            obj = json.loads(contents)
+        except ValueError:
+            # No search results - fake response object
+            obj = { 'response': {
+                'docs': [],
+                'numFound': 0,
+            }}
 
         numFound = int(obj['response']['numFound'])
         
