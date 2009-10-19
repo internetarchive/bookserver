@@ -52,10 +52,15 @@ class iPhone(Device):
             newUrl = re.sub('^http', 'epub', link.get('url'))
             link.set('url', newUrl)
         return link
+        
+class Kindle(Device):
+    name = 'Kindle'
+    
 
 class Detect:
     detectPatterns = {
         iPhone: [ 'Apple.*Mobile.*Safari' ],
+        Kindle: [ 'Kindle/' ],
     }
 
     @classmethod
@@ -68,6 +73,9 @@ class Detect:
         >>> d = Detect.createFromUserAgent('Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543a Safari/419.3')
         >>> print d.name
         iPhone and iPod Touch
+        >>> d = Detect.createFromUserAgent('Mozilla/4.0 (compatible; Linux 2.6.10) NetFront/3.3 Kindle/1.0 (screen 600x800)')
+        >>> print d.name
+        Kindle
         """
         # $$$ list comprehension or reduce might be more efficient
         for device, patterns in cls.detectPatterns.items():

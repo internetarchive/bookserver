@@ -454,16 +454,22 @@ class CatalogToHtml(CatalogRenderer):
             # XXX URL is currently hardcoded
             form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookserver/catalog/search', 'method':'get' } )
             
-            ET.SubElement(form, 'br')
             # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
             
-            searchAttribs = {'class':'opds-search-terms', 'type':'text', 'name':'q' }
+            termsLabel = ET.SubElement(form, 'label', {'for':'opds-search-terms'} )
+            termsLabel.text = desc.shortname
+            ET.SubElement(form, 'br')
+            
+            searchAttribs = {'class':'opds-search-terms', 'type':'text', 'name':'q', 'id':'opds-search-terms' }
             if query:
                 searchAttribs['value'] = query
-            
             terms = ET.SubElement(form, 'input', searchAttribs )
-            submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search'} )
-            form.text = desc.shortname
+            
+            submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'submit', 'type':'submit', 'value':'Search'} )
+            
+            # $$$ expand to other devices
+            if self.device and self.device.name == 'Kindle':
+                deviceSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'device', 'type':'submit', 'value':'Search for Kindle' } )
         
         # XXX finish implementation
         

@@ -30,6 +30,7 @@ import sys
 sys.path.append("/petabox/sw/lib/python")
 
 import cgi
+import re
 import urllib
 import web
 import string
@@ -363,6 +364,16 @@ class htmlsearch:
             start = int(start)
 
         q  = params['q'][0]
+
+        # Device-specific search
+        # $$$ extend to other devices
+        if 'device' in params:
+            deviceStr = params['device'][0]
+            if re.search('Kindle', deviceStr):
+                formatStr = ' AND format:mobi'
+                if not q.endswith(formatStr): # XXX brittle
+                    q += ' AND format:mobi'
+        
         qq = urllib.quote(q)
         
         solrUrl = pubInfo['solr_base'] + '&q=' + qq +'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
