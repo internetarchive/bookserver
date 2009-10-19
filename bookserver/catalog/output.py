@@ -305,8 +305,8 @@ class CatalogToHtml(CatalogRenderer):
         
     entryLinkTitles = {
         'application/pdf': 'PDF',
-        'application/epub': 'EPUB',
-        'application/epub+zip': 'EPUB',
+        'application/epub': 'ePub',
+        'application/epub+zip': 'ePub',
         'application/x-mobipocket-ebook': 'Mobi',
         'text/html': 'Website',
     }
