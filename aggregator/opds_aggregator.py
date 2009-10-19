@@ -363,13 +363,22 @@ class htmlsearch:
                 start = start[:-5]
             start = int(start)
 
-        q  = params['q'][0]
+        if 'q' in params:
+            q  = params['q'][0]
+        else:
+            q = ''
         
         # Provider-specific search              
         if 'provider' in params:
-            provider = params['provider'][0]
-            if not re.search('provider:', q):
-                q += ' AND provider:%s' % provider
+            providerMatch = re.search('(\w+)$', params['provider'][0])
+            if providerMatch:
+                provider = providerMatch.group(0)
+                if not re.search('provider:', q):
+                    if len(q) > 0:
+                        q += ' AND '
+                    q += 'provider:%s' % provider
+            else:
+                provider = None
         else:
             provider = None
 
@@ -378,13 +387,15 @@ class htmlsearch:
         if 'device' in params:
             deviceStr = params['device'][0]
             if re.search('Kindle', deviceStr):
-                formatStr = ' AND format:mobi'
-                if not q.endswith(formatStr): # XXX brittle
-                    q += ' AND format:mobi'
+                formatStr = 'format:mobi'
+                if not re.search(formatStr, q): # XXX brittle
+                    if len(q) > 0:
+                        q += ' AND '
+                    q += formatStr
         
         qq = urllib.quote(q)
-        
         solrUrl = pubInfo['solr_base'] + '&q=' + qq +'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
+
         #solrUrl       = pubInfo['solr_base'] + '?q='+qq+'+AND+mediatype%3Atexts+AND+format%3A(LuraTech+PDF)&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)

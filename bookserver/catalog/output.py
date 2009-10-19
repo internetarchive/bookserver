@@ -472,8 +472,7 @@ class CatalogToHtml(CatalogRenderer):
             if self.device and self.device.name == 'Kindle':
                 deviceSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'device', 'type':'submit', 'value':'Search for Kindle' } )
             if self.provider:
-                providerHidden = ET.SubElement(form, 'input', {'type':'hidden', 'name':'provider', 'value': self.provider })
-                providerSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'type':'submit', 'value':'Search %s' % self.provider} ) # $$$ use pretty name
+                providerSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'provider', 'type':'submit', 'value':'Search %s' % self.provider} ) # $$$ use pretty name
         
         # XXX finish implementation
         
