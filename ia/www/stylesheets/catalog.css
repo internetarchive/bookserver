@@ -3,9 +3,17 @@
  */
 
 .opds-entry-list {
-    list-style: none
+    list-style: none;
 }
 
 .opds-logo {
-    border: 0
+    border: 0;
+}
+
+.opds-catalog-header {
+    font-family: "arial";
+}
+
+.opds-search {
+    font-family: "arial";
 }
