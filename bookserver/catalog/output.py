@@ -461,7 +461,13 @@ class CatalogToHtml(CatalogRenderer):
             termsLabel.text = desc.shortname
             ET.SubElement(form, 'br')
             
-            searchAttribs = {'class':'opds-search-terms', 'type':'text', 'name':'q', 'id':'opds-search-terms' }
+            searchAttribs = {'class':'opds-search-terms',
+                'type':'text',
+                'name':'q', 
+                'id':'opds-search-terms',
+                'size':'40',
+            }
+            
             if query:
                 searchAttribs['value'] = query
             terms = ET.SubElement(form, 'input', searchAttribs )
