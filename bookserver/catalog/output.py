@@ -568,7 +568,7 @@ class CatalogToHtml(CatalogRenderer):
         >>> e = testToHtml.createEntryLinks(links)
         >>> print ET.tostring(e, pretty_print=True)
         <div class="opds-entry-links">
-          <span class="opds-entry-item"><em class="opds-entry-key">Free:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">EPUB</a></span>
+          <span class="opds-entry-item"><em class="opds-entry-key">Free:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">ePub</a></span>
         </div>
         """
         
@@ -636,7 +636,7 @@ class CatalogToHtml(CatalogRenderer):
         >>> l = Link(url = '/blah.epub', type='application/epub')
         >>> e = testToHtml.createEntryLink(l)
         >>> print ET.tostring(e)
-        <a href="/blah.epub" class="opds-entry-link">EPUB</a>
+        <a href="/blah.epub" class="opds-entry-link">ePub</a>
         """
         
         if self.device:
