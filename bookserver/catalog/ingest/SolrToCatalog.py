@@ -49,7 +49,8 @@ class SolrToCatalog:
               'provider'       : 'provider',
               'urn'            : 'urn',
               'summary'        : 'summary',
-              'updated'        : 'updated',              
+              'updated'        : 'updated',
+              'publicdate'     : 'publicdate',
               
               #these are lists, not strings
               'creator'        : 'authors',
@@ -228,10 +229,12 @@ class IASolrToCatalog(SolrToCatalog):
         #use generator expression to map dictionary key names
         bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
 
-        if 'oai_updatedate' in item:
-            bookDict['updated'] = item['oai_updatedate'][-1] #this is sorted, get latest date
+        if 'publicdate' in item:
+            bookDict['updated'] = item['publicdate']
         else:
             bookDict['updated'] = self.getDateString()
+            
+        self.removeKeys(bookDict, ('publicdate',))
 
         #IA scribe books use MARC language codes        
         if 'language' in item:

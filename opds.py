@@ -29,7 +29,7 @@ pubInfo = {
     'mimetype' : 'application/atom+xml;profile=opds',
     'url_base' : '/catalog',
     'urnroot'  : 'urn:x-internet-archive:bookserver:catalog',
-    'solr_base': 'http://se.us.archive.org:8983/solr/select?fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format,month&wt=json',
+    'solr_base': 'http://se.us.archive.org:8983/solr/select?fl=identifier,title,creator,publicdate,date,contributor,publisher,subject,language,format,month&wt=json',
 }
 
 urls = (
@@ -278,7 +278,8 @@ class newest:
             start = int(start)
         
                                
-        solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+(format%3A(LuraTech+PDF)+OR+scanner:google)&sort=updatedate+desc&rows='+str(numRows)+'&start='+str(start*numRows)
+        solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+(format%3A(LuraTech+PDF)+OR+scanner:google)&sort=publicdate+desc&rows='+str(numRows)+'&start='+str(start*numRows)
+        print solrUrl
         titleFragment = 'books sorted by update date'
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
