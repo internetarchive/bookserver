@@ -279,7 +279,6 @@ class newest:
         
                                
         solrUrl       = pubInfo['solr_base'] + '&q=mediatype%3Atexts+AND+(format%3A(LuraTech+PDF)+OR+scanner:google)&sort=publicdate+desc&rows='+str(numRows)+'&start='+str(start*numRows)
-        print solrUrl
         titleFragment = 'books sorted by update date'
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
