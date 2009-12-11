@@ -352,7 +352,7 @@ class opensearch:
 
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
                                                 start=start, numRows=numRows,
-                                                urlBase='/opensearch?q=%s&start=' % (qq),
+                                                urlBase='opensearch?q=%s&start=' % (qq),
                                                 titleFragment = titleFragment)
 
         c = ingestor.getCatalog()
