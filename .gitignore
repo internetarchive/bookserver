@@ -6,3 +6,6 @@
 # Vim swap files
 *.swp
 
+# Emacs oldfiles
+*~
+
