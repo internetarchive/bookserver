@@ -251,8 +251,13 @@ class IASolrToCatalog(SolrToCatalog):
 
         epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
                        type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
-                                   
-        e = IAEntry(bookDict, links=(pdfLink, epubLink))
-        
 
+        coverLink = Link(url  = "http://www.archive.org/download/%s/page/cover_medium.jpg" % (item['identifier']),
+                       type = 'image/jpeg', rel = 'http://opds-spec.org/image')
+
+        thumbLink = Link(url  = "http://www.archive.org/download/%s/page/cover_thumb.jpg" % (item['identifier']),
+                       type = 'image/jpeg', rel = 'http://opds-spec.org/image/thumbnail')
+                       
+        e = IAEntry(bookDict, links=(pdfLink, epubLink, coverLink, thumbLink))
+        
         return e
