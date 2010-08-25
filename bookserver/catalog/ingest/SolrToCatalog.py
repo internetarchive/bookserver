@@ -179,7 +179,7 @@ class SolrToCatalog:
             
         self.c = Catalog(title     = title,
                          urn       = urn,
-                         url       = pubInfo['opdsroot'],
+                         url       = pubInfo['opdsroot'] + '/',
                          author    = pubInfo['name'],
                          authorUri = pubInfo['uri'],
                          datestr   = self.getDateString(),                                 
