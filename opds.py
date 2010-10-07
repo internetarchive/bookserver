@@ -162,7 +162,7 @@ class alpha:
                 mode = 'html'
             start = int(start)
                                
-        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+firstTitle%3A'+letter.upper()+'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
+        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+NOT+collection%3Alendinglibrary+AND+firstTitle%3A'+letter.upper()+'&sort=titleSorter+asc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'books starting with "%s"' % (letter.upper())
         urn           = pubInfo['urnroot'] + ':%s:%d'%(letter, start)
 
@@ -242,7 +242,7 @@ class alphaList:
 #______________________________________________________________________________
 class downloads:
     def GET(self, extension):
-        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22&sort=month+desc&rows='+str(numRows)
+        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+NOT+collection%3Alendinglibrary&sort=month+desc&rows='+str(numRows)
 
         titleFragment = 'Most Downloaded Books in the last Month'
         urn           = pubInfo['urnroot'] + ':downloads'
@@ -278,7 +278,7 @@ class newest:
             start = int(start)
         
                                
-        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22&sort=publicdate+desc&rows='+str(numRows)+'&start='+str(start*numRows)
+        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+NOT+collection%3Alendinglibrary&sort=publicdate+desc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'books sorted by update date'
         urn           = pubInfo['urnroot'] + ':new:%d' % (start)
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
@@ -314,7 +314,7 @@ class crawlable:
             start = int(start)
         
         crawlNumRows = 1000;
-        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)
+        solrUrl       = pubInfo['solr_base'] + '&q=format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+NOT+collection%3Alendinglibrary&rows='+str(crawlNumRows)+'&start='+str(start*crawlNumRows)
         titleFragment = '- crawlable feed'
         urn           = pubInfo['urnroot'] + ':crawl:%d' % (start)
         ingestor = catalog.ingest.IASolrToCatalog(pubInfo, solrUrl, urn,
@@ -346,7 +346,7 @@ class opensearch:
 
         q  = params['?q'][0]
         qq = urllib.quote(q)     
-        solrUrl       = pubInfo['solr_base'] + '&q='+qq+'+AND+format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22&sort=month+desc&rows='+str(numRows)+'&start='+str(start*numRows)
+        solrUrl       = pubInfo['solr_base'] + '&q='+qq+'+AND+format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+NOT+collection%3Alendinglibrary&sort=month+desc&rows='+str(numRows)+'&start='+str(start*numRows)
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
@@ -381,7 +381,7 @@ class htmlsearch:
 
         q  = params['q'][0]
         qq = urllib.quote(q)
-        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
+        solrUrl       = 'http://se.us.archive.org:8983/solr/select?q='+qq+'+AND+format%3Aabbyy+AND+format%3Ascandata+AND+format%3Apdf+AND+NOT+ocr%3A%22language+not%22+AND+NOT+collection%3Alendinglibrary&fl=identifier,title,creator,oai_updatedate,date,contributor,publisher,subject,language,format&rows='+str(numRows)+'&start='+str(start*numRows)+'&wt=json'        
         titleFragment = 'search results for ' + q
         urn           = pubInfo['urnroot'] + ':search:%s:%d' % (qq, start)
 
