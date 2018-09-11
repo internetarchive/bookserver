@@ -17,7 +17,7 @@ This file is part of bookserver.
 
     You should have received a copy of the GNU Affero General Public License
     along with bookserver.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 
 >>> import Entry
@@ -73,7 +73,7 @@ class Entry():
           We should rename them to be similar to feedparser keys
           i.e. dcterms_language instead of languages
     """
-    
+
     valid_keys = {
         'urn'                 : unicode, # Site-specific identifier, used to uniquely identify Atom entry
         'url'                 : unicode, # Acquisition links, there may be multiple with different types - soon to be list of multiple links, with different types
@@ -87,45 +87,48 @@ class Entry():
         'summary'             : unicode, # atom:summary
         'dcterms_source'      : unicode, # dcterms:source
         'provider'            : unicode,
-        
-        'publishers'          : list, # Publishers of the book, (usually just one listed, or none)
+        'publisher'           : unicode, # Publishers of the book, dcterm:publisher is occurrence [0..1], http://www.datypic.com/sc/dc/e-dcterms_publisher.html
+
+        'description'         : list, # IA items can have multiple descriptions
         'contributors'        : list, # IA-specific, includes libraries who contributed book
         'languages'           : list, # Languages, currently copied directly from IA metadata (MARC 21 code list 3 letter codes)
                                       # See http://www.loc.gov/marc/languages/language_code.html
         'subjects'            : list, # For IA, typically come from MARC records
         'oai_updatedates'     : list, # From Solr, list of dates when item was modified
-        'authors'             : list, # List of authors        
+        'authors'             : list, # List of authors
         'formats'             : list,
     }
-        
+
     required_keys = ('urn', 'title')
-    
+
     def validate(self, key, value):
         if key not in self.valid_keys:
             raise KeyError("invalid key in bookserver.catalog.Entry: %s" % (key))
 
         wantedType = self.valid_keys[key]
-        
         gotType = type(value)
         if not gotType == wantedType:
             error = True
-            if unicode == wantedType:
+            if wantedType is list:
+                self._entry[key] = [value]
+                error = False
+            if wantedType is unicode:
                 #we can convert types to unicode if needed
-                if str == gotType or int == gotType:
+                if str is gotType or int is gotType:
                     error = False
-            
+                if gotType == list:
+                    # If more than one expected value, e.g. title in other language, japaneseforevery00susu
+                    #  pick the first to avoid errors
+                    self._entry[key] = value[0]
+                    error = False
+
             if error:
-                raise ValueError("invalid value in bookserver.catalog.Entry: %s=%s should have type %s, but got type %s" % (key, value, wantedType, gotType))
-    
+                raise ValueError("invalid value in bookserver.catalog.Entry: %s=%s should have type %s, but got type %s for item %s" % (key, value, wantedType, gotType, self.get('identifier')))
+
 
     def __init__(self, obj, links=None):
-
-        
         if not type(obj) == dict:
             raise TypeError("bookserver.catalog.Entry takes a dict argument!")
-        
-        for key, val in obj.iteritems():
-            self.validate(key, val)
 
         if 'title' not in obj:
             obj['title'] = '(no title)' #special case for IA test items
@@ -139,7 +142,9 @@ class Entry():
 
         self._entry = copy.deepcopy(obj)
         self._links = links
-                
+        for key, val in obj.iteritems():
+            self.validate(key, val)
+
 
     def get(self, key):
         if key in self._entry:
@@ -164,7 +169,7 @@ class Entry():
 
 class IAEntry(Entry):
     """
-    Catalog entry with extra keys specific tothe Internet Archive.
+    Catalog entry with extra keys specific to the Internet Archive.
     """
     # Add our IA-specific "formats" key
     valid_keys = Entry.valid_keys.copy()

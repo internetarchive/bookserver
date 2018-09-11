@@ -26,8 +26,9 @@ from Catalog import Catalog
 from Entry import Entry
 from OpenSearch import OpenSearch
 from Navigation import Navigation
-from Link  import Link
+from Link import Link
 
+import copy
 import lxml.etree as ET
 import re
 
@@ -43,10 +44,10 @@ class CatalogRenderer:
 
     def __init__(self):
         pass
-        
+
     def toString(self):
         return ''
-        
+
     def prettyPrintET(self, etNode):
         return ET.tostring(etNode, pretty_print=True)
 
@@ -57,67 +58,65 @@ class CatalogToAtom(CatalogRenderer):
     xmlns_atom    = 'http://www.w3.org/2005/Atom'
     xmlns_dcterms = 'http://purl.org/dc/terms/'
     xmlns_opds    = 'http://opds-spec.org/'
-    
+
     atom          = "{%s}" % xmlns_atom
     dcterms       = "{%s}" % xmlns_dcterms
     opdsNS        = "{%s}" % xmlns_opds
-    
+
     nsmap = {
         None     : xmlns_atom,
         'dcterms': xmlns_dcterms,
         'opds'   : xmlns_opds
     }
-    
+
     fileExtMap = {
         'pdf'  : 'application/pdf',
         'epub' : 'application/epub+zip',
         'mobi' : 'application/x-mobipocket-ebook'
     }
-    
+
     ebookTypes = ('application/pdf',
                   'application/epub+zip',
                   'application/x-mobipocket-ebook'
     )
-    
+
     # createTextElement()
     #___________________________________________________________________________
     def createTextElement(self, parent, name, value):
         element = ET.SubElement(parent, name)
         element.text = value
         return element
-    
+
     # createRelLink()
     #___________________________________________________________________________
     def createRelLink(self, parent, rel, urlroot, relurl, title=None, type='application/atom+xml'):
         absurl = urlroot + relurl
         element = ET.SubElement(parent, 'link')
-        element.attrib['rel']  = rel
+        element.attrib['rel'] = rel
         element.attrib['type'] = type
-        element.attrib['href'] = absurl;
+        element.attrib['href'] = absurl
         if title:
-            element.attrib['title'] = title;
-        
+            element.attrib['title'] = title
+
     # createOpdsRoot()
     #___________________________________________________________________________
     def createOpdsRoot(self, c):
         ### TODO: add updated element and uuid element
-        opds = ET.Element(CatalogToAtom.atom + "feed", nsmap=CatalogToAtom.nsmap)                    
-        
-        self.createTextElement(opds, 'title',    c._title)
+        opds = ET.Element(CatalogToAtom.atom + "feed", nsmap=CatalogToAtom.nsmap)
+        opds.base = c._url
 
-        self.createTextElement(opds, 'id',       c._urn)
-    
-        self.createTextElement(opds, 'updated',  c._datestr)
-        
+        self.createTextElement(opds, 'title', c._title)
+        self.createTextElement(opds, 'id', c._urn)
+        self.createTextElement(opds, 'updated', c._datestr)
         self.createRelLink(opds, 'self', c._url, '')
-        
+
         author = ET.SubElement(opds, 'author')
-        self.createTextElement(author, 'name',  c._author)
-        self.createTextElement(author, 'uri',   c._authorUri)
-        
+        self.createTextElement(author, 'name', c._author)
+        self.createTextElement(author, 'uri', c._authorUri)
+
         if c._crawlableUrl:
             self.createRelLink(opds, 'http://opds-spec.org/crawlable', c._crawlableUrl, '', 'Crawlable feed')
-            
+
         return opds
 
     # createOpdsLink()
@@ -126,9 +125,12 @@ class CatalogToAtom(CatalogRenderer):
         element = ET.SubElement(entry, 'link')
         element.attrib['href'] = link.get('url')
         element.attrib['type'] = link.get('type')
+        if link.get('title'):
+            element.attrib['title'] = link.get('title')
+
         if link.get('rel'):
-            element.attrib['rel']  = link.get('rel')
-    
+            element.attrib['rel'] = link.get('rel')
+
         if link.get('price'):
             price = self.createTextElement(element, CatalogToAtom.opdsNS+'price', link.get('price'))
             price.attrib['currencycode'] = link.get('currencycode')
@@ -136,92 +138,119 @@ class CatalogToAtom(CatalogRenderer):
         if link.get('formats'):
             for format in link.get('formats'):
                 self.createTextElement(element, CatalogToAtom.dcterms+'hasFormat', format)
-            
+
+        availability = link.get('availability')
+        if availability:
+            sub = ET.SubElement(element, self.opdsNS+'availability')
+            sub.attrib['status'] = availability
+            if availability == 'unavailable':
+               sub = ET.SubElement(element, self.opdsNS+'unavailable')
+               sub.attrib['date'] = link.get('date')
+
+        holds = link.get('holds')
+        if holds:
+            sub = ET.SubElement(element, self.opdsNS+'holds')
+            sub.attrib['total'] = str(holds)
+
+        copies = link.get('copies')
+        if copies:
+            sub = ET.SubElement(element, self.opdsNS+'copies')
+            sub.attrib['total'] = '1' # currently archive.org only makes one copy available at a time
+            sub.attrib['available'] = str(copies)
+
+        # Indirect Acquisition for borrowable books:
+        # <opds:indirectAcquisition type="application/vnd.adobe.adept+xml">
+        #   <opds:indirectAcquisition type="application/epub+zip"/>
+        # </opds:indirectAcquisition>
+        if availability:
+            epub_ac = ET.SubElement(element, self.opdsNS+'indirectAcquisition')
+            epub_ac.attrib['type'] = 'application/vnd.adobe.adept+xml'
+            sub = ET.SubElement(epub_ac, self.opdsNS+'indirectAcquisition')
+            sub.attrib['type'] = 'application/epub+zip'
+            pdf_ac = copy.copy(epub_ac)
+            pdf_ac[0].attrib['type'] = 'application/pdf'
+            element.append(pdf_ac)
+
     # createOpdsEntry()
     #___________________________________________________________________________
     def createOpdsEntry(self, opds, obj, links, fabricateContentElement):
         entry = ET.SubElement(opds, 'entry')
         self.createTextElement(entry, 'title', obj['title'])
-    
-        #urn = 'urn:x-internet-archive:bookserver:' + nss
-        self.createTextElement(entry, 'id',       obj['urn'])
-    
-        self.createTextElement(entry, 'updated',  obj['updated'])
-    
+
+        # FIXME: July 2018 TEMPORARY WORKAROUND for issue with Aldiko iOS client 1.1.6
+        # Where id/urn was being used to form url links under https scheme.
+        # Apparently fixed after v1.1.6, but we want to demo current progress.
+        if 'identifier' in obj:
+            # standard id=urn for book entries
+            #urn = 'urn:x-internet-archive:bookserver:' + nss
+            self.createTextElement(entry, 'id', obj['urn'])
+        else:
+            # id=url for catalog navigation entries
+            self.createTextElement(entry, 'id', links[0].get('url'))
+
+        self.createTextElement(entry, 'updated', obj['updated'])
         downloadLinks = []
         for link in links:
             self.createOpdsLink(entry, link)
             if link.get('type') in CatalogToAtom.ebookTypes:
                 downloadLinks.append(link)
-                    
+
         if 'date' in obj:
-            element = self.createTextElement(entry, self.dcterms+'issued',  obj['date'][0:4])
-    
+            # TODO: Unify publication date, pick a spec
+            # Displayed by Aldiko
+            element = self.createTextElement(entry, self.dcterms+'issued', obj['date'][0:4])
+            # Displayed by SimplyE, but with too much precision (1 January YYYY), won't display YYYY only
+            element = self.createTextElement(entry, 'published', obj['date'])
+
         if 'authors' in obj:
             for author in obj['authors']:
                 element = ET.SubElement(entry, 'author')
-                self.createTextElement(element, 'name',  author)
-                
+                self.createTextElement(element, 'name', author)
+
         if 'subjects' in obj:
             for subject in obj['subjects']:
                 element = ET.SubElement(entry, 'category')
-                element.attrib['term'] = subject;
-                
-        if 'publishers' in obj: 
-            for publisher in obj['publishers']:
-                element = self.createTextElement(entry, self.dcterms+'publisher', publisher)
-    
+                element.attrib['term'] = subject
+                element.attrib['label'] = subject
+
+        if 'publisher' in obj:
+            element = self.createTextElement(entry, self.dcterms+'publisher', obj['publisher'])
+
         if 'languages' in obj:
-            for language in obj['languages']: 
-                element = self.createTextElement(entry, self.dcterms+'language', language);
-        
+            for language in obj['languages']:
+                element = self.createTextElement(entry, self.dcterms+'language', language)
+
+        if 'description' in obj:
+            element = self.createTextElement(entry, 'summary', ' '.join(obj['description']))
+            element.attrib['type'] = 'html'
+
         if 'content' in obj:
-            self.createTextElement(entry, 'content',  obj['content'])
+            self.createTextElement(entry, 'content', obj['content'])
+        elif 'description' in obj:
+            # TODO: Not sure we need fabricateContentElement, the following line simply copies the description
+            # to the location where Aldiko will display it.
+            contentText = ' '.join(obj['description'])
+
         elif fabricateContentElement:
             ### fabricate an atom:content element if asked to
             ### FireFox won't show the content element if it contains nested html elements
+            # TODO: Remove this section?
             contentText=''
-        
-            if 'authors' in obj:
-                if 1 == len(obj['authors']):
-                    authorStr = '<b>Author: </b>'
-                else:
-                    authorStr = '<b>Authors: </b>'
-                
-                authorStr += ', '.join(obj['authors'])
-                contentText += authorStr + '<br/>'
-        
-            #TODO: refactor
-            if 'subjects' in obj:
-                contentText += '<b>Subject </b>' + ', '.join(obj['subjects']) + '<br/>'
-        
-            if 'publishers' in obj:
-                contentText += '<b>Publisher: </b>' + ', '.join(obj['publishers']) + '<br/>'
-                
-            if 'date' in obj:
-                contentText += '<b>Year published: </b>' + obj['date'][0:4] + '<br/>'
-        
+
             if 'contributors' in obj:
                 contentText += '<b>Book contributor: </b>' + ', '.join(obj['contributors']) + '<br/>'
-        
-            if 'languages' in obj:
-                contentText += '<b>Language: </b>' + ', '.join(obj['languages']) + '<br/>'
-        
+
             if 'downloadsPerMonth' in obj:
                 contentText += str(obj['downloadsPerMonth']) + ' downloads in the last month' + '<br/>'
 
             if 'provider' in obj:
                 contentText += '<b>Provider: </b>' + obj['provider'] + '<br/>'
 
-            if len(downloadLinks):
-                contentText += '<b>Download Ebook: </b>'
-                for link in downloadLinks:
-                    (start, sep, ext) = link.get('url').rpartition('.')
-                    contentText += '(<a href="%s">%s</a>) '%(link.get('url'), ext.upper())
+            element = self.createTextElement(entry, 'content', contentText)
+            element.attrib['type'] = 'html'
 
-        
-            element = self.createTextElement(entry, 'content',  contentText)
-            element.attrib['type'] = 'html'        
+    def createAuthentication(self, opds, auth_url):
+        self.createRelLink(opds, 'http://opds-spec.org/auth/document', auth_url, '', type='application/vnd.opds.authentication.v1.0+json')
 
     # createOpenSearchDescription()
     #___________________________________________________________________________
@@ -230,7 +259,7 @@ class CatalogToAtom(CatalogRenderer):
 
     # createNavLinks()
     #___________________________________________________________________________
-    def createNavLinks(self, opds, nav):        
+    def createNavLinks(self, opds, nav):
         if nav.prevLink:
             self.createRelLink(opds, 'prev', '', nav.prevLink, nav.prevTitle)
 
@@ -238,7 +267,7 @@ class CatalogToAtom(CatalogRenderer):
             self.createRelLink(opds, 'next', '', nav.nextLink, nav.nextTitle)
 
     # __init__()
-    #___________________________________________________________________________    
+    #___________________________________________________________________________
     def __init__(self, c, fabricateContentElement=False):
         CatalogRenderer.__init__(self)
         self.opds = self.createOpdsRoot(c)
@@ -249,20 +278,23 @@ class CatalogToAtom(CatalogRenderer):
         if c._navigation:
             self.createNavLinks(self.opds, c._navigation)
 
+        if c._authentication:
+            self.createAuthentication(self.opds, c._authentication)
+
         for e in c._entries:
             self.createOpdsEntry(self.opds, e._entry, e._links, fabricateContentElement)
             
         
     # toString()
-    #___________________________________________________________________________            
+    #___________________________________________________________________________
     def toString(self):
         return self.prettyPrintET(self.opds)
 
     # toElementTree()
-    #___________________________________________________________________________    
+    #___________________________________________________________________________
     def toElementTree(self):
         return self.opds
-        
+
 
 class CatalogToHtml(CatalogRenderer):
     """
@@ -273,15 +305,15 @@ class CatalogToHtml(CatalogRenderer):
         CatalogHeader
         EntryList
         PageFooter
-        
+
         >>> h = CatalogToHtml(testCatalog)
         >>> # print(h.toString())
     """
-    
+
     entryDisplayKeys = [
         'authors',
         'date',
-        'publishers',
+        'publisher',
         'provider',
         'formats',
         'contributors',
@@ -298,11 +330,11 @@ class CatalogToHtml(CatalogRenderer):
         'formats': ('Format', 'Formats'),
         'languages': ('Language', 'Languages'),
         'provider': ('Provider', 'Provider'),
-        'publishers': ( 'Publisher', 'Publishers'),
+        'publisher': ( 'Publisher', 'Publisher'),
         'summary': ('Summary', 'Summary'),
         'title': ('Title', 'Title')
     }
-        
+
     entryLinkTitles = {
         'application/pdf': 'PDF',
         'application/epub': 'ePub',
@@ -310,14 +342,14 @@ class CatalogToHtml(CatalogRenderer):
         'application/x-mobipocket-ebook': 'Mobi',
         'text/html': 'Website',
     }
-        
+
     def __init__(self, catalog, device = None, query = None, provider = None):
         CatalogRenderer.__init__(self)
         self.device = device
         self.query = query
         self.provider = provider
         self.processCatalog(catalog)
-        
+
     def processCatalog(self, catalog):
         html = self.createHtml(catalog)
         html.append(self.createHead(catalog))
@@ -330,48 +362,48 @@ class CatalogToHtml(CatalogRenderer):
         body.append(self.createEntryList(catalog._entries))
         body.append(self.createNavigation(catalog._navigation))
         body.append(self.createFooter(catalog))
-        
+
         self.html = html
         return self
-        
+
     def createHtml(self, catalog):
         return ET.Element('html')
-        
+
     def createHead(self, catalog):
         # $$$ updated
         # $$$ atom link
-        
+
         head = ET.Element('head')
         titleElement = ET.SubElement(head, 'title')
         titleElement.text = catalog._title
         head.append(self.createStyleSheet('/static/catalog.css'))
-        
+
         return head
-            
+
     def createStyleSheet(self, url):
         """
         Returns a <link> element for the CSS stylesheet at given URL
-        
+
         >>> l = testToHtml.createStyleSheet('/static/catalog.css')
         >>> ET.tostring(l)
         '<link href="/static/catalog.css" type="text/css" rel="stylesheet"/>'
         """
-    
+
         # TODO add ?v={version}
         return ET.Element('link', {
             'rel':'stylesheet',
             'type':'text/css', 
             'href':url
         })
-        
+
     def createBody(self, catalog):
         return ET.Element('body')
-        
+
     def createHeader(self, catalog):
         div = ET.Element( 'div', {'class':'opds-header'} )
-        div.text = 'Catalog Header' # XXX
+        div.text = 'Catalog Header'
         return div
-        
+
     def createNavigation(self, navigation):
         """
         >>> start    = 5
@@ -383,18 +415,15 @@ class CatalogToHtml(CatalogRenderer):
         >>> print ET.tostring(div)
         <div class="opds-navigation"><a href="/alpha/a/4.html" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/alpha/a/6.html" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
         """
-        
+
         div = ET.Element( 'div', {'class':'opds-navigation'} )
         if not navigation:
             # No navigation provided, return empty div
             return div
-                    
-        # print '%s %s - %s %s' % (navigation.nextLink, navigation.nextTitle,
-        #    navigation.prevLink, navigation.prevTitle)
-            
+
         nextLink, nextTitle = navigation.nextLink, navigation.nextTitle
         prevLink, prevTitle = navigation.prevLink, navigation.prevTitle
-        
+
         if (prevLink):
             prevA = self.createNavigationAnchor('prev', navigation.prevLink, navigation.prevTitle)
             div.append(prevA)
@@ -408,9 +437,9 @@ class CatalogToHtml(CatalogRenderer):
         else:
             # $$$ no next results, append appropriate element
             pass
-        
+
         return div
-        
+
     def createNavigationAnchor(self, rel, url, title = None):
         """
         >>> a = testToHtml.createNavigationAnchor('next', 'a/1', 'Next results')
@@ -420,27 +449,27 @@ class CatalogToHtml(CatalogRenderer):
         >>> print ET.tostring(a)
         <a href="a/0.html" class="opds-navigation-anchor" rel="prev" title="Previous">Previous</a>
         """
-        
+
         # Munge URL
         if url.endswith('.xml'):
             url = url[:-4]
         if not url.endswith('.html'):
             url += '.html'
-        
+
         attribs = {'class':'opds-navigation-anchor',
             'rel': rel,
             'href': url}
         if title is not None:
             attribs['title'] = title    
         a = ET.Element('a', attribs)
-        
+
         if title is not None:
             a.text = title
         return a
-        
+
     def createSearch(self, opensearchObj, query = None):
         div = ET.Element( 'div', {'class':'opds-search'} )
-        
+
         # load opensearch
         osUrl = opensearchObj.osddUrl
         desc = opensearch.Description(osUrl)
@@ -451,45 +480,44 @@ class CatalogToHtml(CatalogRenderer):
             div.append(c)
         else:
             template = url.template
-    
+
             # XXX URL is currently hardcoded
             form = ET.SubElement(div, 'form', {'class':'opds-search-form', 'action':'/bookserver/catalog/search', 'method':'get' } )
-            
+
             # ET.SubElement(form, 'input', {'class':'opds-search-template', 'type':'hidden', 'name':'t', 'value': template } )
-            
+
             termsLabel = ET.SubElement(form, 'label', {'for':'opds-search-terms'} )
             termsLabel.text = desc.shortname
             ET.SubElement(form, 'br')
-            
+
             searchAttribs = {'class':'opds-search-terms',
                 'type':'text',
                 'name':'q', 
                 'id':'opds-search-terms',
                 'size':'40',
             }
-            
+
             if query:
                 searchAttribs['value'] = query
             terms = ET.SubElement(form, 'input', searchAttribs )
-            
+
             submit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'submit', 'type':'submit', 'value':'Search'} )
-            
+
             # $$$ expand to other devices
             if self.device and self.device.name == 'Kindle':
                 deviceSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'device', 'type':'submit', 'value':'Search for Kindle' } )
             if self.provider:
                 providerSubmit = ET.SubElement(form, 'input', {'class':'opds-search-submit', 'name':'provider', 'type':'submit', 'value':'Search %s' % self.provider} ) # $$$ use pretty name
-        
+
         # XXX finish implementation
-        
         return div
-        
+
     def createCatalogHeader(self, catalog):
         div = ET.Element( 'div', {'class':'opds-catalog-header'} )
         title = ET.SubElement(div, 'h1', {'class':'opds-catalog-header-title'} )
         title.text = catalog._title # XXX
         return div
-                
+
     def createEntry(self, entry):
         """
         >>> e = testToHtml.createEntry(testEntry)
@@ -503,9 +531,9 @@ class CatalogToHtml(CatalogRenderer):
           </div>
         </p>
         """
-        
+
         e = ET.Element('p', { 'class':'opds-entry'} )
-        
+
         elem = e        
         # Look for link to catalog, and if so, make the title of this entry a link
         catalogLink = self.findCatalogLink(entry._links)
@@ -513,15 +541,15 @@ class CatalogToHtml(CatalogRenderer):
             entry._links.remove(catalogLink)
             a = ET.SubElement(e, 'a', { 'class':'opds-entry-title', 'href':catalogLink.get('url') } )
             elem = a
-        
+
         title = ET.SubElement(elem, 'h2', {'class':'opds-entry-title'} )
         title.text = entry.get('title')
-        
+
         for key in self.entryDisplayKeys:
             value = entry.get(key)
             if value:
                 displayTitle, displayValue = self.formatEntryValue(key, value)
-                
+
                 entryItem = ET.SubElement(e, 'span', {'class':'opds-entry-item'} )
                 itemName = ET.SubElement(entryItem, 'em', {'class':'opds-entry-key'} )
                 itemName.text = displayTitle + ':'
@@ -532,21 +560,20 @@ class CatalogToHtml(CatalogRenderer):
 
         if entry._links:
             e.append(self.createEntryLinks(entry._links))
-                                
+
         # TODO sort for display order
         # for key in Entry.valid_keys.keys():
         #    formattedEntryKey = self.createEntryKey(key, entry.get(key))
         #    if (formattedEntryKey):
         #        e.append( formattedEntryKey )
-        
         return e
-        
+
     def formatEntryValue(self, key, value):
         if type(value) == type([]):
             if len(value) == 1:
                 displayTitle = self.entryDisplayTitles[key][0]
                 displayValue = value[0]
-                               
+
             else:
                 # Multiple items
                 displayTitle = self.entryDisplayTitles[key][1]
@@ -571,7 +598,7 @@ class CatalogToHtml(CatalogRenderer):
           <span class="opds-entry-item"><em class="opds-entry-key">Free:</em> <a href="http://a.o/item.pdf" class="opds-entry-link">PDF</a>, <a href="http://a.o/item.epub" class="opds-entry-link">ePub</a></span>
         </div>
         """
-        
+
         free = []
         buy = []
         lend = []
@@ -579,9 +606,9 @@ class CatalogToHtml(CatalogRenderer):
         sample = []
         opds = [] # XXX munge link for HTML proxy - make entry title the link
         html = []
-        
+
         d = ET.Element('div', {'class':'opds-entry-links'} )
-        
+
         for link in links:
             try:
                 rel = link.get('rel')
@@ -590,7 +617,6 @@ class CatalogToHtml(CatalogRenderer):
                 # no relation
                 continue
 
-            
             if rel == Link.acquisition:
                 free.append(link)
             elif rel == Link.buying:
@@ -606,7 +632,7 @@ class CatalogToHtml(CatalogRenderer):
             elif type == Link.html:
                 html.append(link)
             # XXX output uncaught links
-                
+
         linkTuples = [(free, 'Free:'), (buy, 'Buy:'), (subscribe, 'Subscribe:'), (sample, 'Sample:'), (opds, 'Catalog:'), (html, 'HTML:')]
 
         for (linkList, listTitle) in linkTuples:
@@ -615,58 +641,58 @@ class CatalogToHtml(CatalogRenderer):
                 title = ET.SubElement(s, 'em', {'class':'opds-entry-key'} )
                 title.text = listTitle
                 title.tail = ' '
-                
+
                 linkElems = [self.createEntryLink(aLink) for aLink in linkList]
                 for linkElem in linkElems:
                     s.append(linkElem)
                     if linkElem != linkElems[-1]:
                         linkElem.tail = ', '
-                        
+
                 d.append(s)
-                        
+
         return d
-        
+
     def createEntryLink(self, link):
         """
         >>> l = Link(url = 'http://foo.com/bar.pdf', type='application/pdf')
         >>> e = testToHtml.createEntryLink(l)
         >>> print ET.tostring(e)
         <a href="http://foo.com/bar.pdf" class="opds-entry-link">PDF</a>
-        
+
         >>> l = Link(url = '/blah.epub', type='application/epub')
         >>> e = testToHtml.createEntryLink(l)
         >>> print ET.tostring(e)
         <a href="/blah.epub" class="opds-entry-link">ePub</a>
         """
-        
+
         if self.device:
             link = self.device.formatLink(link)
-        
+
         if self.entryLinkTitles.has_key(link.get('type')):
             title = self.entryLinkTitles[link.get('type')]
         else:
             title = link.get('url')
-            
+
         attribs = {'class':'opds-entry-link',
             'href' : link.get('url')
         }
-        
+
         #try:
         #    attribs['type'] = link.get('type')
         #except:
         #    pass
-        
+
         a = ET.Element('a', attribs)
         a.text = title
         return a
-        
+
     def createEntryKey(self, key, value):
         # $$$ legacy
-        
+
         if not value:
             # empty
             return None
-        
+
         # XXX handle lists, pretty format key, order keys
         e = ET.Element('span', { 'class': 'opds-entry' })
         keyName = ET.SubElement(e, 'em', {'class':'opds-entry-key'})
@@ -676,7 +702,7 @@ class CatalogToHtml(CatalogRenderer):
         keyValue.text = unicode(value)
         ET.SubElement(e, 'br')
         return e
-        
+
     def createEntryList(self, entries):
         list = ET.Element( 'ul', {'class':'opds-entry-list'} )
         for entry in entries:
@@ -684,157 +710,35 @@ class CatalogToHtml(CatalogRenderer):
             item.append(self.createEntry(entry))
             list.append(item)
         return list
-        
+
     def createFooter(self, catalog):
         div = ET.Element('div', {'class':'opds-footer'} )
         div.text = 'Page Footer Div' # XXX
         return div
-    
+
     @classmethod
     def findCatalogLink(cls, links):
         # $$$ should be moved elsewhere -- refactor
         """
-        >>> links = [Link( **{ 'type': Link.acquisition, 'url':'buynow' }), Link( **{'type': Link.opds, 'url':'/providers'}) ]
+        >>> links = [Link( **{ 'type': Link.acquisition, 'url': 'buynow' }), Link( **{'type': Link.opds, 'url': '/providers'}) ]
         >>> catalogLink = CatalogToHtml.findCatalogLink(links)
         >>> print catalogLink.get('url')
         /providers
         """
-       
+
         if links:
             for link in links:
                 try:
                     linkType = link.get('type')
                 except KeyError:
                     continue
-                
+
                 if Link.opds == linkType:
                     return link
         return None
-        
+
     def toString(self):
         return self.prettyPrintET(self.html)
-        
-        
-class ArchiveCatalogToHtml(CatalogToHtml):
-    """
-    Used to create an HTML catalog with Archive specific data and formatting
-    """
-
-    scandataRegex = re.compile('Scandata')
-    viewPortWidth = 600
-    
-    bookserverBase = '/aggregator'
-    catalogBase = '/bookserver/catalog'
-    
-    
-    def createHead(self, catalog):
-        head = CatalogToHtml.createHead(self, catalog)
-        head.append(self.createStyleSheet('/stylesheets/catalog.css'))
-        
-        # Set viewport width for iPhone
-        meta = ET.Element('meta', {'name':'viewport', 'content':'width = %s' % self.viewPortWidth} )
-        head.append(meta)
-        
-        return head
-        
-    def createHeader(self, catalog):
-        div = ET.Element( 'div', {'class':'opds-header'} )
-        # $$$ make local copy of image
-        a = ET.SubElement( div, 'a', {'class':'opds-logo-link',
-            'href':'/bookserver/catalog',
-            'title': 'Open Library BookServer Catalog'} )
-        ET.SubElement(a, 'img', { 'class':'opds-logo', 'src':'http://upstream.openlibrary.org/static/upstream/images/logo_OL-lg.png'})
-        return div
-    
-    def createNavigation(self, navigation):
-        """
-        >>> start    = 5
-        >>> numFound = 100
-        >>> numRows  = 10
-        >>> urlBase  = '/aggregator/alpha/a/'
-        >>> nav = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
-        >>> div = testArchiveToHtml.createNavigation(nav)
-        >>> print ET.tostring(div)
-        <div class="opds-navigation"><a href="/bookserver/catalog/alpha/a/4.html" class="opds-navigation-anchor" rel="prev" title="Prev results">Prev results</a><a href="/bookserver/catalog/alpha/a/6.html" class="opds-navigation-anchor" rel="next" title="Next results">Next results</a></div>
-        """
-        
-        div = CatalogToHtml.createNavigation(self, navigation)
-
-        links = div.findall('a')
-        for link in links:
-            self.rewriteLink(link, self.bookserverBase, self.catalogBase)
-        
-        return div    
-   
-    
-    def createEntry(self, entry):
-        e = CatalogToHtml.createEntry(self, entry)
-        identifier = entry.get('identifier')
-        if identifier:
-            s = ET.SubElement(e, 'span')
-            ET.SubElement(s, 'br')
-            a = ET.SubElement(s, 'a', {'href': 'http://www.archive.org/details/%s' % entry.get('identifier') })
-            a.text = 'More information about this book'
-            ET.SubElement(s, 'br')
-            
-            if self.canReadOnline(entry):
-                s = ET.SubElement(s, 'span')
-                a = ET.SubElement(s, 'a', {'href': self.readOnlineUrl(entry), 'title':'Read online'} )
-                a.text = 'Read online'
-                ET.SubElement(s, 'br')
-                
-        return e
-
-    def createFooter(self, catalog):
-        html = """
-       <div class="opds-footer">
-        <div id="legal">
-        <p><a href="http://www.openlibrary.org" alt="Open Library">Open Library</a> is an initiative of the <a href="http://www.archive.org/">Internet Archive</a>, a 501(c)(3) non-profit, building a digital library of Internet sites and other cultural artifacts in digital form.  Your use of the Open Library is subject to the Internet Archive's <a href="http://www.archive.org/about/terms.php">Terms of Use</a>.</p>
-        </div>
-       </div>
-"""
-        div = ET.fromstring(html)
-        return div
-
-
-    def canReadOnline(self, entry):
-        """
-        Returns true if this item can be read in the online bookreader.
-        """
-        
-        if not entry.get('identifier'):
-            return False
-        
-        # Check for a readable format
-        for format in entry.get('formats'):
-            if self.scandataRegex.search(format):
-                return True
-            
-        return False
-    
-    def readOnlineUrl(self, entry):
-        return 'http://www.archive.org/stream/%s' % entry.get('identifier')
-        
-    @classmethod
-    def rewriteLink(cls, link, oldBase, newBase):
-        """
-        Rewrites link if it is absolute
-        >>> old = '/old'
-        >>> new = '/new'
-        >>> relative = ET.Element('a', {'href':'relative'} )
-        >>> print ArchiveCatalogToHtml.rewriteLink(relative, old, new).get('href')
-        relative
-        >>> absolute = ET.Element('a', {'href':'/old/goats'} )
-        >>> print ArchiveCatalogToHtml.rewriteLink(absolute, old, new).get('href')
-        /new/goats
-        """
-        
-        href = link.get('href')
-        if href.startswith(oldBase):
-            href = newBase + href[len(oldBase):]
-            link.set('href', href)
-        
-        return link
 
 #_______________________________________________________________________________
         
@@ -855,12 +759,12 @@ class CatalogToSolr(CatalogRenderer):
                 #special case for O'Reilly Stanza feeds
                 return True
 
-        return False            
+        return False
 
     def addField(self, element, name, data, catchAll=False):
         field = ET.SubElement(element, "field")
         field.set('name', name)
-        field.text=data        
+        field.text=data
 
         if catchAll:
             #copy this field into the solr catchAll field "text"
@@ -879,13 +783,12 @@ class CatalogToSolr(CatalogRenderer):
         d = feedparser._parse_date(datestr)
         date = datetime.datetime(d.tm_year, d.tm_mon, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec)
         return date.isoformat()+'Z'
-        
-        
+
     def addEntry(self, entry):
         """
         Add each ebook as a Solr document
         """
-        
+
         if not self.isEbook(entry):
             return
 
@@ -900,24 +803,24 @@ class CatalogToSolr(CatalogRenderer):
             if "This work is available for countries where copyright is Life+70." == entry.get('rights'):
                 print "not indexing Life+70 book: " + entry.get('title')
                 return
-            
+
         doc = ET.SubElement(self.solr, "doc")
-        self.addField(doc, 'urn',       entry.get('urn'))
-        self.addField(doc, 'provider',  self.provider)      
-        self.addField(doc, 'title',     entry.get('title'), True)
-        self.addField(doc, 'rights',    entry.get('rights'), True)
-        
-        self.addList(doc, 'creator',    entry.get('authors'), True)
-        self.addList(doc, 'language',   entry.get('languages'))
-        self.addList(doc, 'publisher',  entry.get('publishers'), True)
-        self.addList(doc, 'subject',    entry.get('subjects'), True)
-        
+        self.addField(doc, 'urn', entry.get('urn'))
+        self.addField(doc, 'provider', self.provider)
+        self.addField(doc, 'title', entry.get('title'), True)
+        self.addField(doc, 'rights', entry.get('rights'), True)
+        self.addField(doc, 'publisher', entry.get('publisher'), True)
+
+        self.addList(doc, 'creator', entry.get('authors'), True)
+        self.addList(doc, 'language', entry.get('languages'))
+        self.addList(doc, 'subject', entry.get('subjects'), True)
+
         self.addField(doc, 'updated', self.makeSolrDate(entry.get('updated')))
 
         if entry.get('summary'):
             if not 'No description available.' == entry.get('summary'): #Special case for Feedbooks
                 self.addField(doc, 'summary',     entry.get('summary'), True)
-        
+
         if entry.get('date'):
             try:
                 date = datetime.datetime(int(entry.get('date')), 1, 1)
@@ -939,26 +842,26 @@ class CatalogToSolr(CatalogRenderer):
         for link in entry.getLinks():            
             if 'application/pdf' == link.get('type'):
                 self.addField(doc, 'format', 'pdf')
-                self.addField(doc, 'link',   link.get('url'))
+                self.addField(doc, 'link', link.get('url'))
                 if link.get('price'):
                     price = link.get('price')
                     currencyCode = link.get('currencycode')
             elif 'application/epub+zip' == link.get('type'):
                 self.addField(doc, 'format', 'epub')
-                self.addField(doc, 'link',   link.get('url'))
+                self.addField(doc, 'link', link.get('url'))
                 if link.get('price'):
                     price = link.get('price')
                     currencyCode = link.get('currencycode')
             elif 'application/x-mobipocket-ebook' == link.get('type'):
                 self.addField(doc, 'format', 'mobi')
-                self.addField(doc, 'link',   link.get('url'))
+                self.addField(doc, 'link', link.get('url'))
                 if link.get('price'):
                     price = link.get('price')
                     currencyCode = link.get('currencycode')
             elif ('buynow' == link.get('rel')) and ('text/html' == link.get('type')):
                 #special case for O'Reilly Stanza feeds
                 self.addField(doc, 'format', 'shoppingcart')
-                self.addField(doc, 'link',   link.get('url'))
+                self.addField(doc, 'link', link.get('url'))
                 if link.get('price'):
                     price = link.get('price')
                     currencyCode = link.get('currencycode')
@@ -969,7 +872,7 @@ class CatalogToSolr(CatalogRenderer):
         else:
             price = '0.00'
             currencyCode = 'USD'
-        
+
         self.addField(doc, 'price', price)
         self.addField(doc, 'currencyCode', currencyCode)
         ### old version of lxml on the cluster does not have lxml.html package
@@ -983,11 +886,11 @@ class CatalogToSolr(CatalogRenderer):
 
     def createRoot(self):
         return ET.Element("add")
-    
+
     def __init__(self, catalog, provider):
         CatalogRenderer.__init__(self)
         self.provider = provider
-        
+
         self.solr = self.createRoot()
 
         for entry in catalog.getEntries():
@@ -995,13 +898,13 @@ class CatalogToSolr(CatalogRenderer):
 
     def toString(self):
         return self.prettyPrintET(self.solr)
-        
+
 #_______________________________________________________________________________
 
 def testmod():
     import doctest
     global testEntry, testCatalog, testToHtml, testArchiveToHtml
-    
+
     urn = 'urn:x-internet-archive:bookserver:catalog'
     testCatalog = Catalog(title='Internet Archive OPDS', urn=urn)
     testLink    = Link(url  = 'http://archive.org/download/itemid.pdf',
@@ -1014,25 +917,25 @@ def testmod():
                         'summary': '<p>Fantastic book.</p>',
                         },
                         links=[testLink])
-                        
+
     start    = 0
     numFound = 2
     numRows  = 1
     urlBase  = '/alpha/a/'
     testNavigation = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
     testCatalog.addNavigation(testNavigation)
-    
+
     osDescription = 'http://bookserver.archive.org/catalog/opensearch.xml'
     testSearch = OpenSearch(osDescription)
     testCatalog.addOpenSearch(testSearch)
-    
+
     testCatalog.addEntry(testEntry)
     testToHtml = CatalogToHtml(testCatalog)
-    
+
     testArchiveToHtml = ArchiveCatalogToHtml(testCatalog)
-    
+
     doctest.testmod()
-        
+
 if __name__ == "__main__":
     testmod()
-    
+

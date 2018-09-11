@@ -1,0 +1,6 @@
+feedparser==5.2.1
+internetarchive==1.7.6
+opensearch==0.9.2
+simplejson==3.16.0
+web.py==0.39
+

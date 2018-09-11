@@ -17,12 +17,13 @@ This file is part of bookserver.
 
     You should have received a copy of the GNU Affero General Public License
     along with bookserver.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     The bookserver source is hosted at http://github.com/internetarchive/bookserver/
 """
 
 import urllib
 import time
+import datetime
 
 import sys
 sys.path.append("/petabox/sw/lib/python")
@@ -33,7 +34,7 @@ from ..Entry import IAEntry, Entry
 from .. import Navigation
 from .. import OpenSearch
 from .. import Link
-import bookserver.util.language
+import catalog.language
 
 class SolrToCatalog:
 
@@ -49,32 +50,33 @@ class SolrToCatalog:
               'provider'       : 'provider',
               'urn'            : 'urn',
               'summary'        : 'summary',
+              'description'    : 'description',
               'updated'        : 'updated',
               'publicdate'     : 'publicdate',
-              
+              'publisher'      : 'publisher',
+
               #these are lists, not strings
               'creator'        : 'authors',
               'subject'        : 'subjects',
-              'publisher'      : 'publishers',
               'language'       : 'languages',
               'contributor'    : 'contributors',
               'link'           : 'links',
               'rights'         : 'rights',
-              
+
               'oai_updatedate' : 'oai_updatedates',
               'format'         : 'formats',
 
              }
 
     # removeKeys()
-    #___________________________________________________________________________        
+    #___________________________________________________________________________
     def removeKeys(self, d, keys):
         for key in keys:
             d.pop(key, None)
 
 
     # entryFromSolrResult()
-    #___________________________________________________________________________        
+    #___________________________________________________________________________
     def entryFromSolrResult(self, item, pubInfo):
         #use generator expression to map dictionary key names
         bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
@@ -95,32 +97,32 @@ class SolrToCatalog:
             currencycode = bookDict['currencyCode']
         else:
             currencycode = 'USD'
-        
+
         if not 'updated' in bookDict:
             #how did this happen?
             bookDict['updated'] = self.getDateString()
-        
+
         for link in bookDict['links']:
             if link.endswith('.pdf'):
-                l = Link(url  = link, type = 'application/pdf', 
+                l = Link(url  = link, type = 'application/pdf',
                                rel = rel,
                                price = price,
                                currencycode = currencycode)
                 links.append(l)
             elif link.endswith('.epub'):
-                l = Link(url  = link, type = 'application/epub+zip', 
+                l = Link(url  = link, type = 'application/epub+zip',
                                rel = rel,
                                price = price,
                                currencycode = currencycode)
                 links.append(l)
             elif link.endswith('.mobi'):
-                l = Link(url  = link, type = 'application/x-mobipocket-ebook', 
+                l = Link(url  = link, type = 'application/x-mobipocket-ebook',
                                rel = rel,
                                price = price,
                                currencycode = currencycode)
                 links.append(l)
-            else:    
-                l = Link(url  = link, type = 'text/html', 
+            else:
+                l = Link(url  = link, type = 'text/html',
                                rel = rel,
                                price = price,
                                currencycode = currencycode)
@@ -131,21 +133,21 @@ class SolrToCatalog:
             for right in bookDict['rights']:
                 #special case for Feedbooks
                 if not '' == right:
-                    rightsStr += right + ' '            
+                    rightsStr += right + ' '
             if '' == rightsStr:
                 self.removeKeys(bookDict, ('rights',))
             else:
                 bookDict['rights'] = rightsStr
-            
-        self.removeKeys(bookDict, ('links','price', 'currencyCode')) 
+
+        self.removeKeys(bookDict, ('links','price', 'currencyCode'))
         e = Entry(bookDict, links=links)
 
         return e
 
     # SolrToCatalog()
-    #___________________________________________________________________________    
-    def __init__(self, pubInfo, url, urn, start=None, numRows=None, urlBase=None, titleFragment=None):
-                    
+    #___________________________________________________________________________
+    def __init__(self, pubInfo, url, urn, page=None, numRows=None, urlBase=None, titleFragment=None):
+
         self.url = url
         f = urllib.urlopen(self.url)
         contents = f.read()
@@ -160,46 +162,45 @@ class SolrToCatalog:
             }}
 
         numFound = int(obj['response']['numFound'])
-        
-        title = pubInfo['name'] + ' Catalog'        
 
-        if None != start:
-            if 0 == numFound:
-                title += ' - no '
-            else:
-                title += ' - '
-                if numRows > 0:
-                    title += '%d to %d of ' % (start*numRows + 1, min((start+1)*numRows, numFound))
-                title += "%d " % (numFound)
-        elif None != titleFragment:
-            title += " - "
-            
-        if None != titleFragment:
-            title += titleFragment
-            
+        title = pubInfo['name'] + ' Catalog'
+
+        if titleFragment is not None:
+            title = titleFragment
+
+        # TODO: Pagination counts are not displaying nicely on clients with infinite scroll
+        #   - rethink and reimplement if still required
+        #if page is not None:
+        #    if 0 == numFound:
+        #        title += ' - no results'
+        #    else:
+        #        title += ' - '
+        #        if numRows > 0:
+        #            title += '%d to %d of ' % ((page-1)*numRows + 1, min(page*numRows, numFound))
+        #        title += "%d" % (numFound)
+
         self.c = Catalog(title     = title,
                          urn       = urn,
-                         url       = pubInfo['opdsroot'] + '/',
+                         url       = urlBase,
                          author    = pubInfo['name'],
                          authorUri = pubInfo['uri'],
-                         datestr   = self.getDateString(),                                 
+                         datestr   = self.getDateString(),
                         )
 
-
-        nav = Navigation.initWithBaseUrl(start, numRows, numFound, urlBase)
+        nav = Navigation.initWithBaseUrl(page, numRows, numFound, urlBase)
         self.c.addNavigation(nav)
 
-        osDescriptionDoc = pubInfo['opdsroot'] + '/opensearch.xml'
-        o = OpenSearch(osDescriptionDoc)
-        self.c.addOpenSearch(o)
+        opensearch = OpenSearch('%s/opensearch.xml' % pubInfo['opdsroot'])
+        self.c.addOpenSearch(opensearch)
+        self.c.addAuthentication('%s/authentication_document' % pubInfo['opdsroot'])
 
         for item in obj['response']['docs']:
             entry = self.entryFromSolrResult(item, pubInfo)
             self.c.addEntry(entry)
-  
+
     # getCatalog()
-    #___________________________________________________________________________    
-    def getCatalog(self):        
+    #___________________________________________________________________________
+    def getCatalog(self):
         return self.c
 
     # getDateString()
@@ -208,14 +209,14 @@ class SolrToCatalog:
         #IA is continuously scanning books. Since this OPDS file is constructed
         #from search engine results, let's change the updated date every midnight
         t       = time.gmtime()
-        datestr = time.strftime('%Y-%m-%dT%H:%M:%SZ', 
+        datestr = time.strftime('%Y-%m-%dT%H:%M:%SZ',
                     (t.tm_year, t.tm_mon, t.tm_mday, 0, 0, 0, 0, 0, 0))
         return datestr
-        
-    def nextPage(self):        
+
+    def nextPage(self):
         raise NotImplementedError
 
-    def prevPage(self):        
+    def prevPage(self):
         raise NotImplementedError
 
 
@@ -227,37 +228,90 @@ class SolrToCatalog:
 class IASolrToCatalog(SolrToCatalog):
     def entryFromSolrResult(self, item, pubInfo):
         #use generator expression to map dictionary key names
-        bookDict = dict( (SolrToCatalog.keymap[key], val) for key, val in item.iteritems() )
-
+        bookDict = dict( (SolrToCatalog.keymap.get(key), val) for key, val in item.iteritems() if SolrToCatalog.keymap.get(key) )
         if 'publicdate' in item:
             bookDict['updated'] = item['publicdate']
         else:
             bookDict['updated'] = self.getDateString()
-            
+
         self.removeKeys(bookDict, ('publicdate',))
 
-        #IA scribe books use MARC language codes        
-        if 'language' in item:
-            bookDict['languages'] = []
-            for lang in item['language']:
-                bookDict['languages'].append(bookserver.util.language.iso_639_23_to_iso_639_1(lang))
+        #IA scribe books use MARC language codes
+        if item.get('language'):
+            languages = set(item['language']) if isinstance(item['language'], list) else set([item['language']])
+            bookDict['languages'] = [catalog.language.iso_639_23_to_iso_639_1(language) for language in languages]
 
-        #special case: this is a result from the IA solr.
-        #TODO: refactor this into a subclass IASolrToCatalog
+        # Is the book borrowable?
+        if 'loans__status__status' in item:
+            acquisition_type = 'borrow'
+            avail = item.get('loans__status__status')
+            if avail == 'AVAILABLE':
+                copies = '1'
+            else:
+                copies = '0'
+            holds = item.get('loans__status__num_waitlist')
+            availability = {'availability': avail.lower(), 'holds': holds, 'copies': copies, 'date': self.availableDate(item)}
+        else:
+            acquisition_type = 'open-access'
+            availability = {}
+
         bookDict['urn'] = pubInfo['urnroot'] + ':item:' + item['identifier']
 
-        pdfLink = Link(url  = "http://www.archive.org/download/%s/%s.pdf" % (item['identifier'], item['identifier']),
-                       type = 'application/pdf', rel = 'http://opds-spec.org/acquisition')
+        webLink = Link(url='https://archive.org/details/%s' % item['identifier'],
+                       type='text/html',
+                       rel='http://opds-spec.org/acquisition/%s' % acquisition_type,
+                       **availability)
 
-        epubLink = Link(url  = "http://www.archive.org/download/%s/%s.epub" % (item['identifier'], item['identifier']),
-                       type = 'application/epub+zip', rel = 'http://opds-spec.org/acquisition')
+        borrowLink = Link(url='%s/simple/loans' % pubInfo['opdsroot'],
+                          type='application/atom+xml;type=entry;profile=opds-catalog',
+                          rel='http://opds-spec.org/acquisition/%s' % acquisition_type,
+                          **availability)
 
-        coverLink = Link(url  = "http://www.archive.org/download/%s/page/cover_medium.jpg" % (item['identifier']),
-                       type = 'image/jpeg', rel = 'http://opds-spec.org/image')
+        pdfLink = Link(url='https://archive.org/download/%s/%s.pdf' % (item['identifier'], item['identifier']),
+                       type='application/pdf',
+                       rel='http://opds-spec.org/acquisition/%s' % acquisition_type,
+                       **availability)
 
-        thumbLink = Link(url  = "http://www.archive.org/download/%s/page/cover_thumb.jpg" % (item['identifier']),
-                       type = 'image/jpeg', rel = 'http://opds-spec.org/image/thumbnail')
-                       
-        e = IAEntry(bookDict, links=(pdfLink, epubLink, coverLink, thumbLink))
-        
+        epubLink = Link(url='https://archive.org/download/%s/%s.epub' % (item['identifier'], item['identifier']),
+                        type='application/epub+zip',
+                        rel='http://opds-spec.org/acquisition/%s' % acquisition_type,
+                        **availability)
+
+        coverLink = Link(url='http://archive.org/download/%s/page/cover_medium.jpg' % (item['identifier']),
+                         type='image/jpeg', rel='http://opds-spec.org/image')
+
+        thumbLink = Link(url='http://archive.org/download/%s/page/cover_thumb.jpg' % (item['identifier']),
+                         type='image/jpeg', rel='http://opds-spec.org/image/thumbnail')
+
+        audiobook = 'LibriVox Apple Audiobook' in item.get('format')
+
+        if audiobook:
+            thumb_url = 'https://archive.org/services/img/%s' % item['identifier']
+            coverLink = Link(url=thumb_url, type='image/jpeg', rel='http://opds-spec.org/image')
+            thumbLink = Link(url=thumb_url, type='image/jpeg', rel='http://opds-spec.org/image/thumbnail')
+            audiobookLink = Link(url='https://api.archivelab.org/books/%s/opds_audio_manifest' % item['identifier'],
+                                 type='application/audiobook+json',
+                                 rel='http://opds-spec.org/acquisition/%s' % acquisition_type)
+            webLink = Link(url='https://archive.org/details/%s' % item['identifier'],
+                           type='text/html',
+                           rel='http://opds-spec.org/acquisition/%s' % acquisition_type)
+
+        if acquisition_type == 'borrow':
+            links = (webLink, borrowLink, coverLink, thumbLink)
+        elif audiobook:
+            links = (audiobookLink, webLink, coverLink, thumbLink)
+        else:
+            links = (pdfLink, epubLink, coverLink, thumbLink)
+
+        e = IAEntry(bookDict, links=links)
+
         return e
+
+    def availableDate(self, item):
+        borrowed = item.get('loans__status__last_loan_date')
+        if borrowed is None:
+            return
+        loan_period = 14
+        waiting = int(item.get('loans__status__num_waitlist', 0))
+        date = datetime.datetime.strptime(borrowed, '%Y-%m-%dT%H:%M:%SZ') + datetime.timedelta(days=(1+waiting)*loan_period)
+        return date.strftime('%Y-%m-%d')

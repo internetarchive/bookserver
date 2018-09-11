@@ -24,37 +24,37 @@ This file is part of bookserver.
 class Navigation:
 
     @classmethod
-    def getNext(self, start, numRows, numFound, urlBase):
+    def getNext(self, page, numRows, numFound, urlBase):
         url   = None
         title = None
 
-        if None == start:
+        if page is None:
             return url, title
 
-        if (start+1)*numRows < numFound:
+        if page*numRows < numFound:
             title = 'Next results'
-            url = '%s%d' % (urlBase, start+1)
-    
+            url = '%s%d' % (urlBase, page+1)
+
         return url, title        
 
     @classmethod
-    def getPrev(self, start, numRows, numFound, urlBase):
+    def getPrev(self, page, numRows, numFound, urlBase):
         url   = None
         title = None
 
-        if None == start:
+        if page is None:
             return url, title
 
-        if 0 != start:
+        if page > 1:
             title = 'Prev results'
-            url = '%s%d' % (urlBase, start-1)
-    
+            url = '%s%d' % (urlBase, page-1)
+
         return url, title        
 
     @classmethod
-    def initWithBaseUrl(cls, start, numRows, numFound, urlBase):
-        (nextLink, nextTitle) = cls.getNext(start, numRows, numFound, urlBase)
-        (prevLink, prevTitle) = cls.getPrev(start, numRows, numFound, urlBase)
+    def initWithBaseUrl(cls, page, numRows, numFound, urlBase):
+        (nextLink, nextTitle) = cls.getNext(page, numRows, numFound, urlBase)
+        (prevLink, prevTitle) = cls.getPrev(page, numRows, numFound, urlBase)
         return cls(nextLink, nextTitle, prevLink, prevTitle)
     
 
@@ -62,10 +62,10 @@ class Navigation:
         self.nextLink  = nextLink
         self.nextTitle = nextTitle
         self.prevLink  = prevLink
-        self.prevTitle  = prevTitle
+        self.prevTitle = prevTitle
 
 
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-        
+
