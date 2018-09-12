@@ -262,7 +262,7 @@ class IASolrToCatalog(SolrToCatalog):
                        rel='http://opds-spec.org/acquisition/%s' % acquisition_type,
                        **availability)
 
-        borrowLink = Link(url='%s/simple/loans' % pubInfo['opdsroot'],
+        borrowLink = Link(url='%s/borrow/%s' % (pubInfo['opdsroot'], item['identifier']),
                           type='application/atom+xml;type=entry;profile=opds-catalog',
                           rel='http://opds-spec.org/acquisition/%s' % acquisition_type,
                           **availability)
