@@ -14,6 +14,6 @@ COPY . /bookserver
 WORKDIR /bookserver
 RUN pip install -r requirements.txt
 
-EXPOSE 80 443
+EXPOSE 80
 
 CMD [ "./bookserver/opds.py" ]

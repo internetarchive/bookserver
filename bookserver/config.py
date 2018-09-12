@@ -22,5 +22,5 @@ config.getdef = types.MethodType(getdef, config)
 
 PROTOCOL = config.getdef("server", "protocol", 'https')
 HOST = config.getdef("server", "host", 'bookserver.archive.org')
-PORT = int(config.getdef("server", "port", 1337))  # IA's default opds port
+PORT = int(config.getdef("server", "port", 443))
 DEBUG = bool(int(config.getdef("server", "debug", 0)))
