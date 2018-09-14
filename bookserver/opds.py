@@ -8,11 +8,14 @@ This script is a proxy that formats solr queries as OPDS
 
 import sys
 
-import web
-import time
-import string
 import cgi
+import internetarchive as ia
+import json
+import requests
+import string
+import time
 import urllib
+import web
 
 import catalog as catalog
 import catalog.output as output
@@ -52,13 +55,13 @@ urls = (
     '/search(.*)',                  'Htmlsearch',
     '/crawlable(?:/(.*))?(|.html)', 'Crawlable',
     '/(|index.html)',               'Index',
+    '/borrow/(.*)',                 'Borrow',
     '/simple/loans',                'Loans',
     '/simple(.*)',                  'Simple', # Acquisition only entrypoint for SimplyE
     '/(.*)',                        'IndexRedirect',
     )
 
 application = web.application(urls, globals()).wsgifunc()
-
 
 def getDateString():
     """IA is continuously scanning books. Since this OPDS file is constructed
@@ -72,7 +75,6 @@ def getDateString():
 def getEnv(key, default=None):
     env = web.ctx['environ']
     return env[key] if env.has_key(key) else default
-
 
 def getDevice():
     userAgent = getEnv('HTTP_USER_AGENT')
@@ -393,6 +395,42 @@ class Simple:
         return r.toString()
 
 
+class Borrow:
+    def GET(self, ocaid):
+        webdata = web.ctx.env
+        auth = webdata.get('HTTP_AUTHORIZATION')
+
+        if not auth:
+            raise Loans.Unauthorized()
+        else:
+            email, password = auth[6:].decode('base64').split(':')
+            # Use basic auth credentials to retrive archive.org s3 keys
+            try:
+                s3keys = ia.config.get_auth_config(email, password)
+            except ia.exceptions.AuthenticationError:
+                raise Loans.Unauthorized()
+
+            # POST to archive.org with s3 keys to get acsm url
+            loans_url = "https://%s/services/loans/beta/loan/?action=media_url&identifier=%s&format=epub" % (ARCHIVE_DOMAIN, ocaid)
+            r = requests.post(loans_url, data=s3keys.get('s3', {}))
+            if r.status_code != 200:
+                web.header('Content-Type', 'application/api-problem+json')
+                details = {'status': 404,
+                           'type': 'http://librarysimplified.org/terms/problem/no-licenses',
+                           'detail': 'The item you requested (%s) is not in this collection.' % ocaid,
+                           'title': 'No licenses.'}
+                raise web.NotFound(json.dumps(details))
+
+            # On success show single entry OPDS feed, with link to the acsm file
+            acsm_url = r.json().get('url')
+            entry = """<entry>
+                    <link href="%s" rel="http://opds-spec.org/acquisition" type="application/vnd.adobe.adept+xml">
+                    <opds:indirectAcquisition type="application/epub+zip"/>
+                    </link></entry>""" % acsm_url
+            web.header('Content-Type', 'application/atom+xml;type=entry;profile=opds-catalog')
+            web.ctx.status = '201 Created'
+            return entry
+
 class Loans:
     class Unauthorized(web.HTTPError):
         headers = {
@@ -407,7 +445,6 @@ class Loans:
     def GET(self):
         webdata = web.ctx.env
         auth = webdata.get('HTTP_AUTHORIZATION')
-        # TODO: Use supplied basic auth credentials and list user's current loans here
         raise self.Unauthorized()
 
 
